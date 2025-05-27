@@ -1,0 +1,4 @@
+[submodule "Engine/Dependencies/ImGui"]
+	path = Engine/Dependencies/ImGui
+	url = https://github.com/Muerte0-0/imgui.git
+	branch = docking
