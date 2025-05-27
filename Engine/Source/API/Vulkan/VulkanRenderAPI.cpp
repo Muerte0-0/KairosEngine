@@ -11,7 +11,7 @@ namespace Kairos
 
 	void VulkanRenderAPI::SetClearColor(const glm::vec4& color)
 	{
-
+		
 	}
 
 	void VulkanRenderAPI::Clear()

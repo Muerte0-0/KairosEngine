@@ -15,8 +15,6 @@ namespace Kairos
 		int status = gladLoadGL(glfwGetProcAddress);
 		KE_CORE_ASSERT(status, "Failed to Initialize Glad!");
 
-		
-
 		KE_CORE_INFO("OpenGL Info");
 		KE_CORE_INFO("	Version : {0}", (char*)glGetString(GL_VERSION));
 		KE_CORE_INFO("  GLFW Version: {0}", (char*)glfwGetVersionString());

@@ -6,7 +6,7 @@ VULKAN_SDK = os.getenv("VULKAN_SDK")
 Dependencies = "%{wks.location}/Engine/Dependencies"
 
 IncludeDir = {}
-IncludeDir["Vulkan"] = "%{Dependencies}/Vulkan/include"
+IncludeDir["Vulkan"] = os.getenv("VULKAN_SDK") and (os.getenv("VULKAN_SDK") .. "/Include") or "%{Dependencies}/Vulkan/include"
 IncludeDir["GLFW"] = "%{Dependencies}/GLFW/include"
 IncludeDir["Volk"] = "%{Dependencies}/volk"
 IncludeDir["ImGui"] = "%{Dependencies}/ImGui"

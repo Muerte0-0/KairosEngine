@@ -48,6 +48,7 @@ links
 
 filter "files:**.c"
     flags { "NoPCH" }  -- Skip PCH for C files
+	compileas "C"
 	
 --filter "files:vendor/ImGuizmo/**.cpp"
 	--flags { "NoPCH" }

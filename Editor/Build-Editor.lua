@@ -30,6 +30,10 @@ links
 
 filter "system:windows"
 	systemversion "latest"
+links
+{
+	"%{Library.WinSock}",
+}
 
 filter "configurations:Debug"
 	defines "KE_DEBUG"
