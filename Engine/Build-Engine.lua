@@ -12,6 +12,7 @@ pchsource "Source/kepch.cpp"
 
 defines
 {
+	"VK_NO_PROTOTYPES",
 	"_CRT_SECURE_NO_WARNINGS",
 	"GLFW_INCLUDE_NONE",
 	"SLANG_STATIC",

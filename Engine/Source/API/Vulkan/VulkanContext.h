@@ -1,7 +1,6 @@
 #pragma once
 #include "Engine/Renderer/GraphicsContext.h"
 
-#define VK_NO_PROTOTYPES
 #include <vulkan/vulkan.hpp>
 #include <vma/vk_mem_alloc.h>
 
@@ -10,14 +9,16 @@
 
 namespace Kairos
 {
-	typedef struct {
+	struct QueueFamilyIndices
+	{
 		uint32_t graphics_family;
 		uint32_t present_family;
-		uint32_t compute_family;  // Optional async compute
+		uint32_t compute_family;
 		bool has_compute;
-	} QueueFamilyIndices;
+	};
 
-	typedef struct {
+	struct VkContext 
+	{
 		VkInstance instance;
 		VkSurfaceKHR surface;
 		VkPhysicalDevice physicalDevice;
@@ -29,12 +30,7 @@ namespace Kairos
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
 		VkQueue computeQueue;
-	} VulkanVariables;
-
-	static struct {
-		size_t totalAllocated = 0;
-		std::mutex mutex;
-	} allocStats;
+	};
 
 #define VK_CHECK(result) \
     if (result != VK_SUCCESS) { \
@@ -52,13 +48,14 @@ namespace Kairos
 		virtual void SwapBuffers() override;
 		virtual void Cleanup() override;
 
+		std::deque<std::function<void(VkInstance)>>& GetInstanceDeletionQueue() { return m_InstanceDeletionQueue; }
 		std::deque<std::function<void(VkDevice)>>& GetDeviceDeletionQueue() { return m_DeviceDeletionQueue; }
 
-		VulkanVariables* GetVulkanVariables() { return &m_VulkanVariables; }
+		VkContext& GetVkContext() { return m_Context; }
 	private:
 		GLFWwindow* m_WindowHandle;
 
-		VulkanVariables m_VulkanVariables;
+		VkContext m_Context;
 
 		void Init_Instance();
 

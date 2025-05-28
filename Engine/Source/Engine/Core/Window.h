@@ -12,7 +12,7 @@ namespace Kairos
 		uint32_t Width;
 		uint32_t Height;
 
-		WindowProps(const std::string& title = "Window Title", uint32_t width = 1600, uint32_t height = 900) : Title(title), Width(width), Height(height) {}
+		WindowProps(const std::string& title = "Window Title", uint32_t width = 1280, uint32_t height = 720) : Title(title), Width(width), Height(height) {}
 	};
 
 	class Window
@@ -31,7 +31,7 @@ namespace Kairos
 		// Window attributes
 		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 		virtual void SetVSync(bool enabled) = 0;
-		virtual bool IsVSync() const = 0;
+		virtual bool IsVSyncEnabled() const = 0;
 
 		virtual void* GetNativeWindow() const = 0;
 		virtual void* GetGraphicsContext() const = 0;

@@ -32,7 +32,7 @@ namespace Kairos
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-		
+
 	}
 
 }

@@ -24,7 +24,7 @@ namespace Kairos
 		// Window attributes
 		void SetEventCallback(const EventCallbackFn& callback) override { m_Data.EventCallback = callback; }
 		void SetVSync(bool enabled) override;
-		bool IsVSync() const override;
+		bool IsVSyncEnabled() const override;
 
 		inline virtual void* GetNativeWindow() const { return m_Window; }
 		inline virtual void* GetGraphicsContext() const { return m_Context; }
@@ -38,8 +38,8 @@ namespace Kairos
 		struct WindowData
 		{
 			std::string Title;
-			unsigned int Width, Height;
-			bool VSync;
+			unsigned int Width, Height = (1280, 720);
+			bool VSync = false;
 
 			EventCallbackFn EventCallback;
 		};

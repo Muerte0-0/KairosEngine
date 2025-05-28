@@ -44,7 +44,6 @@ namespace Kairos
 			if (RenderAPI::GetAPI() != RenderAPI::API::OpenGL)
 			{
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-				glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 			}
 
 			glfwSetErrorCallback(GLFWErrorCallback);
@@ -176,7 +175,7 @@ namespace Kairos
 		m_Data.VSync = enabled;
 	}
 
-	bool WindowsWindow::IsVSync() const
+	bool WindowsWindow::IsVSyncEnabled() const
 	{
 		return m_Data.VSync;
 	}

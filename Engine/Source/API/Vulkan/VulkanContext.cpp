@@ -28,13 +28,13 @@ namespace Kairos
 		vkEnumerateInstanceVersion(&version);
 
 		VkPhysicalDeviceProperties props;
-		vkGetPhysicalDeviceProperties(GetVulkanVariables()->physicalDevice, &props);
+		vkGetPhysicalDeviceProperties(GetVkContext().physicalDevice, &props);
 
 		KE_CORE_INFO("Vulkan Info");
-		KE_CORE_INFO("	Version: {}.{}.{}", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+		KE_CORE_INFO("	Version: {}.{}.{}", VK_API_VERSION_MAJOR(version), VK_API_VERSION_MINOR(version), VK_API_VERSION_PATCH(version));
 		KE_CORE_INFO("	Instance Version: {}", volkGetInstanceVersion());
 		KE_CORE_INFO("	GLFW Version: {0}", (char*)glfwGetVersionString());
-		KE_CORE_INFO("	Renderer: {} {}", props.deviceName, props.vendorID);
+		KE_CORE_INFO("	Renderer: {0}", props.deviceName);
 		KE_CORE_INFO("Initialized Vulkan!");
 	}
 
@@ -78,24 +78,24 @@ namespace Kairos
 
 #pragma endregion
 
-		VK_CHECK(vkCreateInstance(&info, nullptr, &GetVulkanVariables()->instance));
+		VK_CHECK(vkCreateInstance(&info, nullptr, &GetVkContext().instance));
 
-		VkInstance handle = GetVulkanVariables()->instance;
+		VkInstance handle = GetVkContext().instance;
 		m_InstanceDeletionQueue.push_back([handle](VkInstance instance)
 			{
 				vkDestroyInstance(instance, nullptr);
 				KE_CORE_INFO("Deleted Instance!");
 			});
 
-		volkLoadInstance(GetVulkanVariables()->instance);
+		volkLoadInstance(GetVkContext().instance);
 
 		VkSurfaceKHR raw_surface = VK_NULL_HANDLE;
-		glfwCreateWindowSurface(GetVulkanVariables()->instance, m_WindowHandle, nullptr, &raw_surface);
-		GetVulkanVariables()->surface = raw_surface;
+		glfwCreateWindowSurface(GetVkContext().instance, m_WindowHandle, nullptr, &raw_surface);
+		GetVkContext().surface = raw_surface;
 
 		m_InstanceDeletionQueue.push_back([this](VkInstance instance)
 			{
-				vkDestroySurfaceKHR(instance, GetVulkanVariables()->surface, nullptr);
+				vkDestroySurfaceKHR(instance, GetVkContext().surface, nullptr);
 				KE_CORE_INFO("Deleted Surface!");
 			});
 	}
@@ -109,9 +109,9 @@ namespace Kairos
 	void VulkanContext::SelectPhysicalDevice()
 	{
 		uint32_t deviceCount = 0;
-		vkEnumeratePhysicalDevices(GetVulkanVariables()->instance, &deviceCount, NULL);
+		vkEnumeratePhysicalDevices(GetVkContext().instance, &deviceCount, NULL);
 		VkPhysicalDevice* devices = (VkPhysicalDevice*)malloc(deviceCount * sizeof(VkPhysicalDevice));
-		vkEnumeratePhysicalDevices(GetVulkanVariables()->instance, &deviceCount, devices);
+		vkEnumeratePhysicalDevices(GetVkContext().instance, &deviceCount, devices);
 
 		// Score devices (Discrete GPU > Integrated > others)
 		int bestScore = 0;
@@ -123,18 +123,18 @@ namespace Kairos
 
 			int score = 0;
 			if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) score += 1000;
-			score += VK_VERSION_MAJOR(props.apiVersion) * 100 + VK_VERSION_MINOR(props.apiVersion);  // Prefer newer API Versions
+			score += VK_VERSION_MAJOR(props.apiVersion) * 100 + VK_VERSION_MINOR(props.apiVersion);		// Prefer newer API Versions
 
 			if (score > bestScore)
 			{
 				bestScore = score;
-				GetVulkanVariables()->physicalDevice = devices[i];
+				GetVkContext().physicalDevice = devices[i];
 			}
 		}
 
 		free(devices);
 
-		if (GetVulkanVariables()->physicalDevice == VK_NULL_HANDLE)
+		if (GetVkContext().physicalDevice == VK_NULL_HANDLE)
 		{
 			KE_CORE_ERROR("No suitable GPU found");
 			abort();
@@ -145,7 +145,6 @@ namespace Kairos
 	{
 		QueueFamilyIndices indices = FindQueueFamilies();
 
-		// Queue create infos
 		float queuePriority = 1.0f;
 		VkDeviceQueueCreateInfo queueCreateInfos[2] = {};
 		uint32_t queueCreateInfoCount = 0;
@@ -170,11 +169,11 @@ namespace Kairos
 
 		// Enable modern features via pNext chain
 		VkPhysicalDeviceFeatures2 features2 = {
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
 		};
 		VkPhysicalDeviceVulkan12Features features12 = {
 			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-			.descriptorIndexing = VK_TRUE  // Enable bindless
+			.descriptorIndexing = VK_TRUE,  // Enable bindless
 		};
 		features2.pNext = &features12;
 
@@ -204,9 +203,9 @@ namespace Kairos
 
 #endif // KE_DEBUG
 
-		VK_CHECK(vkCreateDevice(GetVulkanVariables()->physicalDevice, &createInfo, NULL, &GetVulkanVariables()->device));
+		VK_CHECK(vkCreateDevice(GetVkContext().physicalDevice, &createInfo, NULL, &GetVkContext().device));
 
-		VkDevice handle = GetVulkanVariables()->device;
+		VkDevice handle = GetVkContext().device;
 
 		m_DeviceDeletionQueue.push_back([handle](VkDevice device)
 			{
@@ -215,14 +214,14 @@ namespace Kairos
 			});
 
 		// Get queues
-		vkGetDeviceQueue(GetVulkanVariables()->device, indices.graphics_family, 0, &GetVulkanVariables()->graphicsQueue);
-		vkGetDeviceQueue(GetVulkanVariables()->device, indices.present_family, 0, &GetVulkanVariables()->presentQueue);
+		vkGetDeviceQueue(GetVkContext().device, indices.graphics_family, 0, &GetVkContext().graphicsQueue);
+		vkGetDeviceQueue(GetVkContext().device, indices.present_family, 0, &GetVkContext().presentQueue);
 		if (indices.has_compute) {
-			vkGetDeviceQueue(GetVulkanVariables()->device, indices.compute_family, 0, &GetVulkanVariables()->computeQueue);
+			vkGetDeviceQueue(GetVkContext().device, indices.compute_family, 0, &GetVkContext().computeQueue);
 		}
 
 		// Load device functions with Volk
-		volkLoadDevice(GetVulkanVariables()->device);
+		volkLoadDevice(GetVkContext().device);
 	}
 
 	QueueFamilyIndices VulkanContext::FindQueueFamilies()
@@ -235,9 +234,9 @@ namespace Kairos
 
 		uint32_t queueFamilyCount = 0;
 
-		vkGetPhysicalDeviceQueueFamilyProperties(GetVulkanVariables()->physicalDevice, &queueFamilyCount, NULL);
+		vkGetPhysicalDeviceQueueFamilyProperties(GetVkContext().physicalDevice, &queueFamilyCount, NULL);
 		VkQueueFamilyProperties* queueFamilies = (VkQueueFamilyProperties*)malloc(queueFamilyCount * sizeof(VkQueueFamilyProperties));
-		vkGetPhysicalDeviceQueueFamilyProperties(GetVulkanVariables()->physicalDevice, &queueFamilyCount, queueFamilies);
+		vkGetPhysicalDeviceQueueFamilyProperties(GetVkContext().physicalDevice, &queueFamilyCount, queueFamilies);
 
 		for (uint32_t i = 0; i < queueFamilyCount; i++)
 		{
@@ -248,7 +247,7 @@ namespace Kairos
 
 			// Present queue
 			VkBool32 presentSupport = VK_FALSE;
-			vkGetPhysicalDeviceSurfaceSupportKHR(GetVulkanVariables()->physicalDevice, i, GetVulkanVariables()->surface, &presentSupport);
+			vkGetPhysicalDeviceSurfaceSupportKHR(GetVkContext().physicalDevice, i, GetVkContext().surface, &presentSupport);
 			if (presentSupport) {
 				indices.present_family = i;
 			}
@@ -273,19 +272,19 @@ namespace Kairos
 
 		VmaAllocatorCreateInfo allocatorInfo = {};
 
-		allocatorInfo.physicalDevice = GetVulkanVariables()->physicalDevice;
-		allocatorInfo.device = GetVulkanVariables()->device;
-		allocatorInfo.instance = GetVulkanVariables()->instance;
+		allocatorInfo.physicalDevice = GetVkContext().physicalDevice;
+		allocatorInfo.device = GetVkContext().device;
+		allocatorInfo.instance = GetVkContext().instance;
 		allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_4;
 		allocatorInfo.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT | VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT;
 		allocatorInfo.pVulkanFunctions = &vma_vulkan_func;
 
-		VK_CHECK(vmaCreateAllocator(&allocatorInfo, &GetVulkanVariables()->allocator));
+		VK_CHECK(vmaCreateAllocator(&allocatorInfo, &GetVkContext().allocator));
 	}
 
 	void VulkanContext::SetVSync(bool enabled)
 	{
-
+		
 	}
 
 	void VulkanContext::SwapBuffers()
@@ -295,10 +294,10 @@ namespace Kairos
 
 	void VulkanContext::Cleanup()
 	{
-		vkQueueWaitIdle(GetVulkanVariables()->graphicsQueue);
+		vkQueueWaitIdle(GetVkContext().graphicsQueue);
 		KE_CORE_INFO("Cleanup Started!");
 
-		vmaDestroyAllocator(GetVulkanVariables()->allocator);
+		vmaDestroyAllocator(GetVkContext().allocator);
 
 		while (m_DeviceDeletionQueue.size() > 0)
 		{
@@ -308,7 +307,7 @@ namespace Kairos
 
 		while (m_InstanceDeletionQueue.size() > 0)
 		{
-			m_InstanceDeletionQueue.back()(GetVulkanVariables()->instance);
+			m_InstanceDeletionQueue.back()(GetVkContext().instance);
 			m_InstanceDeletionQueue.pop_back();
 		}
 	}
