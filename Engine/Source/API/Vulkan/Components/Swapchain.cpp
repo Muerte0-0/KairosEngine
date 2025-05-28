@@ -5,65 +5,72 @@
 #include "volk.h"
 
 #include "API/Vulkan/VulkanContext.h"
+#include <GLFW/glfw3.h>
 
 namespace Kairos
 {
     void Swapchain::RecreateSwapchain(VulkanContext* vctx, uint32_t width, uint32_t height)
     {
-        for (auto frame : GetSwapchainInfo()->frames)
-            vkDestroyImageView(vctx->GetVkContext().device, frame.ImageView, nullptr);
+        vkDeviceWaitIdle(vctx->GetVkContext().device);
 
-        vkDestroyDescriptorPool(vctx->GetVkContext().device, GetSwapchainInfo()->descriptorPool, nullptr);
-        vkDestroySwapchainKHR(vctx->GetVkContext().device, GetSwapchainInfo()->swapchain, nullptr);
+        Destroy(vctx);
 
         CreateSwapchain(vctx, width, height);
     }
 
+    void Swapchain::Destroy(VulkanContext* vctx)
+    {
+        while (m_DeletionQueue.size() > 0)
+        {
+            m_DeletionQueue.back()(vctx->GetVkContext().device);
+            m_DeletionQueue.pop_back();
+        }
+
+        m_SwapchainInfo.images.clear();
+        m_SwapchainInfo.frames.clear();
+    }
+
     void Swapchain::CreateSwapchain(VulkanContext* vctx, uint32_t width, uint32_t height)
 	{
-		VkSurfaceCapabilitiesKHR caps;
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vctx->GetVkContext().physicalDevice, vctx->GetVkContext().surface, &caps);
+        SurfaceDetails support = QuerySurfaceSupport(vctx->GetVkContext().physicalDevice, vctx->GetVkContext().surface);
 
-		uint32_t formatCount;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(vctx->GetVkContext().physicalDevice, vctx->GetVkContext().surface, &formatCount, nullptr);
-		std::vector<VkSurfaceFormatKHR> formats(formatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(vctx->GetVkContext().physicalDevice, vctx->GetVkContext().surface, &formatCount, formats.data());
+        m_SwapchainInfo.imageFormat = ChooseSurfaceFormat(support.formats);
+        VkPresentModeKHR presentMode = ChoosePresentMode(support.presentModes);
+        m_SwapchainInfo.extent = ChooseExtent(width, height, support.capabilities);
 
-        GetSwapchainInfo()->imageFormat = formats[0].format;
-        
-        VkSwapchainCreateInfoKHR createInfo = {
-        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-        .surface = vctx->GetVkContext().surface,
-        .minImageCount = std::clamp(3u, caps.minImageCount, caps.maxImageCount > 0 ? caps.maxImageCount : 8u),
-        .imageFormat = GetSwapchainInfo()->imageFormat,
-        .imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
-        .imageExtent = ChooseExtent(width, height, caps),
-        .imageArrayLayers = 1,
-        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_STORAGE_BIT,
-        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
-        .preTransform = caps.currentTransform,
-        .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-        .presentMode = ChoosePresentMode(vctx->GetVkContext().physicalDevice, vctx->GetVkContext().surface),
-        .clipped = VK_TRUE
-        };
+        uint32_t imageCount = std::min(support.capabilities.maxImageCount, support.capabilities.minImageCount + 1);
 
-        VK_CHECK(vkCreateSwapchainKHR(vctx->GetVkContext().device, &createInfo, nullptr, &GetSwapchainInfo()->swapchain));
+        VkSwapchainCreateInfoKHR sci = {};
 
-        vctx->GetDeviceDeletionQueue().push_back([this](VkDevice device)
+        sci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        sci.flags = VkSwapchainCreateFlagBitsKHR();
+        sci.surface = vctx->GetVkContext().surface;
+        sci.minImageCount = imageCount;
+        sci.imageFormat = m_SwapchainInfo.imageFormat.format;
+        sci.imageColorSpace = m_SwapchainInfo.imageFormat.colorSpace;
+        sci.imageExtent = m_SwapchainInfo.extent;
+        sci.imageArrayLayers = 1;
+        sci.compositeAlpha = VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        sci.imageUsage = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        sci.imageSharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
+        sci.preTransform = support.capabilities.currentTransform;
+        sci.presentMode = presentMode;
+        sci.clipped = true;
+        sci.oldSwapchain = VkSwapchainKHR(nullptr);
+
+        vkCreateSwapchainKHR(vctx->GetVkContext().device, &sci, nullptr, &m_SwapchainInfo.swapchain);
+
+        m_DeletionQueue.push_back([this](VkDevice device)
             {
-                if (GetSwapchainInfo()->swapchain  != VK_NULL_HANDLE)
-                {
-                    vkDestroySwapchainKHR(device, GetSwapchainInfo()->swapchain, nullptr);
-                }
+                vkDestroySwapchainKHR(device, m_SwapchainInfo.swapchain, nullptr);
             });
 
-        uint32_t imageCount;
-        vkGetSwapchainImagesKHR(vctx->GetVkContext().device, GetSwapchainInfo()->swapchain, &imageCount, nullptr);
-        GetSwapchainInfo()->images.resize(imageCount);
-        vkGetSwapchainImagesKHR(vctx->GetVkContext().device, GetSwapchainInfo()->swapchain, &imageCount, GetSwapchainInfo()->images.data());
+        vkGetSwapchainImagesKHR(vctx->GetVkContext().device, m_SwapchainInfo.swapchain, &imageCount, nullptr);
+        m_SwapchainInfo.images.resize(imageCount);
+        vkGetSwapchainImagesKHR(vctx->GetVkContext().device, m_SwapchainInfo.swapchain, &imageCount, m_SwapchainInfo.images.data());
 
-        for (uint32_t i = 0; i < GetSwapchainInfo()->images.size(); ++i)
-            GetSwapchainInfo()->frames.push_back(Frame(GetSwapchainInfo()->images[i], vctx->GetVkContext().device, GetSwapchainInfo()->imageFormat, vctx->GetDeviceDeletionQueue()));
+        for (uint32_t i = 0; i < m_SwapchainInfo.images.size(); ++i)
+            m_SwapchainInfo.frames.push_back(Frame(m_SwapchainInfo.images[i], vctx->GetVkContext().device, m_SwapchainInfo.imageFormat.format, m_DeletionQueue));
 
         VkDescriptorPoolSize poolSizes[] =
         {
@@ -78,50 +85,51 @@ namespace Kairos
             .pPoolSizes = poolSizes
         };
 
-        VK_CHECK(vkCreateDescriptorPool(vctx->GetVkContext().device, &poolInfo, nullptr, &GetSwapchainInfo()->descriptorPool));
+        VK_CHECK(vkCreateDescriptorPool(vctx->GetVkContext().device, &poolInfo, nullptr, &m_SwapchainInfo.descriptorPool));
 
-        vctx->GetDeviceDeletionQueue().push_back([this](VkDevice device)
+        m_DeletionQueue.push_back([this](VkDevice device)
             {
-                vkDestroyDescriptorPool(device, GetSwapchainInfo()->descriptorPool, nullptr);
+                vkDestroyDescriptorPool(device, m_SwapchainInfo.descriptorPool, nullptr);
             });
 	}
 
-    VkExtent2D Swapchain::ChooseExtent(uint32_t width, uint32_t height, VkSurfaceCapabilitiesKHR capabilities)
+    SurfaceDetails Swapchain::QuerySurfaceSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
     {
-        if (capabilities.currentExtent.width != UINT32_MAX) {
-            return capabilities.currentExtent;
-        }
+        SurfaceDetails support;
 
-        VkExtent2D actualExtent = {
-            static_cast<uint32_t>(width),
-            static_cast<uint32_t>(height)
-        };
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &support.capabilities);
 
-        actualExtent.width = std::clamp(
-            actualExtent.width,
-            capabilities.minImageExtent.width,
-            capabilities.maxImageExtent.width
-        );
+        uint32_t surfaceFormatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, NULL);
+        support.formats.resize(surfaceFormatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, support.formats.data());
 
-        actualExtent.height = std::clamp(
-            actualExtent.height,
-            capabilities.minImageExtent.height,
-            capabilities.maxImageExtent.height
-        );
+        uint32_t presentModesCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModesCount, NULL);
+        support.presentModes.resize(presentModesCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModesCount, support.presentModes.data());
 
-        return actualExtent;
+        return support;
     }
 
-    VkPresentModeKHR Swapchain::ChoosePresentMode(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
+    VkExtent2D Swapchain::ChooseExtent(uint32_t width, uint32_t height, VkSurfaceCapabilitiesKHR capabilities)
     {
-        // Available present modes
-        uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
-        std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, presentModes.data());
+        if (capabilities.currentExtent.width != UINT32_MAX)
+            return capabilities.currentExtent;
 
+        VkExtent2D extent;
+
+        extent.width = std::min(capabilities.maxImageExtent.width, std::max(capabilities.minImageExtent.width, width));
+        extent.height = std::min(capabilities.maxImageExtent.height, std::max(capabilities.minImageExtent.height, height));
+
+        return extent;
+    }
+
+    VkPresentModeKHR Swapchain::ChoosePresentMode(std::vector<VkPresentModeKHR> presentModes)
+    {
         // Preferred modes in order of priority
-        const std::vector<VkPresentModeKHR> preferredModes = {
+        const std::vector<VkPresentModeKHR> preferredModes =
+        {
             VK_PRESENT_MODE_MAILBOX_KHR,    // Triple buffering (low latency)
             VK_PRESENT_MODE_FIFO_KHR,       // Standard vsync (always available)
             VK_PRESENT_MODE_IMMEDIATE_KHR,  // No vsync (tearing possible)
@@ -136,5 +144,14 @@ namespace Kairos
 
         KE_CORE_WARN("Falling back to FIFO present mode [Standard VSync]");
         return VK_PRESENT_MODE_FIFO_KHR;
+    }
+
+    VkSurfaceFormatKHR Swapchain::ChooseSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats)
+    {
+        for (VkSurfaceFormatKHR format : formats)
+            if (format.format == VkFormat::VK_FORMAT_R8G8B8A8_UNORM && format.colorSpace == VkColorSpaceKHR::VK_COLORSPACE_SRGB_NONLINEAR_KHR)
+                return format;
+
+        return formats[0];
     }
 }

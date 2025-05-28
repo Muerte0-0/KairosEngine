@@ -7,6 +7,9 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+// Components
+#include "Components/Swapchain.h"
+
 namespace Kairos
 {
 	struct QueueFamilyIndices
@@ -30,6 +33,11 @@ namespace Kairos
 		VkQueue graphicsQueue;
 		VkQueue presentQueue;
 		VkQueue computeQueue;
+
+		Swapchain m_Swapchain;
+
+		VkCommandPool commandPool;
+		std::vector<VkCommandBuffer> commandBuffers;
 	};
 
 #define VK_CHECK(result) \
