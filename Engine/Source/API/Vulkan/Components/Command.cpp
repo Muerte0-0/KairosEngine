@@ -163,6 +163,7 @@ namespace Kairos
                 .extent = vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().extent
             },
             .layerCount = 1,
+            .viewMask = 0,
             .colorAttachmentCount = 1,
             .pColorAttachments = &colorAttachment
         };
