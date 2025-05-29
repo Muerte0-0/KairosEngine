@@ -161,7 +161,8 @@ namespace Kairos
 		uint32_t queueCreateInfoCount = 0;
 
 		// Graphics queue (may also support present)
-		queueCreateInfos[queueCreateInfoCount++] = VkDeviceQueueCreateInfo{
+		queueCreateInfos[queueCreateInfoCount++] = VkDeviceQueueCreateInfo
+		{
 			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
 			.queueFamilyIndex = indices.graphics_family,
 			.queueCount = 1,
@@ -169,7 +170,8 @@ namespace Kairos
 		};
 
 		// Separate present queue if needed
-		if (indices.present_family != indices.graphics_family) {
+		if (indices.present_family != indices.graphics_family)
+		{
 			queueCreateInfos[queueCreateInfoCount++] = VkDeviceQueueCreateInfo{
 				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
 				.queueFamilyIndex = indices.present_family,
@@ -178,22 +180,31 @@ namespace Kairos
 			};
 		}
 
-		// Enable modern features via pNext chain
-		VkPhysicalDeviceFeatures2 features2 = {
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
-		};
-		VkPhysicalDeviceVulkan12Features features12 = {
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-			.descriptorIndexing = VK_TRUE,  // Enable bindless
-		};
-		features2.pNext = &features12;
+		// Separate compute queue if available
+		if (indices.has_compute && indices.compute_family != indices.graphics_family && indices.compute_family != indices.present_family)
+		{
+			queueCreateInfos[queueCreateInfoCount++] = VkDeviceQueueCreateInfo{
+				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+				.queueFamilyIndex = indices.compute_family,
+				.queueCount = 1,
+				.pQueuePriorities = &queuePriority
+			};
+		}
 
-		VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures = {
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+		// Enable modern features via pNext chain
+		VkPhysicalDeviceFeatures deviceFeatures = VkPhysicalDeviceFeatures();
+
+		VkPhysicalDeviceShaderObjectFeaturesEXT shaderObjectFeatures = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT,
+			.shaderObject = VK_TRUE,  // Enable shader objects
+		};
+
+		VkPhysicalDeviceVulkan13Features features13 = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+			.synchronization2 = VK_TRUE,  // Enable synchronization2
 			.dynamicRendering = VK_TRUE,  // Enable dynamic rendering
 		};
-
-		features12.pNext = &dynamicRenderingFeatures;
+		shaderObjectFeatures.pNext = &features13;
 
 		const char* extensions[] = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -202,14 +213,15 @@ namespace Kairos
 			VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME
 		};
 
-		VkDeviceCreateInfo createInfo = {
-			.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-			.pNext = &features2,
-			.queueCreateInfoCount = queueCreateInfoCount,
-			.pQueueCreateInfos = queueCreateInfos,
-			.enabledExtensionCount = sizeof(extensions) / sizeof(extensions[0]),
-			.ppEnabledExtensionNames = extensions
-		};
+		VkDeviceCreateInfo createInfo = {};
+
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		createInfo.pEnabledFeatures = &deviceFeatures;
+		createInfo.pNext = &shaderObjectFeatures;
+		createInfo.queueCreateInfoCount = queueCreateInfoCount;
+		createInfo.pQueueCreateInfos = queueCreateInfos;
+		createInfo.enabledExtensionCount = sizeof(extensions) / sizeof(extensions[0]);
+		createInfo.ppEnabledExtensionNames = extensions;
 
 // Validation layers (debug only)
 #ifdef KE_DEBUG
@@ -261,20 +273,22 @@ namespace Kairos
 		for (uint32_t i = 0; i < queueFamilyCount; i++)
 		{
 			// Graphics queue
-			if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+			if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+			{
 				indices.graphics_family = i;
 			}
 
 			// Present queue
 			VkBool32 presentSupport = VK_FALSE;
 			vkGetPhysicalDeviceSurfaceSupportKHR(m_Context.physicalDevice, i, m_Context.surface, &presentSupport);
-			if (presentSupport) {
+			if (presentSupport)
+			{
 				indices.present_family = i;
 			}
 
 			// Dedicated compute queue (no graphics capability)
-			if ((queueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT) &&
-				!(queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
+			if ((queueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT) && !(queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT))
+			{
 				indices.compute_family = i;
 				indices.has_compute = true;
 			}
