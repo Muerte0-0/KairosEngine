@@ -9,11 +9,14 @@
 
 namespace Kairos
 {
-    void Swapchain::RecreateSwapchain(VulkanContext* vctx, uint32_t width, uint32_t height)
+    void Swapchain::RecreateSwapchain(VulkanContext* vctx)
     {
         vkDeviceWaitIdle(vctx->GetVkContext().device);
 
         Destroy(vctx);
+
+        int width, height;
+        glfwGetWindowSize(vctx->GetWindowHandle(), &width, &height);
 
         CreateSwapchain(vctx, width, height);
     }
@@ -58,7 +61,7 @@ namespace Kairos
         sci.clipped = true;
         sci.oldSwapchain = VkSwapchainKHR(nullptr);
 
-        vkCreateSwapchainKHR(vctx->GetVkContext().device, &sci, nullptr, &m_SwapchainInfo.swapchain);
+        VK_CHECK(vkCreateSwapchainKHR(vctx->GetVkContext().device, &sci, nullptr, &m_SwapchainInfo.swapchain));
 
         m_DeletionQueue.push_back([this](VkDevice device)
             {

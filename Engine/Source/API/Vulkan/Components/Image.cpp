@@ -28,35 +28,25 @@ namespace Kairos
         return view;
 	}
 
-	void TransitionImageLayout(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage)
+	void TransitionImageLayout(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, VkAccessFlags srcAccessMask,
+    VkAccessFlags dstAccessMask, VkPipelineStageFlags srcStage, VkPipelineStageFlags dstStage)
 	{
-		VkImageSubresourceRange access;
-		access.aspectMask = VkImageAspectFlagBits::VK_IMAGE_ASPECT_COLOR_BIT;
-		access.baseMipLevel = 0;
-		access.levelCount = 1;
-		access.baseArrayLayer = 0;
-		access.layerCount = 1;
+        VkImageMemoryBarrier barrier = {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+            .srcAccessMask = srcAccessMask,
+            .dstAccessMask = dstAccessMask,
+            .oldLayout = oldLayout,
+            .newLayout = newLayout,
+            .image = image,
+            .subresourceRange = {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel = 0,
+                .levelCount = 1,
+                .baseArrayLayer = 0,
+                .layerCount = 1
+            }
+        };
 
-		VkImageMemoryBarrier2 barrier;
-		barrier.oldLayout = oldLayout;
-		barrier.newLayout = newLayout;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.image = image;
-		barrier.subresourceRange = access;
-
-		VkPipelineStageFlags sourceStage, destinationStage;
-
-		barrier.srcAccessMask = srcAccessMask;
-		barrier.dstAccessMask = dstAccessMask;
-
-		//vkCmdPipelineBarrier(commandBuffer, srcStage, dstStage, VkDependencyFlags(),);
-
-		VkDependencyInfo depInfo = {};
-		depInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
-		depInfo.dependencyFlags = VkDependencyFlags();
-		depInfo.pImageMemoryBarriers = &barrier;
-
-		vkCmdPipelineBarrier2(commandBuffer, &depInfo);
+        vkCmdPipelineBarrier(commandBuffer, srcStage, dstStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 	}
 }

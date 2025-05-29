@@ -1,6 +1,8 @@
 #include "kepch.h"
 #include "OpenGLContext.h"
 
+#include "glad/gl.h"
+
 namespace Kairos
 {
 	OpenGLContext::OpenGLContext(GLFWwindow* windowHandle) : m_WindowHandle(windowHandle)
@@ -27,8 +29,11 @@ namespace Kairos
 		glfwSwapInterval(enabled);
 	}
 
-	void OpenGLContext::SwapBuffers()
+	void OpenGLContext::Update()
 	{
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		glfwSwapBuffers(m_WindowHandle);
 	}
 

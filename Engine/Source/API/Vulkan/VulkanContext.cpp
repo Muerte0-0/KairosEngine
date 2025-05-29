@@ -7,8 +7,7 @@
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
 
-#include "Engine/Renderer/Renderer.h"
-#include "VulkanRenderAPI.h"
+#include "Components/Command.h"
 
 namespace Kairos
 {
@@ -30,6 +29,10 @@ namespace Kairos
 		glfwGetWindowSize(m_WindowHandle, &width, &height);
 
 		m_Context.m_Swapchain.CreateSwapchain(this, width, height);
+
+		CreateCommandPool(this);
+		CreateCommandBuffers(this);
+		CreateSyncObjects(this);
 
 		// Logging Vulkan Info
 		uint32_t version;
@@ -185,9 +188,18 @@ namespace Kairos
 		};
 		features2.pNext = &features12;
 
+		VkPhysicalDeviceDynamicRenderingFeatures dynamicRenderingFeatures = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+			.dynamicRendering = VK_TRUE,  // Enable dynamic rendering
+		};
+
+		features12.pNext = &dynamicRenderingFeatures;
+
 		const char* extensions[] = {
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME
+			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
+			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+			VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME
 		};
 
 		VkDeviceCreateInfo createInfo = {
@@ -295,15 +307,19 @@ namespace Kairos
 		
 	}
 
-	void VulkanContext::SwapBuffers()
+	void VulkanContext::Update()
 	{
-		
+		vkDeviceWaitIdle(m_Context.device);
+
+		RenderFrame(this);
 	}
 
 	void VulkanContext::Cleanup()
 	{
 		vkQueueWaitIdle(m_Context.graphicsQueue);
 		KE_CORE_INFO("Cleanup Started!");
+
+		vkFreeCommandBuffers(m_Context.device, m_Context.commandPool, m_Context.commandBuffers.size(), m_Context.commandBuffers.data());
 
 		m_Context.m_Swapchain.Destroy(this);
 

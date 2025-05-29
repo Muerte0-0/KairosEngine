@@ -17,17 +17,7 @@ namespace Kairos
 	{
 		VulkanContext* vctx = (VulkanContext*)ctx;
 
-		vctx->GetVkContext().m_Swapchain.RecreateSwapchain(vctx, width, height);
-	}
-
-	void VulkanRenderAPI::SetClearColor(const glm::vec4& color)
-	{
-		
-	}
-
-	void VulkanRenderAPI::Clear()
-	{
-		
+		vctx->GetVkContext().m_Swapchain.RecreateSwapchain(vctx);
 	}
 
 	void VulkanRenderAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)

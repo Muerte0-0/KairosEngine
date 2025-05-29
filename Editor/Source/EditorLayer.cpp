@@ -19,9 +19,6 @@ namespace Kairos
 
 	void EditorLayer::OnUpdate(Timestep delta)
 	{
-		RenderCommand::SetClearColor({ 0.1f,0.1f ,0.1f ,1.0f });
-		RenderCommand::Clear();
-		
 		//Renderer::Submit(m_TriangleShader, m_VertexArray, NULL);
 	}
 

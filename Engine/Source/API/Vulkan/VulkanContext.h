@@ -23,11 +23,11 @@ namespace Kairos
 	struct VkContext 
 	{
 		VkInstance instance;
-		VkSurfaceKHR surface;
+		VkSurfaceKHR surface = VK_NULL_HANDLE;
 		VkPhysicalDevice physicalDevice;
 		VkDevice device;
 
-		VmaAllocator allocator;
+		VmaAllocator allocator = VK_NULL_HANDLE;
 		VkAllocationCallbacks* callbacks;
 
 		VkQueue graphicsQueue;
@@ -36,8 +36,14 @@ namespace Kairos
 
 		Swapchain m_Swapchain;
 
-		VkCommandPool commandPool;
+		VkCommandPool commandPool = VK_NULL_HANDLE;
 		std::vector<VkCommandBuffer> commandBuffers;
+
+		std::vector<VkSemaphore> imageAvailableSemaphores; // Signaled when swapchain image is ready
+		std::vector<VkSemaphore> renderFinishedSemaphores; // Signaled when rendering completes
+		std::vector<VkFence> inFlightFences;               // CPU-GPU synchronization
+		std::vector<VkFence> imagesInFlight;               // Track in-use swapchain images
+		size_t currentFrame = 0;
 	};
 
 #define VK_CHECK(result) \
@@ -46,6 +52,8 @@ namespace Kairos
         abort(); \
     }
 
+#define MAX_FRAMES_IN_FLIGHT 2
+
 	class VulkanContext : public GraphicsContext
 	{
 	public:
@@ -53,13 +61,17 @@ namespace Kairos
 
 		virtual void Init() override;
 		virtual void SetVSync(bool enabled) override;
-		virtual void SwapBuffers() override;
+		virtual void Update() override;
 		virtual void Cleanup() override;
+
+		QueueFamilyIndices FindQueueFamilies();
 
 		std::deque<std::function<void(VkInstance)>>& GetInstanceDeletionQueue() { return m_InstanceDeletionQueue; }
 		std::deque<std::function<void(VkDevice)>>& GetDeviceDeletionQueue() { return m_DeviceDeletionQueue; }
 
 		VkContext& GetVkContext() { return m_Context; }
+
+		GLFWwindow* GetWindowHandle() {return m_WindowHandle;}
 	private:
 		GLFWwindow* m_WindowHandle;
 
@@ -70,8 +82,6 @@ namespace Kairos
 		void Init_Device();
 		void SelectPhysicalDevice();
 		void CreateLogicalDevice();
-
-		QueueFamilyIndices FindQueueFamilies();
 
 		void Init_Allocator();
 
