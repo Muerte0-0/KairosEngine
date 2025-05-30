@@ -9,6 +9,8 @@
 
 #include "Components/Command.h"
 
+#include "backends/imgui_impl_vulkan.h"
+
 namespace Kairos
 {
 	VulkanContext::VulkanContext(GLFWwindow* windowHandle) : m_WindowHandle(windowHandle)
@@ -29,6 +31,7 @@ namespace Kairos
 		glfwGetWindowSize(m_WindowHandle, &width, &height);
 
 		m_Context.m_Swapchain.CreateSwapchain(this, width, height);
+		m_Context.m_Swapchain.CreateDescriptorPool(this);
 
 		CreateCommandPool(this);
 		CreateCommandBuffers(this);
@@ -322,17 +325,17 @@ namespace Kairos
 		
 	}
 
-	void VulkanContext::Update()
+	void VulkanContext::SwapBuffers()
 	{
-		vkDeviceWaitIdle(m_Context.device);
-
-		RenderFrame(this);
+		VkSwapBuffers(this);
 	}
 
 	void VulkanContext::Cleanup()
 	{
 		vkQueueWaitIdle(m_Context.graphicsQueue);
 		KE_CORE_INFO("Cleanup Started!");
+
+		ImGui_ImplVulkan_Shutdown();
 
 		m_Context.m_Swapchain.Destroy(this);
 

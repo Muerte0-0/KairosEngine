@@ -29,6 +29,7 @@ namespace Kairos
 	public:
 		void RecreateSwapchain(class VulkanContext* vctx);
 		void CreateSwapchain(class VulkanContext* vctx, uint32_t width, uint32_t height);
+		void CreateDescriptorPool(class VulkanContext* vctx);
 
 		VkSwapchain& GetSwapchainInfo() {return m_SwapchainInfo;}
 

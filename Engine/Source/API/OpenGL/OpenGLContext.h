@@ -13,7 +13,7 @@ namespace Kairos
 
 		virtual void Init() override;
 		virtual void SetVSync(bool enabled) override;
-		virtual void Update() override;
+		virtual void SwapBuffers() override;
 		virtual void Cleanup() override;
 
 	private:

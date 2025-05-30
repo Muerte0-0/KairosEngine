@@ -92,7 +92,7 @@ namespace Kairos
 
 		m_Minimized = false;
 
-		Renderer::OnWindowResize((GraphicsContext*)GetWindow().GetGraphicsContext(), e.GetWidth(), e.GetHeight());
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
 		return false;
 	}

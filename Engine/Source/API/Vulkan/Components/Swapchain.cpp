@@ -7,8 +7,6 @@
 #include "API/Vulkan/VulkanContext.h"
 #include <GLFW/glfw3.h>
 
-#include "backends/imgui_impl_vulkan.h"
-
 namespace Kairos
 {
     void Swapchain::RecreateSwapchain(VulkanContext* vctx)
@@ -76,31 +74,39 @@ namespace Kairos
 
         for (uint32_t i = 0; i < m_SwapchainInfo.images.size(); ++i)
             m_SwapchainInfo.frames.push_back(Frame(m_SwapchainInfo.images[i], vctx->GetVkContext().device, m_SwapchainInfo.imageFormat.format, m_DeletionQueue));
+	}
 
-		std::array<VkDescriptorPoolSize, 2> poolSizes {};
-
-		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT); // 2 per frame for color and depth
-		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * 2; // 2 per frame for uniform buffers
-
-        VkDescriptorPoolCreateInfo poolInfo =
+    void Swapchain::CreateDescriptorPool(VulkanContext* vctx)
+    {
+        VkDescriptorPoolSize pool_sizes[] =
         {
-            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-			.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
-            .maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * 2,
-            .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
-            .pPoolSizes = poolSizes.data(),
+            { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
         };
 
-        VK_CHECK(vkCreateDescriptorPool(vctx->GetVkContext().device, &poolInfo, nullptr, &m_SwapchainInfo.descriptorPool));
+        VkDescriptorPoolCreateInfo pool_info = {};
+        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        pool_info.maxSets = 1000 * ((int)(sizeof(pool_sizes) / sizeof(*(pool_sizes))));
+        pool_info.poolSizeCount = (uint32_t)((int)(sizeof(pool_sizes) / sizeof(*(pool_sizes))));
+        pool_info.pPoolSizes = pool_sizes;
 
-        m_DeletionQueue.push_back([this](VkDevice device)
+        VK_CHECK(vkCreateDescriptorPool(vctx->GetVkContext().device, &pool_info, nullptr, &m_SwapchainInfo.descriptorPool));
+
+        vctx->GetDeviceDeletionQueue().push_back([this](VkDevice device)
             {
-                ImGui_ImplVulkan_Shutdown();
                 vkDestroyDescriptorPool(device, m_SwapchainInfo.descriptorPool, nullptr);
             });
-	}
+    }
 
     SurfaceDetails Swapchain::QuerySurfaceSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
     {

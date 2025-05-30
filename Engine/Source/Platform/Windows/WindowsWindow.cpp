@@ -165,7 +165,7 @@ namespace Kairos
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		m_Context->Update();
+		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)

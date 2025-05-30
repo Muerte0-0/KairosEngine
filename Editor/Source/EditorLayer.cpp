@@ -19,6 +19,7 @@ namespace Kairos
 
 	void EditorLayer::OnUpdate(Timestep delta)
 	{
+		RenderCommand::Clear();
 		//Renderer::Submit(m_TriangleShader, m_VertexArray, NULL);
 	}
 

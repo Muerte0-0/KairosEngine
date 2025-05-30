@@ -13,7 +13,7 @@ namespace Kairos
 	public:
 		static void Init();
 
-		static void OnWindowResize(GraphicsContext* ctx, uint32_t width, uint32_t height);
+		static void OnWindowResize(uint32_t width, uint32_t height);
 
 		static void BeginScene();
 		static void EndScene();

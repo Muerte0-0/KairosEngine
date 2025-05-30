@@ -4,6 +4,9 @@
 #include "Swapchain.h"
 #include "Image.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_vulkan.h"
+
 #include "volk.h"
 
 namespace Kairos
@@ -12,7 +15,7 @@ namespace Kairos
 	{
         VkCommandPoolCreateInfo poolInfo = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-        .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT ,
+        .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT | VK_COMMAND_POOL_CREATE_TRANSIENT_BIT,
         .queueFamilyIndex = vctx->FindQueueFamilies().graphics_family
         };
 
@@ -113,7 +116,7 @@ namespace Kairos
         vkFreeCommandBuffers(vctx->GetVkContext().device, vctx->GetVkContext().commandPool, 1, &commandBuffer);
     }
 
-    void RenderFrame(VulkanContext* vctx)
+    void VkSwapBuffers(VulkanContext* vctx)
     {
         vkWaitForFences(vctx->GetVkContext().device, 1, &vctx->GetVkContext().inFlightFences[vctx->GetVkContext().currentFrame], VK_TRUE, UINT64_MAX);
 
@@ -138,6 +141,8 @@ namespace Kairos
         VkCommandBuffer commandBuffer = vctx->GetVkContext().commandBuffers[imageIndex];
         vkResetCommandBuffer(commandBuffer, 0);
         RecordCommandBuffer(vctx, commandBuffer, imageIndex);
+
+        vkResetFences(vctx->GetVkContext().device, 1, &vctx->GetVkContext().inFlightFences[vctx->GetVkContext().currentFrame]);
 
         VkPipelineStageFlags flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
@@ -209,6 +214,8 @@ namespace Kairos
         };
 
         vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);
+
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
         vkCmdEndRenderingKHR(commandBuffer);
 

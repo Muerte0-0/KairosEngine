@@ -1,9 +1,12 @@
 #include "kepch.h"
 #include "VulkanRenderAPI.h"
 
+#include "Engine/Core/Application.h"
 #include "VulkanContext.h"
+#include "Components/Command.h"
 
 #include "volk.h"
+
 
 namespace Kairos
 {
@@ -13,9 +16,9 @@ namespace Kairos
 		
 	}
 
-	void VulkanRenderAPI::SetViewport(GraphicsContext* ctx, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+	void VulkanRenderAPI::SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 	{
-		VulkanContext* vctx = (VulkanContext*)ctx;
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
 		vctx->GetVkContext().m_Swapchain.RecreateSwapchain(vctx);
 	}
@@ -23,5 +26,10 @@ namespace Kairos
 	void VulkanRenderAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)
 	{
 
+	}
+
+	void VulkanRenderAPI::Clear()
+	{
+		
 	}
 }

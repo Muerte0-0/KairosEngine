@@ -10,6 +10,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 
+#define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
 #include "volk.h"
@@ -34,17 +35,25 @@ namespace Kairos
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;			// Enable Keyboard Controls
+		io.ConfigFlags &= ImGuiConfigFlags_NavEnableKeyboard;			// Enable Keyboard Controls
 		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;			// Enable Gamepad Controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;				// Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;				// Enable Viewports
+		io.ConfigFlags &= ImGuiConfigFlags_DockingEnable;				// Enable Docking
+		io.ConfigFlags &= ImGuiConfigFlags_ViewportsEnable;				// Enable Viewports
 
 		// Setup Dear ImGui Style
 		ImGui::StyleColorsDark();
 		//ImGui::StyleColorsClassic();
 
-		// When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
+		// Style
 		ImGuiStyle& style = ImGui::GetStyle();
+		style.WindowPadding = ImVec2(10.0f, 10.0f);
+		style.FramePadding = ImVec2(8.0f, 6.0f);
+		style.ItemSpacing = ImVec2(6.0f, 6.0f);
+		style.ChildRounding = 6.0f;
+		style.PopupRounding = 6.0f;
+		style.FrameRounding = 6.0f;
+		style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
+
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			style.WindowRounding = 0.0f;
@@ -59,7 +68,6 @@ namespace Kairos
 
 		VkPipelineRenderingCreateInfo pipeline_rendering_create_info = {};
 		pipeline_rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-		pipeline_rendering_create_info.viewMask = 0;
 		pipeline_rendering_create_info.colorAttachmentCount = 1;
 		pipeline_rendering_create_info.pColorAttachmentFormats = &vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().imageFormat.format;
 
@@ -102,10 +110,9 @@ namespace Kairos
 
 		// Rendering
 		ImGui::Render();
+		DrawImGui();
 
-		VkCommandBuffer cb = BeginSingleTimeCommands(vctx);
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cb);
-		EndSingleTimeCommands(vctx, cb);
+		vkDeviceWaitIdle(vctx->GetVkContext().device);
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
@@ -114,6 +121,41 @@ namespace Kairos
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(current_context_backup);
 		}
+	}
+
+	void VulkanImGuiLayer::DrawImGui()
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkCommandBuffer cb = BeginSingleTimeCommands(vctx);
+
+		 VkRenderingAttachmentInfo colorAttachment = {
+            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+            .imageView = vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().frames[vctx->GetVkContext().currentFrame].ImageView,
+            .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+            .clearValue = {.color = { 0.1f, 0.1f, 0.1f, 1.0f } }
+        };
+
+        VkRenderingInfo renderingInfo = {
+            .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
+            .renderArea = {
+                .offset = { 0, 0 },
+                .extent = vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().extent
+            },
+            .layerCount = 1,
+            .colorAttachmentCount = 1,
+            .pColorAttachments = &colorAttachment,
+        };
+
+		vkCmdBeginRenderingKHR(cb, &renderingInfo);
+
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cb);
+
+		vkCmdEndRenderingKHR(cb);
+
+		EndSingleTimeCommands(vctx, cb);
 	}
 
 	void VulkanImGuiLayer::OnImGuiRender()
