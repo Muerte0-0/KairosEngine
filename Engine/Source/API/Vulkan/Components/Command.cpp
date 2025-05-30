@@ -116,7 +116,7 @@ namespace Kairos
         vkFreeCommandBuffers(vctx->GetVkContext().device, vctx->GetVkContext().commandPool, 1, &commandBuffer);
     }
 
-    void VkSwapBuffers(VulkanContext* vctx)
+    void ClearFrame(VulkanContext* vctx)
     {
         vkWaitForFences(vctx->GetVkContext().device, 1, &vctx->GetVkContext().inFlightFences[vctx->GetVkContext().currentFrame], VK_TRUE, UINT64_MAX);
 

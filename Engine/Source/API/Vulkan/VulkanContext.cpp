@@ -327,7 +327,7 @@ namespace Kairos
 
 	void VulkanContext::SwapBuffers()
 	{
-		VkSwapBuffers(this);
+		ClearFrame(this);
 	}
 
 	void VulkanContext::Cleanup()

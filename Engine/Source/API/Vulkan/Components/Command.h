@@ -13,7 +13,7 @@ namespace Kairos
 	VkCommandBuffer BeginSingleTimeCommands(VulkanContext* vctx);
 	void EndSingleTimeCommands(VulkanContext* vctx, VkCommandBuffer commandBuffer);
 
-	void VkSwapBuffers(VulkanContext* vctx);
+	void ClearFrame(VulkanContext* vctx);
 
 	void RecordCommandBuffer(VulkanContext* vctx, VkCommandBuffer commandBuffer, uint32_t imageIndex);
 }
