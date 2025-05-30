@@ -210,7 +210,8 @@ namespace Kairos
 			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
 			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-			VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME
+			VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
+			VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
 		};
 
 		VkDeviceCreateInfo createInfo = {};
@@ -333,7 +334,7 @@ namespace Kairos
 		vkQueueWaitIdle(m_Context.graphicsQueue);
 		KE_CORE_INFO("Cleanup Started!");
 
-		vkFreeCommandBuffers(m_Context.device, m_Context.commandPool, m_Context.commandBuffers.size(), m_Context.commandBuffers.data());
+		
 
 		m_Context.m_Swapchain.Destroy(this);
 

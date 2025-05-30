@@ -1,11 +1,10 @@
 ﻿#include "kepch.h"
 
 #include "Command.h"
-
-#include "volk.h"
-
 #include "Swapchain.h"
 #include "Image.h"
+
+#include "volk.h"
 
 namespace Kairos
 {
@@ -39,6 +38,12 @@ namespace Kairos
             .commandBufferCount = (uint32_t)vctx->GetVkContext().commandBuffers.size()
         };
         VK_CHECK(vkAllocateCommandBuffers(vctx->GetVkContext().device, &allocInfo, vctx->GetVkContext().commandBuffers.data()));
+
+        vctx->GetDeviceDeletionQueue().push_back([vctx](VkDevice device)
+            {
+                vkFreeCommandBuffers(device, vctx->GetVkContext().commandPool, (uint32_t)vctx->GetVkContext().commandBuffers.size(), vctx->GetVkContext().commandBuffers.data());
+                KE_CORE_INFO("Deleted Command Buffers!");
+			});
 	}
 
     void CreateSyncObjects(VulkanContext* vctx)
@@ -71,6 +76,41 @@ namespace Kairos
                     vkDestroyFence(vctx->GetVkContext().device, vctx->GetVkContext().inFlightFences[i], nullptr);
                 });
         }
+    }
+
+    VkCommandBuffer BeginSingleTimeCommands(VulkanContext* vctx)
+    {
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = vctx->GetVkContext().commandPool;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(vctx->GetVkContext().device, &allocInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+        return commandBuffer;
+    }
+
+    void EndSingleTimeCommands(VulkanContext* vctx, VkCommandBuffer commandBuffer)
+    {
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        vkQueueSubmit(vctx->GetVkContext().graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(vctx->GetVkContext().graphicsQueue);
+
+        vkFreeCommandBuffers(vctx->GetVkContext().device, vctx->GetVkContext().commandPool, 1, &commandBuffer);
     }
 
     void RenderFrame(VulkanContext* vctx)
@@ -165,7 +205,7 @@ namespace Kairos
             .layerCount = 1,
             .viewMask = 0,
             .colorAttachmentCount = 1,
-            .pColorAttachments = &colorAttachment
+            .pColorAttachments = &colorAttachment,
         };
 
         vkCmdBeginRenderingKHR(commandBuffer, &renderingInfo);

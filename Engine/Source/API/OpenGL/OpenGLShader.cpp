@@ -1,8 +1,6 @@
 #include "kepch.h"
 #include "OpenGLShader.h"
 
-#include "glad/gl.h"
-
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Kairos
@@ -53,6 +51,8 @@ namespace Kairos
 		sources[GL_VERTEX_SHADER] = vertCode;
 		sources[GL_FRAGMENT_SHADER] = fragCode;
 		Compile(sources);
+
+		m_Name = shaderName;
 	}
 
 	OpenGLShader::~OpenGLShader()
@@ -106,7 +106,7 @@ namespace Kairos
 	void OpenGLShader::Compile(const std::unordered_map<GLenum, std::string>& shaderSources)
 	{
 		GLuint program = glCreateProgram();
-		KE_CORE_ASSERT(shaderSources.size() <= 2, "Only 2 Shader Supported For Now")
+		KE_CORE_ASSERT(shaderSources.size() <= 2, "Only 2 Shader Types (Vertex, Fragment) Supported For Now")
 			std::array<GLenum, 2> glShaderIDs;
 		int glShaderIDIndex = 0;
 

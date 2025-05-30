@@ -2,6 +2,9 @@
 
 #include "Engine/ImGui/ImGuiLayer.h"
 
+#define VULKAN_HPP_NO_EXCEPTIONS
+#include <vulkan/vulkan.hpp>
+
 namespace Kairos
 {
 	class VulkanImGuiLayer : public ImGuiLayer
@@ -18,5 +21,7 @@ namespace Kairos
 		virtual void End();
 	private:
 		float m_Time = 0.0f;
+
+		VkDescriptorPool m_ImguiPool = VK_NULL_HANDLE;
 	};
 }
