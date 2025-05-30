@@ -77,16 +77,10 @@ namespace Kairos
 		init_info.PipelineRenderingCreateInfo = pipeline_rendering_create_info;
 
 		ImGui_ImplVulkan_Init(&init_info);
-
-		vctx->GetDeviceDeletionQueue().push_back([this](VkDevice device)
-			{
-				ImGui_ImplVulkan_Shutdown();
-			});
 	}
 
 	void VulkanImGuiLayer::OnDetach()
 	{
-		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 	}

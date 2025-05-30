@@ -334,8 +334,6 @@ namespace Kairos
 		vkQueueWaitIdle(m_Context.graphicsQueue);
 		KE_CORE_INFO("Cleanup Started!");
 
-		
-
 		m_Context.m_Swapchain.Destroy(this);
 
 		vmaDestroyAllocator(m_Context.allocator);

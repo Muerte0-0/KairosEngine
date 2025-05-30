@@ -7,6 +7,8 @@
 #include "API/Vulkan/VulkanContext.h"
 #include <GLFW/glfw3.h>
 
+#include "backends/imgui_impl_vulkan.h"
+
 namespace Kairos
 {
     void Swapchain::RecreateSwapchain(VulkanContext* vctx)
@@ -95,6 +97,7 @@ namespace Kairos
 
         m_DeletionQueue.push_back([this](VkDevice device)
             {
+                ImGui_ImplVulkan_Shutdown();
                 vkDestroyDescriptorPool(device, m_SwapchainInfo.descriptorPool, nullptr);
             });
 	}
