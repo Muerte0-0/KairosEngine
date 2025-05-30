@@ -50,6 +50,8 @@ namespace Kairos
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
+
+		ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_Always);
 	}
 
 	void OpenGLImGuiLayer::OnDetach()

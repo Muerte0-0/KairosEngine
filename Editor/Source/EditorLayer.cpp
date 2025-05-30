@@ -14,7 +14,7 @@ namespace Kairos
 
 	void EditorLayer::OnDetach()
 	{
-
+		
 	}
 
 	void EditorLayer::OnUpdate(Timestep delta)
@@ -24,12 +24,12 @@ namespace Kairos
 
 	void EditorLayer::OnImGuiRender()
 	{
-
+		
 	}
 
 	void EditorLayer::OnEvent(Event& event)
 	{
-
+		
 	}
 
 }

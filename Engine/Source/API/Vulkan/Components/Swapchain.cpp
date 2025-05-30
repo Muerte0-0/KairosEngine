@@ -75,17 +75,20 @@ namespace Kairos
         for (uint32_t i = 0; i < m_SwapchainInfo.images.size(); ++i)
             m_SwapchainInfo.frames.push_back(Frame(m_SwapchainInfo.images[i], vctx->GetVkContext().device, m_SwapchainInfo.imageFormat.format, m_DeletionQueue));
 
-        VkDescriptorPoolSize poolSizes[] =
-        {
-            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, imageCount * 2 }
-        };
+		std::array<VkDescriptorPoolSize, 2> poolSizes {};
+
+		poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT); // 2 per frame for color and depth
+		poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * 2; // 2 per frame for uniform buffers
 
         VkDescriptorPoolCreateInfo poolInfo =
         {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-            .maxSets = imageCount,
-            .poolSizeCount = 1,
-            .pPoolSizes = poolSizes
+			.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT,
+            .maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT) * 2,
+            .poolSizeCount = static_cast<uint32_t>(poolSizes.size()),
+            .pPoolSizes = poolSizes.data(),
         };
 
         VK_CHECK(vkCreateDescriptorPool(vctx->GetVkContext().device, &poolInfo, nullptr, &m_SwapchainInfo.descriptorPool));

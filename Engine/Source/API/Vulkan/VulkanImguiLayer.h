@@ -21,7 +21,5 @@ namespace Kairos
 		virtual void End();
 	private:
 		float m_Time = 0.0f;
-
-		VkDescriptorPool m_ImguiPool = VK_NULL_HANDLE;
 	};
 }

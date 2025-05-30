@@ -34,10 +34,10 @@ namespace Kairos
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;          // Enable Keyboard Controls
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;         // Enable Gamepad Controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;              // Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;            // Enable Viewports
+		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;			// Enable Keyboard Controls
+		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;			// Enable Gamepad Controls
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;				// Enable Docking
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;				// Enable Viewports
 
 		// Setup Dear ImGui Style
 		ImGui::StyleColorsDark();
@@ -55,36 +55,11 @@ namespace Kairos
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
-		VkDescriptorPoolSize pool_sizes[] =
-		{
-			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-		};
-
-		VkDescriptorPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		pool_info.maxSets = 1000;
-		pool_info.poolSizeCount = std::size(pool_sizes);
-		pool_info.pPoolSizes = pool_sizes;
-
-		VK_CHECK(vkCreateDescriptorPool(vctx->GetVkContext().device, &pool_info, nullptr, &m_ImguiPool));
-
-		//this initializes the core structures of imgui
-		ImGui::CreateContext();
+		ImGui_ImplGlfw_InitForVulkan(window, true);
 
 		VkPipelineRenderingCreateInfo pipeline_rendering_create_info = {};
 		pipeline_rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-		pipeline_rendering_create_info.viewMask = 0; // No multiview support
+		pipeline_rendering_create_info.viewMask = 0;
 		pipeline_rendering_create_info.colorAttachmentCount = 1;
 		pipeline_rendering_create_info.pColorAttachmentFormats = &vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().imageFormat.format;
 
@@ -94,27 +69,24 @@ namespace Kairos
 		init_info.PhysicalDevice = vctx->GetVkContext().physicalDevice;
 		init_info.Device = vctx->GetVkContext().device;
 		init_info.Queue = vctx->GetVkContext().graphicsQueue;
-		init_info.DescriptorPool = m_ImguiPool;
-		init_info.MinImageCount = 3;
-		init_info.ImageCount = 3;
+		init_info.DescriptorPool = vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().descriptorPool;
+		init_info.MinImageCount = 2;
+		init_info.ImageCount = MAX_FRAMES_IN_FLIGHT;
 		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		init_info.UseDynamicRendering = true; // Use dynamic rendering for Vulkan 1.3 and above
 		init_info.PipelineRenderingCreateInfo = pipeline_rendering_create_info;
 
-		ImGui_ImplGlfw_InitForVulkan(window, true);
 		ImGui_ImplVulkan_Init(&init_info);
 
-		vctx->GetDeviceDeletionQueue().push_back([=](VkDevice device) 
-		{
-			vkDestroyDescriptorPool(device, m_ImguiPool, nullptr);
-			ImGui_ImplVulkan_Shutdown();
-		});
+		vctx->GetDeviceDeletionQueue().push_back([this](VkDevice device)
+			{
+				ImGui_ImplVulkan_Shutdown();
+			});
 	}
 
 	void VulkanImGuiLayer::OnDetach()
 	{
-		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
-
+		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 	}
