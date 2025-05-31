@@ -44,6 +44,9 @@ namespace Kairos
 		ImGui::StyleColorsDark();
 		//ImGui::StyleColorsClassic();
 
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("Assets/Fonts/OpenSans/OpenSans-Regular.ttf", 18.0f);
+		io.Fonts->AddFontFromFileTTF("Assets/Fonts/OpenSans/OpenSans-Bold.ttf", 18.0f);
+
 		// Style
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.WindowPadding = ImVec2(10.0f, 10.0f);

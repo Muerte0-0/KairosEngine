@@ -129,6 +129,9 @@ namespace Kairos
 		ImGui::Begin("Content Browser");
 		ImGui::End();
 
+		ImGui::Begin("Console");
+		ImGui::End();
+
 		ImGui::Begin("Details");
 		ImGui::End();
 

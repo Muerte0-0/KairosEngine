@@ -23,7 +23,7 @@ namespace Kairos
 	{
 		return new WindowProps(
 			"Kairos Editor",
-			1280, 720
+			1920, 1080
 		);
 	}
 
