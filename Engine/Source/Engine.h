@@ -12,7 +12,10 @@
 #include "Engine/Input/KeyCodes.h"
 // ------------------------------ //
 
+// -------------- GUI -------------- //
+#include "imgui.h"
 #include "Engine/ImGui/ImGuiLayer.h"
+// --------------------------------- //
 
 // ---------------- Renderer ---------------- //
 #include "Engine/Renderer/Renderer.h"

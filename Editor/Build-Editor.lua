@@ -17,15 +17,16 @@ externalincludedirs
 {
 	"%{IncludeDir.spdlog}",
 	"%{wks.location}/Engine/Source",
-	"%{wks.location}/Engine/Dependencies/Include",
-	"%{IncludeDir.Glm}"
+	"%{wks.location}/Engine/Dependencies/",
+	"%{IncludeDir.Glm}",
+	"%{IncludeDir.ImGui}",
 }
 
 links
 {
 	"Engine",
 
-	"%{Library.Vulkan}"
+	"%{Library.Vulkan}",
 }
 
 filter "system:windows"

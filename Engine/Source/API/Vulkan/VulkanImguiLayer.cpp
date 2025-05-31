@@ -160,7 +160,6 @@ namespace Kairos
 
 	void VulkanImGuiLayer::OnImGuiRender()
 	{
-		static bool show = true;
-		ImGui::ShowDemoWindow(&show);
+		
 	}
 }

@@ -30,7 +30,7 @@ namespace Kairos
 
 	Application::~Application()
 	{
-
+		
 	}
 
 	void Application::PushLayer(Layer* layer)

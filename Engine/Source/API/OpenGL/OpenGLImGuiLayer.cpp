@@ -89,8 +89,7 @@ namespace Kairos
 
 	void OpenGLImGuiLayer::OnImGuiRender()
 	{
-		static bool show = true;
-		ImGui::ShowDemoWindow(&show);
+		
 	}
 
 }
