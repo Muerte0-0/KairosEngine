@@ -17,6 +17,9 @@ namespace Kairos
 		virtual void End() = 0;
 
 		static ImGuiLayer* Create();
+
+		void SetImGuiStyle();
+		void SetDarkThemeColors();
 	private:
 		float m_Time = 0.0f;
 	};

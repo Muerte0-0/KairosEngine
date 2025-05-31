@@ -34,34 +34,9 @@ namespace Kairos
 		// Setup Dear ImGui Context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;			// Enable Keyboard Controls
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;			// Enable Gamepad Controls
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;				// Enable Docking
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;				// Enable Viewports
 
-		// Setup Dear ImGui Style
-		ImGui::StyleColorsDark();
-		//ImGui::StyleColorsClassic();
-
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("Assets/Fonts/OpenSans/OpenSans-Regular.ttf", 18.0f);
-		io.Fonts->AddFontFromFileTTF("Assets/Fonts/OpenSans/OpenSans-Bold.ttf", 18.0f);
-
-		// Style
-		ImGuiStyle& style = ImGui::GetStyle();
-		style.WindowPadding = ImVec2(10.0f, 10.0f);
-		style.FramePadding = ImVec2(8.0f, 6.0f);
-		style.ItemSpacing = ImVec2(6.0f, 6.0f);
-		style.ChildRounding = 6.0f;
-		style.PopupRounding = 6.0f;
-		style.FrameRounding = 6.0f;
-		style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
-
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-		{
-			style.WindowRounding = 0.0f;
-			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-		}
+		SetImGuiStyle();
+		SetDarkThemeColors();
 
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
@@ -74,7 +49,7 @@ namespace Kairos
 		pipeline_rendering_create_info.colorAttachmentCount = 1;
 		pipeline_rendering_create_info.pColorAttachmentFormats = &vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().imageFormat.format;
 
-		//this initializes imgui for Vulkan
+		// Initialize ImGui For Vulkan
 		ImGui_ImplVulkan_InitInfo init_info = {};
 		init_info.Instance = vctx->GetVkContext().instance;
 		init_info.PhysicalDevice = vctx->GetVkContext().physicalDevice;
@@ -84,7 +59,7 @@ namespace Kairos
 		init_info.MinImageCount = 2;
 		init_info.ImageCount = MAX_FRAMES_IN_FLIGHT;
 		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		init_info.UseDynamicRendering = true; // Use dynamic rendering for Vulkan 1.3 and above
+		init_info.UseDynamicRendering = true; // Use Dynamic Rendering [Vulkan 1.3 & Above]
 		init_info.PipelineRenderingCreateInfo = pipeline_rendering_create_info;
 
 		ImGui_ImplVulkan_Init(&init_info);
