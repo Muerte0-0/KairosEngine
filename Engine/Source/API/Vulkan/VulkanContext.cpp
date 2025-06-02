@@ -7,7 +7,11 @@
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
 
+//Components
+#include "Components/Device.h"
 #include "Components/Command.h"
+#include "Components/Synchronization.h"
+#include "Components/Image.h"
 
 #include "backends/imgui_impl_vulkan.h"
 
@@ -23,26 +27,46 @@ namespace Kairos
 		if (volkInitialize() != VK_SUCCESS)
 			KE_CORE_ERROR("Failed to initialize Vulkan");
 
-		Init_Instance();
-		Init_Device();
+		m_Context.Instance = CreateInstance(glfwGetWindowTitle(m_WindowHandle), m_InstanceDeletionQueue);
+		volkLoadInstance(m_Context.Instance);
+		m_Context.Surface = CreateSurface(m_Context.Instance, m_WindowHandle, m_InstanceDeletionQueue);
+
+		m_Context.PhysicalDevice = ChoosePhysicalDevice(m_Context.Instance);
+		m_Context.LogicalDevice = CreateLogicalDevice(m_Context.PhysicalDevice, m_Context.Surface, m_DeviceDeletionQueue);
+		volkLoadDevice(m_Context.LogicalDevice);
+
+		// Get queues
+		QueueFamilyIndices indices = FindQueueFamilies(m_Context.PhysicalDevice, m_Context.Surface);
+		vkGetDeviceQueue(m_Context.LogicalDevice, indices.GraphicsIndex, 0, &m_Context.GraphicsQueue);
+		vkGetDeviceQueue(m_Context.LogicalDevice, indices.PresentIndex, 0, &m_Context.PresentQueue);
+		if (indices.HasCompute)
+			vkGetDeviceQueue(m_Context.LogicalDevice, indices.ComputeIndex, 0, &m_Context.ComputeQueue);
+
 		Init_Allocator();
 
 		int width, height;
 		glfwGetWindowSize(m_WindowHandle, &width, &height);
 
-		m_Context.m_Swapchain.CreateSwapchain(this, width, height);
-		m_Context.m_Swapchain.CreateDescriptorPool(this);
+		m_Context.Swapchain.CreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, width, height);
+		m_Context.Swapchain.CreateDescriptorPool(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 
-		CreateCommandPool(this);
-		CreateCommandBuffers(this);
-		CreateSyncObjects(this);
+		m_Context.CommandPool = CreateCommandPool(m_Context.LogicalDevice, FindQueueFamilyIndex(m_Context.PhysicalDevice, m_Context.Surface, VK_QUEUE_GRAPHICS_BIT), m_DeviceDeletionQueue);
+
+		for (uint32_t i = 0; i < 2; ++i) {
+			vk::CommandBuffer commandBuffer = AllocateCommandBuffer(m_Context.LogicalDevice, m_Context.CommandPool);
+			frames.push_back(Frame(swapchain, logicalDevice, shaders, commandBuffer, m_DeviceDeletionQueue));
+		}
+
+		m_Context.ImageAquiredSemaphore = MakeSemaphore(m_Context.LogicalDevice, m_DeviceDeletionQueue);
+		m_Context.RenderFinishedSemaphore = MakeSemaphore(m_Context.LogicalDevice, m_DeviceDeletionQueue);
+		m_Context.RenderFinishedFence = MakeFence(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 
 		// Logging Vulkan Info
 		uint32_t version;
 		vkEnumerateInstanceVersion(&version);
 
 		VkPhysicalDeviceProperties props;
-		vkGetPhysicalDeviceProperties(m_Context.physicalDevice, &props);
+		vkGetPhysicalDeviceProperties(m_Context.PhysicalDevice, &props);
 
 		KE_CORE_INFO("Vulkan Info");
 		KE_CORE_INFO("	Version: {}.{}.{}", VK_API_VERSION_MAJOR(version), VK_API_VERSION_MINOR(version), VK_API_VERSION_PATCH(version));
@@ -50,256 +74,6 @@ namespace Kairos
 		KE_CORE_INFO("	GLFW Version: {0}", (char*)glfwGetVersionString());
 		KE_CORE_INFO("	Renderer: {0}", props.deviceName);
 		KE_CORE_INFO("Initialized Vulkan!");
-	}
-
-	void VulkanContext::Init_Instance()
-	{
-#pragma region Vulkan Instance Info
-
-		uint32_t version;
-		vkEnumerateInstanceVersion(&version);
-		version &= ~(0xFFFU);
-
-		VkApplicationInfo appInfo;
-		appInfo.pApplicationName = glfwGetWindowTitle(m_WindowHandle);
-		appInfo.apiVersion = version;
-		appInfo.pEngineName = "Kairos Engine";
-		appInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-		appInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
-		appInfo.pNext = NULL;
-
-		uint32_t glfwExtensionCount = 0;
-		const char** glfwExtensions;
-		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-		VkInstanceCreateInfo info = {};
-
-		info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-
-		info.enabledExtensionCount = glfwExtensionCount;
-		info.ppEnabledExtensionNames = glfwExtensions;
-
-#ifdef KE_DEBUG
-
-		const char* layers[] = {
-	"VK_LAYER_KHRONOS_validation"
-		};
-
-		info.enabledLayerCount = sizeof(layers) / sizeof(const char*);
-		info.ppEnabledLayerNames = layers;
-
-#endif // KE_DEBUG
-
-#pragma endregion
-
-		VK_CHECK(vkCreateInstance(&info, nullptr, &m_Context.instance));
-
-		VkInstance handle = m_Context.instance;
-		m_InstanceDeletionQueue.push_back([handle](VkInstance instance)
-			{
-				vkDestroyInstance(instance, nullptr);
-				KE_CORE_INFO("Deleted Instance!");
-			});
-
-		volkLoadInstance(m_Context.instance);
-
-		VkSurfaceKHR raw_surface = VK_NULL_HANDLE;
-		glfwCreateWindowSurface(m_Context.instance, m_WindowHandle, nullptr, &raw_surface);
-		m_Context.surface = raw_surface;
-
-		m_InstanceDeletionQueue.push_back([this](VkInstance instance)
-			{
-				vkDestroySurfaceKHR(instance, m_Context.surface, nullptr);
-				KE_CORE_INFO("Deleted Surface!");
-			});
-	}
-
-	void VulkanContext::Init_Device()
-	{
-		SelectPhysicalDevice();
-		CreateLogicalDevice();
-	}
-
-	void VulkanContext::SelectPhysicalDevice()
-	{
-		uint32_t deviceCount = 0;
-		vkEnumeratePhysicalDevices(m_Context.instance, &deviceCount, NULL);
-		VkPhysicalDevice* devices = (VkPhysicalDevice*)malloc(deviceCount * sizeof(VkPhysicalDevice));
-		vkEnumeratePhysicalDevices(m_Context.instance, &deviceCount, devices);
-
-		// Score devices (Discrete GPU > Integrated > others)
-		int bestScore = 0;
-
-		for (uint32_t i = 0; i < deviceCount; i++)
-		{
-			VkPhysicalDeviceProperties props;
-			vkGetPhysicalDeviceProperties(devices[i], &props);
-
-			int score = 0;
-			if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) score += 1000;
-			score += VK_VERSION_MAJOR(props.apiVersion) * 100 + VK_VERSION_MINOR(props.apiVersion);		// Prefer newer API Versions
-
-			if (score > bestScore)
-			{
-				bestScore = score;
-				m_Context.physicalDevice = devices[i];
-			}
-		}
-
-		free(devices);
-
-		if (m_Context.physicalDevice == VK_NULL_HANDLE)
-		{
-			KE_CORE_ERROR("No suitable GPU found");
-			abort();
-		}
-	}
-
-	void VulkanContext::CreateLogicalDevice()
-	{
-		QueueFamilyIndices indices = FindQueueFamilies();
-
-		float queuePriority = 1.0f;
-		VkDeviceQueueCreateInfo queueCreateInfos[2] = {};
-		uint32_t queueCreateInfoCount = 0;
-
-		// Graphics queue (may also support present)
-		queueCreateInfos[queueCreateInfoCount++] = VkDeviceQueueCreateInfo
-		{
-			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-			.queueFamilyIndex = indices.graphics_family,
-			.queueCount = 1,
-			.pQueuePriorities = &queuePriority
-		};
-
-		// Separate present queue if needed
-		if (indices.present_family != indices.graphics_family)
-		{
-			queueCreateInfos[queueCreateInfoCount++] = VkDeviceQueueCreateInfo{
-				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-				.queueFamilyIndex = indices.present_family,
-				.queueCount = 1,
-				.pQueuePriorities = &queuePriority
-			};
-		}
-
-		// Separate compute queue if available
-		if (indices.has_compute && indices.compute_family != indices.graphics_family && indices.compute_family != indices.present_family)
-		{
-			queueCreateInfos[queueCreateInfoCount++] = VkDeviceQueueCreateInfo{
-				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-				.queueFamilyIndex = indices.compute_family,
-				.queueCount = 1,
-				.pQueuePriorities = &queuePriority
-			};
-		}
-
-		// Enable modern features via pNext chain
-		VkPhysicalDeviceFeatures deviceFeatures = VkPhysicalDeviceFeatures();
-
-		VkPhysicalDeviceShaderObjectFeaturesEXT shaderObjectFeatures = {
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT,
-			.shaderObject = VK_TRUE,  // Enable shader objects
-		};
-
-		VkPhysicalDeviceVulkan13Features features13 = {
-			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-			.synchronization2 = VK_TRUE,  // Enable synchronization2
-			.dynamicRendering = VK_TRUE,  // Enable dynamic rendering
-		};
-		shaderObjectFeatures.pNext = &features13;
-
-		const char* extensions[] = {
-			VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-			VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
-			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
-			VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME,
-			VK_KHR_DEPTH_STENCIL_RESOLVE_EXTENSION_NAME,
-		};
-
-		VkDeviceCreateInfo createInfo = {};
-
-		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		createInfo.pEnabledFeatures = &deviceFeatures;
-		createInfo.pNext = &shaderObjectFeatures;
-		createInfo.queueCreateInfoCount = queueCreateInfoCount;
-		createInfo.pQueueCreateInfos = queueCreateInfos;
-		createInfo.enabledExtensionCount = sizeof(extensions) / sizeof(extensions[0]);
-		createInfo.ppEnabledExtensionNames = extensions;
-
-// Validation layers (debug only)
-#ifdef KE_DEBUG
-
-		const char* layers[] = {
-	"VK_LAYER_KHRONOS_validation"
-		};
-
-		createInfo.enabledLayerCount = sizeof(layers) / sizeof(const char*);
-		createInfo.ppEnabledLayerNames = layers;
-
-#endif // KE_DEBUG
-
-		VK_CHECK(vkCreateDevice(m_Context.physicalDevice, &createInfo, NULL, &m_Context.device));
-
-		VkDevice handle = m_Context.device;
-
-		m_DeviceDeletionQueue.push_back([handle](VkDevice device)
-			{
-				vkDestroyDevice(device, nullptr);
-				KE_CORE_INFO("Deleted Logical Device!");
-			});
-
-		// Get queues
-		vkGetDeviceQueue(m_Context.device, indices.graphics_family, 0, &m_Context.graphicsQueue);
-		vkGetDeviceQueue(m_Context.device, indices.present_family, 0, &m_Context.presentQueue);
-		if (indices.has_compute) {
-			vkGetDeviceQueue(m_Context.device, indices.compute_family, 0, &m_Context.computeQueue);
-		}
-
-		// Load device functions with Volk
-		volkLoadDevice(m_Context.device);
-	}
-
-	QueueFamilyIndices VulkanContext::FindQueueFamilies()
-	{
-		QueueFamilyIndices indices = { 0 };
-
-		indices.graphics_family = UINT32_MAX;
-		indices.present_family = UINT32_MAX;
-		indices.compute_family = UINT32_MAX;
-
-		uint32_t queueFamilyCount = 0;
-
-		vkGetPhysicalDeviceQueueFamilyProperties(m_Context.physicalDevice, &queueFamilyCount, NULL);
-		VkQueueFamilyProperties* queueFamilies = (VkQueueFamilyProperties*)malloc(queueFamilyCount * sizeof(VkQueueFamilyProperties));
-		vkGetPhysicalDeviceQueueFamilyProperties(m_Context.physicalDevice, &queueFamilyCount, queueFamilies);
-
-		for (uint32_t i = 0; i < queueFamilyCount; i++)
-		{
-			// Graphics queue
-			if (queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
-			{
-				indices.graphics_family = i;
-			}
-
-			// Present queue
-			VkBool32 presentSupport = VK_FALSE;
-			vkGetPhysicalDeviceSurfaceSupportKHR(m_Context.physicalDevice, i, m_Context.surface, &presentSupport);
-			if (presentSupport)
-			{
-				indices.present_family = i;
-			}
-
-			// Dedicated compute queue (no graphics capability)
-			if ((queueFamilies[i].queueFlags & VK_QUEUE_COMPUTE_BIT) && !(queueFamilies[i].queueFlags & VK_QUEUE_GRAPHICS_BIT))
-			{
-				indices.compute_family = i;
-				indices.has_compute = true;
-			}
-		}
-
-		free(queueFamilies);
-		return indices;
 	}
 
 	void VulkanContext::Init_Allocator()
@@ -310,14 +84,14 @@ namespace Kairos
 
 		VmaAllocatorCreateInfo allocatorInfo = {};
 
-		allocatorInfo.physicalDevice = m_Context.physicalDevice;
-		allocatorInfo.device = m_Context.device;
-		allocatorInfo.instance = m_Context.instance;
+		allocatorInfo.physicalDevice = m_Context.PhysicalDevice;
+		allocatorInfo.device = m_Context.LogicalDevice;
+		allocatorInfo.instance = m_Context.Instance;
 		allocatorInfo.vulkanApiVersion = VK_API_VERSION_1_4;
 		allocatorInfo.flags = VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT | VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT;
 		allocatorInfo.pVulkanFunctions = &vma_vulkan_func;
 
-		VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_Context.allocator));
+		VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_Context.Allocator));
 	}
 
 	void VulkanContext::SetVSync(bool enabled)
@@ -327,19 +101,69 @@ namespace Kairos
 
 	void VulkanContext::SwapBuffers()
 	{
-		ClearFrame(this);
+		vkDeviceWaitIdle(m_Context.LogicalDevice);
+
+		vkWaitForFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence, VK_TRUE, UINT64_MAX);
+
+		uint32_t imageIndex;
+		VkResult aquireResult = vkAcquireNextImageKHR(m_Context.LogicalDevice, m_Context.Swapchain.Info().Swapchain, UINT64_MAX, m_Context.ImageAquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
+
+		if (aquireResult == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			m_Context.Swapchain.RecreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, m_WindowHandle);
+			return;
+		}
+
+		vkResetFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence);
+
+		m_Context.Swapchain.Info().Frames[imageIndex].RecordCommandBuffer(imageIndex);
+
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.pNext = nullptr;
+		submitInfo.commandBufferCount = 0;
+		submitInfo.pCommandBuffers = &m_Context.Swapchain.Info().Frames[m_Context.CurrentFrame].CommandBuffer;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_Context.ImageAquiredSemaphore;
+		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		submitInfo.pWaitDstStageMask = &waitStage;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_Context.RenderFinishedSemaphore;
+
+		vkQueueWaitIdle(m_Context.GraphicsQueue);
+		vkQueueSubmit(m_Context.GraphicsQueue, 1, &submitInfo, m_Context.RenderFinishedFence);
+
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.pNext = nullptr;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &m_Context.Swapchain.Info().Swapchain;
+		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &m_Context.RenderFinishedSemaphore;
+
+
+		vkQueueWaitIdle(m_Context.GraphicsQueue);
+		vkWaitForFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence, VK_TRUE, UINT64_MAX);
+		VkResult presentResult = vkQueuePresentKHR(m_Context.GraphicsQueue, &presentInfo);
+
+		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
+		{
+			m_Context.Swapchain.RecreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, m_WindowHandle);
+			return;
+		}
 	}
 
 	void VulkanContext::Cleanup()
 	{
-		vkQueueWaitIdle(m_Context.graphicsQueue);
+		vkQueueWaitIdle(m_Context.GraphicsQueue);
 		KE_CORE_INFO("Cleanup Started!");
 
 		ImGui_ImplVulkan_Shutdown();
 
-		m_Context.m_Swapchain.Destroy(this);
+		m_Context.Swapchain.Destroy(m_Context.LogicalDevice);
 
-		vmaDestroyAllocator(m_Context.allocator);
+		vmaDestroyAllocator(m_Context.Allocator);
 
 		while (m_DeviceDeletionQueue.size() > 0)
 		{
@@ -349,8 +173,11 @@ namespace Kairos
 
 		while (m_InstanceDeletionQueue.size() > 0)
 		{
-			m_InstanceDeletionQueue.back()(m_Context.instance);
+			m_InstanceDeletionQueue.back()(m_Context.Instance);
 			m_InstanceDeletionQueue.pop_back();
 		}
+
+		glfwDestroyWindow(m_WindowHandle);
+		glfwTerminate();
 	}
 }

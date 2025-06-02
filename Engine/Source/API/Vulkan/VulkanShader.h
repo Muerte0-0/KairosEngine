@@ -19,9 +19,16 @@ namespace Kairos
 
 		virtual const std::string& GetName() const override { return m_ShaderName; }
 
+		std::vector<VkShaderEXT> MakeShaderObjects(VkDevice device, const char* name, std::vector<char> vertSrc, std::vector<char> fragSrc,
+			std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue, bool compileCode);
 	private:
 		std::vector<char> ReadCode(const std::string& filepath);
 		std::string ReadFile(const std::string& filepath);
 		std::string m_ShaderName;
+
+		std::unordered_map<shaderc_shader_kind, std::string> PreProcess(const std::string& source);
+		void PreProcessShader(std::unordered_map<shaderc_shader_kind, std::vector<char>>& shaderSources, shaderc::CompileOptions& options);
+		void CompileToAssembly(std::unordered_map<shaderc_shader_kind, std::vector<char>>& shaderSources, shaderc::CompileOptions& options);
+		std::vector<uint32_t> Compile(std::vector<char>& shaderSource, shaderc::CompileOptions& options);
 	};
 }

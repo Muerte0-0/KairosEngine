@@ -5,78 +5,88 @@
 #include "volk.h"
 
 #include "API/Vulkan/VulkanContext.h"
-#include <GLFW/glfw3.h>
+#include "Engine/Core/Application.h"
 
 namespace Kairos
 {
-    void Swapchain::RecreateSwapchain(VulkanContext* vctx)
+    void Swapchain::RecreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, GLFWwindow* window)
     {
-        vkDeviceWaitIdle(vctx->GetVkContext().device);
-
-        Destroy(vctx);
+        Destroy(logicalDevice);
 
         int width, height;
-        glfwGetWindowSize(vctx->GetWindowHandle(), &width, &height);
+        glfwGetWindowSize(window, &width, &height);
 
-        CreateSwapchain(vctx, width, height);
+        CreateSwapchain(logicalDevice, physicalDevice, surface, width, height);
     }
 
-    void Swapchain::Destroy(VulkanContext* vctx)
+    void Swapchain::Destroy(VkDevice logicalDevice)
     {
+        vkDeviceWaitIdle(logicalDevice);
+
         while (m_DeletionQueue.size() > 0)
         {
-            m_DeletionQueue.back()(vctx->GetVkContext().device);
+            m_DeletionQueue.back()(logicalDevice);
             m_DeletionQueue.pop_back();
         }
 
-        m_SwapchainInfo.images.clear();
-        m_SwapchainInfo.frames.clear();
+        m_Info.Images.clear();
+        m_Info.ImageViews.clear();
     }
 
-    void Swapchain::CreateSwapchain(VulkanContext* vctx, uint32_t width, uint32_t height)
-	{
-        SurfaceDetails support = QuerySurfaceSupport(vctx->GetVkContext().physicalDevice, vctx->GetVkContext().surface);
+    void Swapchain::CreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t width, uint32_t height)
+    {
+        SurfaceDetails support = QuerySurfaceSupport(physicalDevice, surface);
 
-        m_SwapchainInfo.imageFormat = ChooseSurfaceFormat(support.formats);
-        VkPresentModeKHR presentMode = ChoosePresentMode(support.presentModes);
-        m_SwapchainInfo.extent = ChooseExtent(width, height, support.capabilities);
+        m_Info.ImageFormat = ChooseSurfaceFormat(support.Formats);
+        VkPresentModeKHR presentMode = ChoosePresentMode(support.PresentModes);
+        m_Info.Extent = ChooseExtent(width, height, support.Capabilities);
 
-        uint32_t imageCount = std::min(support.capabilities.maxImageCount, support.capabilities.minImageCount + 1);
+        m_Info.ImageCount = std::min(support.Capabilities.maxImageCount, support.Capabilities.minImageCount + 1);
 
-        VkSwapchainCreateInfoKHR sci = {};
+        VkSwapchainCreateInfoKHR swapchainCreateInfo;
+        swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        swapchainCreateInfo.flags = VkSwapchainCreateFlagsKHR();
+        swapchainCreateInfo.surface = surface;
+        swapchainCreateInfo.minImageCount = m_Info.ImageCount;
+        swapchainCreateInfo.imageFormat = m_Info.ImageFormat.format;
+        swapchainCreateInfo.imageColorSpace = m_Info.ImageFormat.colorSpace;
+        swapchainCreateInfo.imageExtent = m_Info.Extent;
+        swapchainCreateInfo.imageArrayLayers = 1;
+        swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        swapchainCreateInfo.preTransform = support.Capabilities.currentTransform;
+        swapchainCreateInfo.presentMode = presentMode;
+        swapchainCreateInfo.clipped = true;
+        swapchainCreateInfo.oldSwapchain = VkSwapchainKHR(nullptr);
+		swapchainCreateInfo.pNext = nullptr;
 
-        sci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        sci.flags = VkSwapchainCreateFlagBitsKHR();
-        sci.surface = vctx->GetVkContext().surface;
-        sci.minImageCount = imageCount;
-        sci.imageFormat = m_SwapchainInfo.imageFormat.format;
-        sci.imageColorSpace = m_SwapchainInfo.imageFormat.colorSpace;
-        sci.imageExtent = m_SwapchainInfo.extent;
-        sci.imageArrayLayers = 1;
-        sci.compositeAlpha = VkCompositeAlphaFlagBitsKHR::VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        sci.imageUsage = VkImageUsageFlagBits::VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-        sci.imageSharingMode = VkSharingMode::VK_SHARING_MODE_EXCLUSIVE;
-        sci.preTransform = support.capabilities.currentTransform;
-        sci.presentMode = presentMode;
-        sci.clipped = true;
-        sci.oldSwapchain = VkSwapchainKHR(nullptr);
+        VK_CHECK(vkCreateSwapchainKHR(logicalDevice, &swapchainCreateInfo, nullptr, &m_Info.Swapchain));
 
-        VK_CHECK(vkCreateSwapchainKHR(vctx->GetVkContext().device, &sci, nullptr, &m_SwapchainInfo.swapchain));
+		VkSwapchainKHR handle = m_Info.Swapchain;
 
-        m_DeletionQueue.push_back([this](VkDevice device)
+        m_DeletionQueue.push_back([handle](VkDevice device)
             {
-                vkDestroySwapchainKHR(device, m_SwapchainInfo.swapchain, nullptr);
+                vkDestroySwapchainKHR(device, handle, nullptr);
             });
 
-        vkGetSwapchainImagesKHR(vctx->GetVkContext().device, m_SwapchainInfo.swapchain, &imageCount, nullptr);
-        m_SwapchainInfo.images.resize(imageCount);
-        vkGetSwapchainImagesKHR(vctx->GetVkContext().device, m_SwapchainInfo.swapchain, &imageCount, m_SwapchainInfo.images.data());
+        vkGetSwapchainImagesKHR(logicalDevice, m_Info.Swapchain, &m_Info.ImageCount, nullptr);
+        m_Info.Images.resize(m_Info.ImageCount);
+        vkGetSwapchainImagesKHR(logicalDevice, m_Info.Swapchain, &m_Info.ImageCount, m_Info.Images.data());
 
-        for (uint32_t i = 0; i < m_SwapchainInfo.images.size(); ++i)
-            m_SwapchainInfo.frames.push_back(Frame(m_SwapchainInfo.images[i], vctx->GetVkContext().device, m_SwapchainInfo.imageFormat.format, m_DeletionQueue));
-	}
+        for (uint32_t i = 0; i < m_Info.Images.size(); ++i)
+        {
+            VkImageView imageView = CreateImageView(logicalDevice, m_Info.Images[i], m_Info.ImageFormat.format);
+            m_Info.ImageViews.push_back(imageView);
 
-    void Swapchain::CreateDescriptorPool(VulkanContext* vctx)
+            m_DeletionQueue.push_back([imageView](VkDevice device)
+            {
+                vkDestroyImageView(device, imageView, nullptr);
+            });
+        }
+    }
+
+    void Swapchain::CreateDescriptorPool(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue)
     {
         VkDescriptorPoolSize pool_sizes[] =
         {
@@ -100,11 +110,13 @@ namespace Kairos
         pool_info.poolSizeCount = (uint32_t)((int)(sizeof(pool_sizes) / sizeof(*(pool_sizes))));
         pool_info.pPoolSizes = pool_sizes;
 
-        VK_CHECK(vkCreateDescriptorPool(vctx->GetVkContext().device, &pool_info, nullptr, &m_SwapchainInfo.descriptorPool));
+        VK_CHECK(vkCreateDescriptorPool(logicalDevice, &pool_info, nullptr, &m_Info.DescriptorPool));
 
-        vctx->GetDeviceDeletionQueue().push_back([this](VkDevice device)
+        VkDescriptorPool handle = m_Info.DescriptorPool;
+
+        deviceDeletionQueue.push_back([handle](VkDevice device)
             {
-                vkDestroyDescriptorPool(device, m_SwapchainInfo.descriptorPool, nullptr);
+                vkDestroyDescriptorPool(device, handle, nullptr);
             });
     }
 
@@ -112,17 +124,17 @@ namespace Kairos
     {
         SurfaceDetails support;
 
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &support.capabilities);
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &support.Capabilities);
 
         uint32_t surfaceFormatCount;
         vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, NULL);
-        support.formats.resize(surfaceFormatCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, support.formats.data());
+        support.Formats.resize(surfaceFormatCount);
+        vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &surfaceFormatCount, support.Formats.data());
 
         uint32_t presentModesCount;
         vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModesCount, NULL);
-        support.presentModes.resize(presentModesCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModesCount, support.presentModes.data());
+        support.PresentModes.resize(presentModesCount);
+        vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModesCount, support.PresentModes.data());
 
         return support;
     }
@@ -153,7 +165,10 @@ namespace Kairos
         for (auto mode : preferredModes) {
             if (std::find(presentModes.begin(), presentModes.end(), mode) != presentModes.end()) {
                 if (mode == VK_PRESENT_MODE_MAILBOX_KHR)
+                {
                     return mode;
+					KE_CORE_INFO("Using Mailbox present mode [Triple Buffering]");
+                }
             }
         }
 
@@ -164,7 +179,7 @@ namespace Kairos
     VkSurfaceFormatKHR Swapchain::ChooseSurfaceFormat(std::vector<VkSurfaceFormatKHR> formats)
     {
         for (VkSurfaceFormatKHR format : formats)
-            if (format.format == VkFormat::VK_FORMAT_R8G8B8A8_UNORM && format.colorSpace == VkColorSpaceKHR::VK_COLORSPACE_SRGB_NONLINEAR_KHR)
+            if (format.format == VK_FORMAT_R8G8B8A8_UNORM && format.colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR)
                 return format;
 
         return formats[0];

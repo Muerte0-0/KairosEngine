@@ -28,7 +28,6 @@ namespace Kairos
 	{
 		shader->Bind();
 
-		//vertexArray->Bind();
-		RenderCommand::DrawIndexed(vertexArray);
+		RenderCommand::DrawIndexed(vertexArray, 6);
 	}
 }

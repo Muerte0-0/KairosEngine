@@ -4,6 +4,7 @@
 #include "Renderer.h"
 
 #include "API/OpenGL/OpenGLBuffer.h"
+#include "API/Vulkan/VulkanBuffer.h"
 
 namespace Kairos
 {
@@ -13,7 +14,7 @@ namespace Kairos
 		{
 			case RenderAPI::API::None:				KE_CORE_ASSERT(false, "RendererAPI::None -> Vertex Buffer Not Implemented!"); return nullptr;
 			case RenderAPI::API::OpenGL:			return new OpenGLVertexBuffer(vertices, size);
-			case RenderAPI::API::Vulkan:			KE_CORE_ASSERT(false, "RendererAPI::Vulkan -> Vertex Buffer Not Implemented!"); return nullptr;
+			case RenderAPI::API::Vulkan:			return new VulkanVertexBuffer(vertices, size);
 			#ifdef KE_PLATFORM_WINDOWS
 			case RenderAPI::API::DX3D:				KE_CORE_ASSERT(false, "RendererAPI::DX3D -> Vertex Buffer Not Implemented!"); return nullptr;
 			#endif // KE_PLATFORM_WINDOWS
@@ -30,7 +31,7 @@ namespace Kairos
 		{
 			case RenderAPI::API::None:				KE_CORE_ASSERT(false, "RendererAPI::None -> Index Buffer Not Implemented!"); return nullptr;
 			case RenderAPI::API::OpenGL:			return new OpenGLIndexBuffer(indices, count);
-			case RenderAPI::API::Vulkan:			KE_CORE_ASSERT(false, "RendererAPI::Vulkan -> Index Buffer Not Implemented!"); return nullptr;
+			case RenderAPI::API::Vulkan:			return new VulkanIndexBuffer(indices, count);
 			#ifdef KE_PLATFORM_WINDOWS
 			case RenderAPI::API::DX3D:				KE_CORE_ASSERT(false, "RendererAPI::DX3D -> Index Buffer Not Implemented!"); return nullptr;
 			#endif // KE_PLATFORM_WINDOWS

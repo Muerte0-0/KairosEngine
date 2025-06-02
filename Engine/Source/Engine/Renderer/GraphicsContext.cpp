@@ -17,7 +17,7 @@ namespace Kairos
 			case RenderAPI::API::Vulkan:			return new VulkanContext(windowHandle);
 			#ifdef KE_PLATFORM_WINDOWS
 			case RenderAPI::API::DX3D:				KE_CORE_ASSERT(false, "RendererAPI::DX3D -> Graphics Context Not Implemented!");
-			#endif // AE_PLATFORM_WINDOWS
+			#endif // KE_PLATFORM_WINDOWS
 		}
 
 		KE_CORE_ASSERT(false, "Unknown RendererAPI!");

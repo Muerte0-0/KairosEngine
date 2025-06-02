@@ -1,42 +1,51 @@
 #pragma once
+#define VULKAN_HPP_NO_EXCEPTIONS
+#include <vulkan/vulkan.hpp>
 
+#include "GLFW/glfw3.h"
+
+// Components
 #include "Frame.h"
 
 namespace Kairos
 {
-	struct VkSwapchain
+	struct SwapchainInfo
 	{
-		VkSwapchainKHR swapchain;
-		std::vector<VkImage> images;
-		std::vector<Frame> frames;
-		VkSurfaceFormatKHR imageFormat;
-		VkExtent2D extent;
+		VkSwapchainKHR Swapchain;
+		VkSurfaceFormatKHR ImageFormat;
+		VkExtent2D Extent;
+
+		uint32_t ImageCount;
+		std::vector<VkImageView> ImageViews;
+		std::vector<VkImage> Images;
+		std::vector<Frame> Frames;
 
 		// Dynamic rendering
-		VkDescriptorPool descriptorPool;
-		std::vector<VkDescriptorSet> descriptorSets;
+		VkDescriptorPool DescriptorPool;
+		std::vector<VkDescriptorSet> DescriptorSets;
 	};
 
 	struct SurfaceDetails
 	{
-		VkSurfaceCapabilitiesKHR capabilities;
-		std::vector<VkSurfaceFormatKHR> formats;
-		std::vector<VkPresentModeKHR> presentModes;
+		VkSurfaceCapabilitiesKHR Capabilities;
+		std::vector<VkSurfaceFormatKHR> Formats;
+		std::vector<VkPresentModeKHR> PresentModes;
 	};
 
 	class Swapchain 
 	{
 	public:
-		void RecreateSwapchain(class VulkanContext* vctx);
-		void CreateSwapchain(class VulkanContext* vctx, uint32_t width, uint32_t height);
-		void CreateDescriptorPool(class VulkanContext* vctx);
+		void RecreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, GLFWwindow* window);
 
-		VkSwapchain& GetSwapchainInfo() {return m_SwapchainInfo;}
+		void Destroy(VkDevice logicalDevice);
 
-		void Destroy(VulkanContext* vctx);
+		void CreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t width, uint32_t height);
+		void CreateDescriptorPool(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue);
+
+		SwapchainInfo& Info() {return m_Info;}
 
 	private:
-		VkSwapchain m_SwapchainInfo;
+		SwapchainInfo m_Info;
 		std::deque<std::function<void(VkDevice)>> m_DeletionQueue;
 
 		SurfaceDetails QuerySurfaceSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);

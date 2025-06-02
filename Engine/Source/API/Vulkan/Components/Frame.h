@@ -2,20 +2,24 @@
 #define VULKAN_HPP_NO_EXCEPTIONS
 #include <vulkan/vulkan.hpp>
 
+#include "Image.h"
+#include "Swapchain.h"
+
 namespace Kairos
 {
 	class Frame
 	{
 	public:
-		Frame(VkImage image, VkDevice logicalDevice, VkFormat swapchainFormat, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue);
+		Frame(Swapchain& swapchainRef, VkDevice device, std::vector<vk::ShaderEXT>& shaders, VkCommandBuffer commandBuffer, std::deque<std::function<void(VkDevice)>>& deletionQueue);
+
+		void RecordCommandBuffer(uint32_t imageIndex);
 
 		void SetCommandBuffer(VkCommandBuffer newCommandBuffer, std::vector<VkShaderEXT>& shaders, VkExtent2D frameSize);
 
-		VkImage Image;
-
-		VkImageView ImageView;
-
 		VkCommandBuffer CommandBuffer;
+
+		Swapchain& SwapchainRef;
+		std::vector<VkShaderEXT>& Shaders;
 
 		VkSemaphore ImageAquiredSemaphore;
 		VkSemaphore RenderFinishedSemaphore;
@@ -23,8 +27,9 @@ namespace Kairos
 		VkFence RenderFinishedFence;
 
 	private:
-		void BuildRenderingInfo(VkExtent2D frameSize);
-		void BuildColorAttachment(VkClearValue clearColor = VkClearValue({ 0.1f, 0.1f, 0.1f, 1.0f }));
+		void BuildRenderingInfo();
+		void BuildColorAttachment(uint32_t imageIndex);
+		void AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs();
 
 		VkRenderingInfoKHR RenderingInfo = {};
 		VkRenderingAttachmentInfoKHR ColorAttachment = {};

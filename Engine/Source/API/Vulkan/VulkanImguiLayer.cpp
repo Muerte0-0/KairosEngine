@@ -5,6 +5,7 @@
 #include "Engine/Core/Application.h"
 #include "VulkanContext.h"
 #include "Components/Command.h"
+#include "Components/Image.h"
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
@@ -47,15 +48,15 @@ namespace Kairos
 		VkPipelineRenderingCreateInfo pipeline_rendering_create_info = {};
 		pipeline_rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
 		pipeline_rendering_create_info.colorAttachmentCount = 1;
-		pipeline_rendering_create_info.pColorAttachmentFormats = &vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().imageFormat.format;
+		pipeline_rendering_create_info.pColorAttachmentFormats = &vctx->GetVkContext().Swapchain.Info().ImageFormat.format;
 
 		// Initialize ImGui For Vulkan
 		ImGui_ImplVulkan_InitInfo init_info = {};
-		init_info.Instance = vctx->GetVkContext().instance;
-		init_info.PhysicalDevice = vctx->GetVkContext().physicalDevice;
-		init_info.Device = vctx->GetVkContext().device;
-		init_info.Queue = vctx->GetVkContext().graphicsQueue;
-		init_info.DescriptorPool = vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().descriptorPool;
+		init_info.Instance = vctx->GetVkContext().Instance;
+		init_info.PhysicalDevice = vctx->GetVkContext().PhysicalDevice;
+		init_info.Device = vctx->GetVkContext().LogicalDevice;
+		init_info.Queue = vctx->GetVkContext().GraphicsQueue;
+		init_info.DescriptorPool = vctx->GetVkContext().Swapchain.Info().DescriptorPool;
 		init_info.MinImageCount = 2;
 		init_info.ImageCount = MAX_FRAMES_IN_FLIGHT;
 		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
@@ -90,7 +91,7 @@ namespace Kairos
 		ImGui::Render();
 		DrawImGui();
 
-		vkDeviceWaitIdle(vctx->GetVkContext().device);
+		vkDeviceWaitIdle(vctx->GetVkContext().LogicalDevice);
 
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
@@ -105,27 +106,32 @@ namespace Kairos
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
-		VkCommandBuffer cb = BeginSingleTimeCommands(vctx);
+		VkCommandBuffer cb = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
 
-		 VkRenderingAttachmentInfo colorAttachment = {
-            .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
-            .imageView = vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().frames[vctx->GetVkContext().currentFrame].ImageView,
-            .imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-            .clearValue = {.color = { 0.1f, 0.1f, 0.1f, 1.0f } }
-        };
+		VkRenderingAttachmentInfo colorAttachment = {
+			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
+			.imageView = vctx->GetVkContext().Swapchain.Info().Frames[vctx->GetVkContext().CurrentFrame].ImageView,
+			.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+			.clearValue = {.color = { 0.1f, 0.1f, 0.1f, 1.0f } }
+		};
 
-        VkRenderingInfo renderingInfo = {
-            .sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR,
-            .renderArea = {
-                .offset = { 0, 0 },
-                .extent = vctx->GetVkContext().m_Swapchain.GetSwapchainInfo().extent
-            },
-            .layerCount = 1,
-            .colorAttachmentCount = 1,
-            .pColorAttachments = &colorAttachment,
-        };
+		VkRenderingInfo renderingInfo = {};
+		renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
+		renderingInfo.renderArea = {
+			.offset = { 0, 0 },
+			.extent = vctx->GetVkContext().Swapchain.Info().Extent
+		};
+		renderingInfo.layerCount = 1;
+		renderingInfo.colorAttachmentCount = 1;
+		renderingInfo.pColorAttachments = &colorAttachment;
+		renderingInfo.pNext = nullptr;
+
+		TransitionImageLayout(cb, vctx->GetVkContext().Swapchain.Info().Images[vctx->GetVkContext().CurrentFrame],
+			VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout::VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+			VkAccessFlagBits::VK_ACCESS_NONE, VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 
 		vkCmdBeginRenderingKHR(cb, &renderingInfo);
 
@@ -133,7 +139,12 @@ namespace Kairos
 
 		vkCmdEndRenderingKHR(cb);
 
-		EndSingleTimeCommands(vctx, cb);
+		TransitionImageLayout(cb, vctx->GetVkContext().Swapchain.Info().Images[vctx->GetVkContext().CurrentFrame],
+			VkImageLayout::VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL, VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VkAccessFlagBits::VK_ACCESS_NONE,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, cb, vctx->GetVkContext().CommandPool, vctx->GetVkContext().GraphicsQueue, vctx->GetVkContext().RenderFinishedFence);
 	}
 
 	void VulkanImGuiLayer::OnImGuiRender()

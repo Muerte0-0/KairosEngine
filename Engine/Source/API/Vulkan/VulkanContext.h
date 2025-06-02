@@ -8,42 +8,36 @@
 #include <GLFW/glfw3.h>
 
 // Components
+#include "Components/Instance.h"
 #include "Components/Swapchain.h"
 
 namespace Kairos
 {
-	struct QueueFamilyIndices
-	{
-		uint32_t graphics_family;
-		uint32_t present_family;
-		uint32_t compute_family;
-		bool has_compute;
-	};
-
 	struct VkContext 
 	{
-		VkInstance instance;
-		VkSurfaceKHR surface = VK_NULL_HANDLE;
-		VkPhysicalDevice physicalDevice;
-		VkDevice device;
+		VkInstance Instance;
+		VkDebugUtilsMessengerEXT Messenger;
 
-		VmaAllocator allocator = VK_NULL_HANDLE;
-		VkAllocationCallbacks* callbacks;
+		VkSurfaceKHR Surface = VK_NULL_HANDLE;
+		VkPhysicalDevice PhysicalDevice;
+		VkDevice LogicalDevice;
 
-		VkQueue graphicsQueue;
-		VkQueue presentQueue;
-		VkQueue computeQueue;
+		VmaAllocator Allocator = VK_NULL_HANDLE;
+		VkAllocationCallbacks* AllocationCallbacks;
 
-		Swapchain m_Swapchain;
+		VkQueue GraphicsQueue;
+		VkQueue PresentQueue;
+		VkQueue ComputeQueue;
 
-		VkCommandPool commandPool = VK_NULL_HANDLE;
-		std::vector<VkCommandBuffer> commandBuffers;
+		Swapchain Swapchain;
 
-		std::vector<VkSemaphore> imageAvailableSemaphores; // Signaled when swapchain image is ready
-		std::vector<VkSemaphore> renderFinishedSemaphores; // Signaled when rendering completes
-		std::vector<VkFence> inFlightFences;               // CPU-GPU synchronization
-		std::vector<VkFence> imagesInFlight;               // Track in-use swapchain images
-		size_t currentFrame = 0;
+		VkCommandPool CommandPool = VK_NULL_HANDLE;
+
+		VkSemaphore ImageAquiredSemaphore;
+		VkSemaphore RenderFinishedSemaphore;
+		VkFence RenderFinishedFence;
+
+		size_t CurrentFrame = 0;
 	};
 
 #define VK_CHECK(result) \
@@ -64,8 +58,6 @@ namespace Kairos
 		virtual void SwapBuffers() override;
 		virtual void Cleanup() override;
 
-		QueueFamilyIndices FindQueueFamilies();
-
 		std::deque<std::function<void(VkInstance)>>& GetInstanceDeletionQueue() { return m_InstanceDeletionQueue; }
 		std::deque<std::function<void(VkDevice)>>& GetDeviceDeletionQueue() { return m_DeviceDeletionQueue; }
 
@@ -76,12 +68,6 @@ namespace Kairos
 		GLFWwindow* m_WindowHandle;
 
 		VkContext m_Context;
-
-		void Init_Instance();
-
-		void Init_Device();
-		void SelectPhysicalDevice();
-		void CreateLogicalDevice();
 
 		void Init_Allocator();
 

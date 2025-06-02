@@ -7,7 +7,6 @@
 
 #include "volk.h"
 
-
 namespace Kairos
 {
 
@@ -20,15 +19,15 @@ namespace Kairos
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
-		vctx->GetVkContext().m_Swapchain.RecreateSwapchain(vctx);
-	}
-
-	void VulkanRenderAPI::DrawIndexed(const Ref<VertexArray>& vertexArray)
-	{
-
+		vctx->GetVkContext().Swapchain.RecreateSwapchain(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().PhysicalDevice, vctx->GetVkContext().Surface, vctx->GetWindowHandle());
 	}
 
 	void VulkanRenderAPI::Clear()
+	{
+		
+	}
+
+	void VulkanRenderAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount)
 	{
 		
 	}

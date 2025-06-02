@@ -2,18 +2,11 @@
 #define VULKAN_HPP_NO_EXCEPTIONS
 #include <vulkan/vulkan.hpp>
 
-#include "API/Vulkan/VulkanContext.h"
-
 namespace Kairos
 {
-	void CreateCommandPool(VulkanContext* vctx);
-	void CreateCommandBuffers(VulkanContext* vctx);
-	void CreateSyncObjects(VulkanContext* vctx);
+	VkCommandPool CreateCommandPool(VkDevice logicalDevice, uint32_t queueFamilyIndex, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue);
+	VkCommandBuffer AllocateCommandBuffer(VkDevice logicalDevice, VkCommandPool commandPool);
 
-	VkCommandBuffer BeginSingleTimeCommands(VulkanContext* vctx);
-	void EndSingleTimeCommands(VulkanContext* vctx, VkCommandBuffer commandBuffer);
-
-	void ClearFrame(VulkanContext* vctx);
-
-	void RecordCommandBuffer(VulkanContext* vctx, VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	VkCommandBuffer BeginSingleTimeCommands(VkDevice logicalDevice, VkCommandPool commandPool);
+	void EndSingleTimeCommands(VkDevice logicalDevice, VkCommandBuffer commandBuffer, VkCommandPool commandPool, VkQueue graphicsQueue, VkFence renderFinishedFence);
 }

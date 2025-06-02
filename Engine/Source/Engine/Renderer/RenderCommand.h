@@ -20,7 +20,7 @@ namespace Kairos
 
 		inline static void Clear() { s_RendererAPI->Clear(); }
 		
-		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray) { s_RendererAPI->DrawIndexed(vertexArray); }
+		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, uint32_t indexCount) { s_RendererAPI->DrawIndexed(vertexArray, indexCount); }
 
 		inline static RenderAPI* GetRenderAPI() { return s_RendererAPI; }
 	};
