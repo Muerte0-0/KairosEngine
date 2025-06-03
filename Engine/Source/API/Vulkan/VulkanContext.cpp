@@ -52,11 +52,6 @@ namespace Kairos
 
 		m_Context.CommandPool = CreateCommandPool(m_Context.LogicalDevice, FindQueueFamilyIndex(m_Context.PhysicalDevice, m_Context.Surface, VK_QUEUE_GRAPHICS_BIT), m_DeviceDeletionQueue);
 
-		for (uint32_t i = 0; i < 2; ++i) {
-			vk::CommandBuffer commandBuffer = AllocateCommandBuffer(m_Context.LogicalDevice, m_Context.CommandPool);
-			frames.push_back(Frame(swapchain, logicalDevice, shaders, commandBuffer, m_DeviceDeletionQueue));
-		}
-
 		m_Context.ImageAquiredSemaphore = MakeSemaphore(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 		m_Context.RenderFinishedSemaphore = MakeSemaphore(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 		m_Context.RenderFinishedFence = MakeFence(m_Context.LogicalDevice, m_DeviceDeletionQueue);
@@ -101,9 +96,9 @@ namespace Kairos
 
 	void VulkanContext::SwapBuffers()
 	{
-		vkDeviceWaitIdle(m_Context.LogicalDevice);
-
 		vkWaitForFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence, VK_TRUE, UINT64_MAX);
+
+		vkResetFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence);
 
 		uint32_t imageIndex;
 		VkResult aquireResult = vkAcquireNextImageKHR(m_Context.LogicalDevice, m_Context.Swapchain.Info().Swapchain, UINT64_MAX, m_Context.ImageAquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
@@ -114,15 +109,13 @@ namespace Kairos
 			return;
 		}
 
-		vkResetFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence);
-
-		m_Context.Swapchain.Info().Frames[imageIndex].RecordCommandBuffer(imageIndex);
+		m_Context.Frames[imageIndex].RecordCommandBuffer(imageIndex);
 
 		VkSubmitInfo submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.pNext = nullptr;
-		submitInfo.commandBufferCount = 0;
-		submitInfo.pCommandBuffers = &m_Context.Swapchain.Info().Frames[m_Context.CurrentFrame].CommandBuffer;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &m_Context.Frames[imageIndex].CommandBuffer;
 		submitInfo.waitSemaphoreCount = 1;
 		submitInfo.pWaitSemaphores = &m_Context.ImageAquiredSemaphore;
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -130,7 +123,6 @@ namespace Kairos
 		submitInfo.signalSemaphoreCount = 1;
 		submitInfo.pSignalSemaphores = &m_Context.RenderFinishedSemaphore;
 
-		vkQueueWaitIdle(m_Context.GraphicsQueue);
 		vkQueueSubmit(m_Context.GraphicsQueue, 1, &submitInfo, m_Context.RenderFinishedFence);
 
 		VkPresentInfoKHR presentInfo = {};
@@ -142,8 +134,6 @@ namespace Kairos
 		presentInfo.waitSemaphoreCount = 1;
 		presentInfo.pWaitSemaphores = &m_Context.RenderFinishedSemaphore;
 
-
-		vkQueueWaitIdle(m_Context.GraphicsQueue);
 		vkWaitForFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence, VK_TRUE, UINT64_MAX);
 		VkResult presentResult = vkQueuePresentKHR(m_Context.GraphicsQueue, &presentInfo);
 

@@ -73,7 +73,7 @@ namespace Kairos
 	{
 		KE_PROFILE_FUNCTION();
 
-		return;
+		return; // Disable ImGui rendering for now
 
 		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
 

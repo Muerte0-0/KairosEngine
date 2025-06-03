@@ -5,6 +5,7 @@
 #include "VulkanContext.h"
 
 #include "Components/Command.h"
+#include "Components/Frame.h"
 
 #include "volk.h"
 
@@ -53,11 +54,14 @@ namespace Kairos
 		auto count = lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash;
 		m_ShaderName = filepath.substr(lastSlash, count);
 
-		auto shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
+		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
 										vctx->GetDeviceDeletionQueue(), true);
 
 		for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); ++i)
-			vctx->GetVkContext().Swapchain.Info().Frames[i].SetCommandBuffer(AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool), shaders, vctx->GetVkContext().Swapchain.Info().Extent);
+		{
+			VkCommandBuffer commandBuffer = AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+			vctx->GetVkContext().Frames.push_back(Frame(vctx->GetVkContext().Swapchain, vctx->GetVkContext().LogicalDevice, m_Shaders, commandBuffer, vctx->GetDeviceDeletionQueue()));
+		}
 	}
 
 	VulkanShader::VulkanShader(const std::string& vertFilepath, const std::string& fragFilepath)
@@ -74,11 +78,14 @@ namespace Kairos
 		auto vertSrc = ReadCode(vertFilepath + ".spv");
 		auto fragSrc = ReadCode(fragFilepath + ".spv");
 
-		auto shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), vertSrc, fragSrc,
+		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), vertSrc, fragSrc,
 			vctx->GetDeviceDeletionQueue(), false);
 
 		for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); ++i)
-			vctx->GetVkContext().Swapchain.Info().Frames[i].SetCommandBuffer(AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool), shaders, vctx->GetVkContext().Swapchain.Info().Extent);
+		{
+			VkCommandBuffer commandBuffer = AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+			vctx->GetVkContext().Frames.push_back(Frame(vctx->GetVkContext().Swapchain, vctx->GetVkContext().LogicalDevice, m_Shaders, commandBuffer, vctx->GetDeviceDeletionQueue()));
+		}
 	}
 
 	VulkanShader::VulkanShader(std::string& shaderName, std::string& vertCode, std::string& fragCode) : m_ShaderName(shaderName)
@@ -104,11 +111,14 @@ namespace Kairos
 		PreProcessShader(shaderSources, options);
 		CompileToAssembly(shaderSources, options);
 
-		auto shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
+		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
 			vctx->GetDeviceDeletionQueue(), true);
 
 		for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); ++i)
-			vctx->GetVkContext().Swapchain.Info().Frames[i].SetCommandBuffer(AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool), shaders, vctx->GetVkContext().Swapchain.Info().Extent);
+		{
+			VkCommandBuffer commandBuffer = AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+			vctx->GetVkContext().Frames.push_back(Frame(vctx->GetVkContext().Swapchain, vctx->GetVkContext().LogicalDevice, m_Shaders, commandBuffer, vctx->GetDeviceDeletionQueue()));
+		}
 	}
 
 	std::vector<VkShaderEXT> VulkanShader::MakeShaderObjects(VkDevice device, const char* name, std::vector<char> vertSrc, std::vector<char> fragSrc,
@@ -210,12 +220,15 @@ namespace Kairos
 
 	void VulkanShader::Bind() const
 	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
+		//for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); ++i)
+			//vctx->GetVkContext().Frames[i].UpdateShaders(m_Shaders);
 	}
 
 	void VulkanShader::UnBind() const
 	{
-
+		
 	}
 
 	std::vector<char> VulkanShader::ReadCode(const std::string& filepath)

@@ -4,9 +4,6 @@
 
 #include "GLFW/glfw3.h"
 
-// Components
-#include "Frame.h"
-
 namespace Kairos
 {
 	struct SwapchainInfo
@@ -18,7 +15,6 @@ namespace Kairos
 		uint32_t ImageCount;
 		std::vector<VkImageView> ImageViews;
 		std::vector<VkImage> Images;
-		std::vector<Frame> Frames;
 
 		// Dynamic rendering
 		VkDescriptorPool DescriptorPool;

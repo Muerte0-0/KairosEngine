@@ -1,6 +1,7 @@
 #include "kepch.h"
 
 #include "Swapchain.h"
+#include "Image.h"
 
 #include "volk.h"
 
@@ -11,6 +12,10 @@ namespace Kairos
 {
     void Swapchain::RecreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, GLFWwindow* window)
     {
+		KE_CORE_INFO("Recreating Swapchain...");
+
+        vkDeviceWaitIdle(logicalDevice);
+
         Destroy(logicalDevice);
 
         int width, height;
@@ -21,8 +26,6 @@ namespace Kairos
 
     void Swapchain::Destroy(VkDevice logicalDevice)
     {
-        vkDeviceWaitIdle(logicalDevice);
-
         while (m_DeletionQueue.size() > 0)
         {
             m_DeletionQueue.back()(logicalDevice);

@@ -194,19 +194,43 @@ namespace Kairos
 				});
 		}
 
-		VkPhysicalDeviceFeatures deviceFeatures = VkPhysicalDeviceFeatures();
-		VkPhysicalDeviceShaderObjectFeaturesEXT shaderFeatures = VkPhysicalDeviceShaderObjectFeaturesEXT(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT);
-		shaderFeatures.shaderObject = true;
-		VkPhysicalDeviceVulkan13Features vulkan13Features = VkPhysicalDeviceVulkan13Features(VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES);
-		vulkan13Features.synchronization2 = true;
-		vulkan13Features.dynamicRendering = true;
+		VkPhysicalDeviceFeatures deviceFeatures = 
+		{
+			.multiViewport = VK_TRUE,
+		};
 
-		shaderFeatures.pNext = &vulkan13Features;
-		vulkan13Features.pNext = nullptr;
+		VkPhysicalDeviceFeatures2 deviceFeatures2 = 
+		{
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+			.features = deviceFeatures,
+		};
+
+		VkPhysicalDeviceShaderObjectFeaturesEXT shaderObjectFeatures =
+		{
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT,
+			.shaderObject = VK_TRUE,
+		};
+		
+
+		VkPhysicalDeviceShaderDrawParametersFeatures shaderDrawParamsFeatures = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES,
+			.shaderDrawParameters = VK_TRUE
+		};
+
+		VkPhysicalDeviceVulkan13Features vulkan13Features = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+			.synchronization2 = VK_TRUE,
+			.dynamicRendering = VK_TRUE,
+		};
+
+		deviceFeatures2.pNext = &shaderObjectFeatures;
+		shaderObjectFeatures.pNext = &shaderDrawParamsFeatures;
+		shaderDrawParamsFeatures.pNext = &vulkan13Features;
 
 		std::vector<const char*> enabledLayers;
 #ifdef KE_DEBUG
 		enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
+		enabledLayers.push_back("VK_LAYER_KHRONOS_synchronization");
 #endif // KE_DEBUG
 
 		std::vector<const char*> enabledExtensions
@@ -215,14 +239,16 @@ namespace Kairos
 			VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
 			VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
 			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
+			VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
+			VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME,
 		};
 
 		VkDeviceCreateInfo deviceCreateInfo;
 
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		deviceCreateInfo.flags = VkDeviceCreateFlags();
-		deviceCreateInfo.pEnabledFeatures = &deviceFeatures;
-		deviceCreateInfo.pNext = &shaderFeatures;
+		deviceCreateInfo.pEnabledFeatures = nullptr;
+		deviceCreateInfo.pNext = &deviceFeatures2;
 
 		deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.size();
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();

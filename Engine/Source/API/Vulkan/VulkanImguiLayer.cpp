@@ -89,7 +89,7 @@ namespace Kairos
 
 		// Rendering
 		ImGui::Render();
-		DrawImGui();
+		//DrawImGui();
 
 		vkDeviceWaitIdle(vctx->GetVkContext().LogicalDevice);
 
@@ -110,7 +110,7 @@ namespace Kairos
 
 		VkRenderingAttachmentInfo colorAttachment = {
 			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
-			.imageView = vctx->GetVkContext().Swapchain.Info().Frames[vctx->GetVkContext().CurrentFrame].ImageView,
+			.imageView = vctx->GetVkContext().Swapchain.Info().ImageViews[vctx->GetVkContext().CurrentFrame],
 			.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
 			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,

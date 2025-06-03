@@ -10,6 +10,7 @@
 // Components
 #include "Components/Instance.h"
 #include "Components/Swapchain.h"
+#include "Components/Frame.h"
 
 namespace Kairos
 {
@@ -30,6 +31,7 @@ namespace Kairos
 		VkQueue ComputeQueue;
 
 		Swapchain Swapchain;
+		std::vector<Frame> Frames;
 
 		VkCommandPool CommandPool = VK_NULL_HANDLE;
 

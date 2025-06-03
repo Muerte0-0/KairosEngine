@@ -26,6 +26,8 @@ namespace Kairos
 		std::string ReadFile(const std::string& filepath);
 		std::string m_ShaderName;
 
+		std::vector<VkShaderEXT> m_Shaders;
+
 		std::unordered_map<shaderc_shader_kind, std::string> PreProcess(const std::string& source);
 		void PreProcessShader(std::unordered_map<shaderc_shader_kind, std::vector<char>>& shaderSources, shaderc::CompileOptions& options);
 		void CompileToAssembly(std::unordered_map<shaderc_shader_kind, std::vector<char>>& shaderSources, shaderc::CompileOptions& options);

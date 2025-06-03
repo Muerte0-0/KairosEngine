@@ -14,8 +14,8 @@ namespace Kairos
 		switch (Renderer::GetAPI())
 		{
 			case RenderAPI::API::None:				KE_CORE_ASSERT(false, "RendererAPI::None -> Shaders Not Implemented!"); return nullptr;
-			case RenderAPI::API::OpenGL:			return std::make_shared<OpenGLShader>(filepath);
-			case RenderAPI::API::Vulkan:			return std::make_shared<VulkanShader>(filepath);
+			case RenderAPI::API::OpenGL:			return CreateRef<OpenGLShader>(filepath);
+			case RenderAPI::API::Vulkan:			return CreateRef<VulkanShader>(filepath);
 			#ifdef KE_PLATFORM_WINDOWS
 			case RenderAPI::API::DX3D:				KE_CORE_ASSERT(false, "RendererAPI::DX3D -> Shaders Not Implemented!"); return nullptr;
 			#endif // KE_PLATFORM_WINDOWS
@@ -30,8 +30,8 @@ namespace Kairos
 		switch (Renderer::GetAPI())
 		{
 			case RenderAPI::API::None:				KE_CORE_ASSERT(false, "RendererAPI::None -> Shaders Not Implemented!");
-			case RenderAPI::API::OpenGL:			return std::make_shared<OpenGLShader>(vertFilepath, fragFilepath);
-			case RenderAPI::API::Vulkan:			return std::make_shared<VulkanShader>(vertFilepath, fragFilepath);
+			case RenderAPI::API::OpenGL:			return CreateRef<OpenGLShader>(vertFilepath, fragFilepath);
+			case RenderAPI::API::Vulkan:			return CreateRef<VulkanShader>(vertFilepath, fragFilepath);
 			#ifdef KE_PLATFORM_WINDOWS
 			case RenderAPI::API::DX3D:				KE_CORE_ASSERT(false, "RendererAPI::DX3D -> Shaders Not Implemented!");
 			#endif // KE_PLATFORM_WINDOWS
@@ -46,8 +46,8 @@ namespace Kairos
 		switch (Renderer::GetAPI())
 		{
 			case RenderAPI::API::None:				KE_CORE_ASSERT(false, "RendererAPI::None -> Shaders Not Implemented!");
-			case RenderAPI::API::OpenGL:			return std::make_shared<OpenGLShader>(shaderName, vertCode, fragCode);
-			case RenderAPI::API::Vulkan:			return std::make_shared<VulkanShader>(shaderName, vertCode, fragCode);
+			case RenderAPI::API::OpenGL:			return CreateRef<OpenGLShader>(shaderName, vertCode, fragCode);
+			case RenderAPI::API::Vulkan:			return CreateRef<VulkanShader>(shaderName, vertCode, fragCode);
 			#ifdef KE_PLATFORM_WINDOWS
 			case RenderAPI::API::DX3D:				KE_CORE_ASSERT(false, "RendererAPI::DX3D -> Shaders Not Implemented!");
 			#endif // KE_PLATFORM_WINDOWS

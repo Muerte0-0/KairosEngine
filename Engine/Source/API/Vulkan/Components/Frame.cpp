@@ -2,16 +2,18 @@
 
 #include "Frame.h"
 #include "Synchronization.h"
+#include "Swapchain.h"
 
 #include "Engine/Renderer/Renderer.h"
 
 #include "volk.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_vulkan.h"
+
 namespace Kairos
 {
-
-
-	Frame::Frame(Swapchain& swapchainRef, VkDevice logicalDevice, std::vector<vk::ShaderEXT>& shaders, VkCommandBuffer commandBuffer, std::deque<std::function<void(VkDevice)>>& deletionQueue)
+	Frame::Frame(Swapchain& swapchainRef, VkDevice logicalDevice, std::vector<VkShaderEXT>& shaders, VkCommandBuffer commandBuffer, std::deque<std::function<void(VkDevice)>>& deletionQueue)
 		: SwapchainRef(swapchainRef), CommandBuffer(commandBuffer), Shaders(shaders)
 	{
 		ImageAquiredSemaphore = MakeSemaphore(logicalDevice, deletionQueue);
@@ -21,7 +23,7 @@ namespace Kairos
 
 	void Frame::RecordCommandBuffer(uint32_t imageIndex)
 	{
-		vkResetCommandBuffer(CommandBuffer, VK_COMMAND_BUFFER_RESET_FLAG_BITS_MAX_ENUM);
+		vkResetCommandBuffer(CommandBuffer, NULL);
 		BuildColorAttachment(imageIndex);
 		BuildRenderingInfo();
 
@@ -30,7 +32,7 @@ namespace Kairos
 		vkBeginCommandBuffer(CommandBuffer, &beginInfo);
 
 		TransitionImageLayout(CommandBuffer, SwapchainRef.Info().Images[imageIndex],
-			VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout::VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+			VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			VkAccessFlagBits::VK_ACCESS_NONE, VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 
@@ -39,20 +41,24 @@ namespace Kairos
 		vkCmdBeginRenderingKHR(CommandBuffer, &RenderingInfo);
 
 		VkShaderStageFlagBits stages[2] = {
-			VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT,
-			VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT
+			VK_SHADER_STAGE_VERTEX_BIT,
+			VK_SHADER_STAGE_FRAGMENT_BIT
 		};
 
 		vkCmdBindShadersEXT(CommandBuffer, Shaders.size(), stages, Shaders.data());
 
+		//vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
+
 		vkCmdDraw(CommandBuffer, 3, 1, 0, 0);
+
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBuffer);
 
 		vkCmdEndRenderingKHR(CommandBuffer);
 
 		TransitionImageLayout(CommandBuffer, SwapchainRef.Info().Images[imageIndex],
 			VkImageLayout::VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL, VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VkAccessFlagBits::VK_ACCESS_NONE,
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
+			VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT,
+			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 
 		vkEndCommandBuffer(CommandBuffer);
 	}
@@ -80,8 +86,17 @@ namespace Kairos
 
 	void Frame::AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs()
 	{
-		VkViewport viewport = VkViewport(0.0f, 0.0f, SwapchainRef.Info().Extent.width, SwapchainRef.Info().Extent.height, 0.0f, 1.0f);
-		vkCmdSetViewportWithCountEXT(CommandBuffer, 1, &viewport);
+		if (SwapchainRef.Info().Extent.width != 0 && SwapchainRef.Info().Extent.height != 0)
+		{
+			VkViewport viewport = VkViewport
+			{
+				.x = 0.0f, .y = 0.0f,
+				.width = (float)SwapchainRef.Info().Extent.width,
+				.height = (float)SwapchainRef.Info().Extent.height,
+				.minDepth = 0.0f, .maxDepth = 1.0f
+			};
+			vkCmdSetViewportWithCountEXT(CommandBuffer, 1, &viewport);
+		}
 
 		VkRect2D scissor = VkRect2D({ 0,0 }, SwapchainRef.Info().Extent);
 		vkCmdSetScissorWithCountEXT(CommandBuffer, 1, &scissor);
@@ -140,4 +155,5 @@ namespace Kairos
 			VK_COLOR_COMPONENT_A_BIT;
 		vkCmdSetColorWriteMaskEXT(CommandBuffer, 0, 1, &colorWriteMask);
 	}
+
 }
