@@ -19,6 +19,7 @@ namespace Kairos
 	void OpenGLRenderAPI::Clear()
 	{
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
@@ -26,6 +27,7 @@ namespace Kairos
 	{
 		vertexArray->Bind();
 		uint32_t count = indexCount ? indexCount : vertexArray->GetIndexBuffer()->GetCount();
+
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 	}
 }

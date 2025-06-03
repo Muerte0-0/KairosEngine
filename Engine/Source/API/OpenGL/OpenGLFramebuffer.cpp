@@ -9,7 +9,6 @@ namespace Kairos
 
 	namespace Utils
 	{
-
 		static GLenum TextureTarget(bool multisampled)
 		{
 			return multisampled ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;

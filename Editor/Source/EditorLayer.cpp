@@ -16,7 +16,7 @@ namespace Kairos
 		//float vertices[3 * 7] = {
 		//	-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
 		//	 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
-		//	 0.0f,  0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
+		//	 0.0f, -0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
 		//};
 		//
 		//Ref<VertexBuffer> vertexBuffer;
@@ -73,13 +73,13 @@ namespace Kairos
 	{
 		KE_PROFILE_FUNCTION();
 
-		return; // Disable ImGui rendering for now
+		//return; // Disable ImGui rendering for now
 
-		static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
 
-		ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+		ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 
-		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+		dockspaceWindowFlags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 			ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
 
 		const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -90,7 +90,7 @@ namespace Kairos
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-		ImGui::Begin("Editor Dockspace", nullptr, window_flags);
+		ImGui::Begin("Editor Dockspace", nullptr, dockspaceWindowFlags);
 
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar(2);
@@ -99,7 +99,7 @@ namespace Kairos
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("Editor Dockspace");
-			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspaceFlags);
 		}
 
 		if (ImGui::BeginMenuBar())
@@ -176,16 +176,16 @@ namespace Kairos
 			//uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
 			//ImGui::Image(textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
-
+		
 		ImGui::Begin("Scene Hierarchy");
 		ImGui::End();
-
+		
 		ImGui::Begin("Content Browser");
 		ImGui::End();
-
+		
 		ImGui::Begin("Console");
 		ImGui::End();
-
+		
 		ImGui::Begin("Details");
 		ImGui::End();
 

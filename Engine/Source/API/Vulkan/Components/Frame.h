@@ -15,7 +15,6 @@ namespace Kairos
 		void RecordCommandBuffer(uint32_t imageIndex);
 
 		VkCommandBuffer CommandBuffer;
-		VkPipeline Pipeline = VK_NULL_HANDLE;
 
 		Swapchain& SwapchainRef;
 		std::vector<VkShaderEXT>& Shaders;

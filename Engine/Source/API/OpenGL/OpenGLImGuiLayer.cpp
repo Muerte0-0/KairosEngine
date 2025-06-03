@@ -6,7 +6,9 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+
 #include "GLFW/glfw3.h"
+#include <glad/gl.h>
 
 namespace Kairos
 {
@@ -61,6 +63,7 @@ namespace Kairos
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 
 		// Rendering
+		glDisable(GL_SCISSOR_TEST);
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

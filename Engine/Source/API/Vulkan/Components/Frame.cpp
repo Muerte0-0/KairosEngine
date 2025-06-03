@@ -23,7 +23,7 @@ namespace Kairos
 
 	void Frame::RecordCommandBuffer(uint32_t imageIndex)
 	{
-		vkResetCommandBuffer(CommandBuffer, NULL);
+		vkResetCommandBuffer(CommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 		BuildColorAttachment(imageIndex);
 		BuildRenderingInfo();
 
@@ -46,8 +46,6 @@ namespace Kairos
 		};
 
 		vkCmdBindShadersEXT(CommandBuffer, Shaders.size(), stages, Shaders.data());
-
-		//vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, Pipeline);
 
 		vkCmdDraw(CommandBuffer, 3, 1, 0, 0);
 
@@ -86,6 +84,8 @@ namespace Kairos
 
 	void Frame::AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs()
 	{
+		vkCmdSetVertexInputEXT(CommandBuffer, 0, nullptr, 0, nullptr);
+
 		if (SwapchainRef.Info().Extent.width != 0 && SwapchainRef.Info().Extent.height != 0)
 		{
 			VkViewport viewport = VkViewport
@@ -95,35 +95,18 @@ namespace Kairos
 				.height = (float)SwapchainRef.Info().Extent.height,
 				.minDepth = 0.0f, .maxDepth = 1.0f
 			};
+
 			vkCmdSetViewportWithCountEXT(CommandBuffer, 1, &viewport);
 		}
 
 		VkRect2D scissor = VkRect2D({ 0,0 }, SwapchainRef.Info().Extent);
 		vkCmdSetScissorWithCountEXT(CommandBuffer, 1, &scissor);
 
-		VkVertexInputBindingDescription2EXT bindingDesc = {
-			.sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_BINDING_DESCRIPTION_2_EXT,
-			.binding = 0,
-			.stride = sizeof(float) * 3, // 3 floats (x, y, z)
-			.inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
-			.divisor = 1,
-		};
-
-		VkVertexInputAttributeDescription2EXT attributeDesc = {
-			.sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT,
-			.location = 0,
-			.binding = 0,
-			.format = VK_FORMAT_R32G32B32_SFLOAT, // vec3
-			.offset = 0,
-		};
-
-		vkCmdSetVertexInputEXT(CommandBuffer, 1, &bindingDesc, 1, &attributeDesc);
-
 		vkCmdSetRasterizerDiscardEnableEXT(CommandBuffer, VK_FALSE);
 		vkCmdSetPolygonModeEXT(CommandBuffer, VK_POLYGON_MODE_FILL);
 		vkCmdSetRasterizationSamplesEXT(CommandBuffer, VK_SAMPLE_COUNT_1_BIT);
 
-		const VkSampleMask sampleMask = VkSampleMask();
+		uint32_t sampleMask = 1;
 		vkCmdSetSampleMaskEXT(CommandBuffer, VK_SAMPLE_COUNT_1_BIT, &sampleMask);
 
 		vkCmdSetAlphaToCoverageEnableEXT(CommandBuffer, VK_FALSE);
@@ -140,10 +123,10 @@ namespace Kairos
 
 		VkColorBlendEquationEXT equation;
 		equation.colorBlendOp = VK_BLEND_OP_ADD;
-		equation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-		equation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-		equation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE; // Must be valid!
+		equation.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+		equation.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
 		equation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		equation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
 		equation.alphaBlendOp = VK_BLEND_OP_ADD;
 
 		vkCmdSetColorBlendEquationEXT(CommandBuffer, 0, 1, &equation);

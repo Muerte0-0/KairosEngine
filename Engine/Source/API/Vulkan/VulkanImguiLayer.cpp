@@ -89,7 +89,6 @@ namespace Kairos
 
 		// Rendering
 		ImGui::Render();
-		//DrawImGui();
 
 		vkDeviceWaitIdle(vctx->GetVkContext().LogicalDevice);
 
@@ -100,51 +99,6 @@ namespace Kairos
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(current_context_backup);
 		}
-	}
-
-	void VulkanImGuiLayer::DrawImGui()
-	{
-		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
-
-		VkCommandBuffer cb = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
-
-		VkRenderingAttachmentInfo colorAttachment = {
-			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR,
-			.imageView = vctx->GetVkContext().Swapchain.Info().ImageViews[vctx->GetVkContext().CurrentFrame],
-			.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-			.storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-			.clearValue = {.color = { 0.1f, 0.1f, 0.1f, 1.0f } }
-		};
-
-		VkRenderingInfo renderingInfo = {};
-		renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
-		renderingInfo.renderArea = {
-			.offset = { 0, 0 },
-			.extent = vctx->GetVkContext().Swapchain.Info().Extent
-		};
-		renderingInfo.layerCount = 1;
-		renderingInfo.colorAttachmentCount = 1;
-		renderingInfo.pColorAttachments = &colorAttachment;
-		renderingInfo.pNext = nullptr;
-
-		TransitionImageLayout(cb, vctx->GetVkContext().Swapchain.Info().Images[vctx->GetVkContext().CurrentFrame],
-			VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout::VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
-			VkAccessFlagBits::VK_ACCESS_NONE, VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-
-		vkCmdBeginRenderingKHR(cb, &renderingInfo);
-
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cb);
-
-		vkCmdEndRenderingKHR(cb);
-
-		TransitionImageLayout(cb, vctx->GetVkContext().Swapchain.Info().Images[vctx->GetVkContext().CurrentFrame],
-			VkImageLayout::VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL, VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VkAccessFlagBits::VK_ACCESS_NONE,
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT);
-
-		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, cb, vctx->GetVkContext().CommandPool, vctx->GetVkContext().GraphicsQueue, vctx->GetVkContext().RenderFinishedFence);
 	}
 
 	void VulkanImGuiLayer::OnImGuiRender()

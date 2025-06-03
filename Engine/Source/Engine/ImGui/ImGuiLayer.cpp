@@ -33,6 +33,7 @@ namespace Kairos
 		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;			// Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;				// Enable Docking
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;				// Enable Viewports
+		io.ConfigFlags |= ImGuiConfigFlags_IsSRGB;						// Enable SRGB for ImGui
 
 		// Setup Dear ImGui Style
 		ImGui::StyleColorsDark();
@@ -59,8 +60,10 @@ namespace Kairos
 	void ImGuiLayer::SetDarkThemeColors()
 	{
 		auto& colors = ImGui::GetStyle().Colors;
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
-		colors[ImGuiCol_ChildBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
+		//colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
+		colors[ImGuiCol_WindowBg] = ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f }; // Transparent background for viewports
+		//colors[ImGuiCol_ChildBg] = ImVec4{ 0.1f, 0.105f, 0.11f, 1.0f };
+		colors[ImGuiCol_ChildBg] = ImVec4{ 0.0f, 0.0f, 0.0f, 0.0f }; // Transparent background for child windows
 
 		// Headers
 		colors[ImGuiCol_Header] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };

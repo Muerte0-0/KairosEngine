@@ -1,4 +1,6 @@
 #pragma once
+#define VULKAN_HPP_NO_EXCEPTIONS
+#include <vulkan/vulkan.hpp>
 
 #include "Engine/Renderer/Framebuffer.h"
 
@@ -20,7 +22,7 @@ namespace Kairos
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) override;
 
-		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override { KE_CORE_ASSERT(index < m_ColorAttachments.size()); return m_ColorAttachments[index]; }
+		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override;
 
 		virtual const FramebufferSpecification& GetSpecification() const override { return m_Specification; }
 
@@ -33,5 +35,9 @@ namespace Kairos
 
 		std::vector<uint32_t> m_ColorAttachments;
 		uint32_t m_DepthAttachment = 0;
+
+		// For ImGui integration
+		std::vector<VkDescriptorSet> m_ImGuiTextureDescriptors;
+		std::vector<VkSampler> m_ImGuiSamplers;
 	};
 }
