@@ -168,6 +168,7 @@ namespace Kairos
 		}
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
 		ImGui::Begin("Viewport");
 			ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 			m_ViewportSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
@@ -177,6 +178,7 @@ namespace Kairos
 				ImGui::Image(textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 			}
 		ImGui::End();
+
 		ImGui::PopStyleVar();
 
 		ImGui::Begin("Scene Hierarchy");
