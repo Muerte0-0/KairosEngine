@@ -94,10 +94,10 @@ namespace Kairos
 	{
 		for (auto spec : m_Specification.Attachments.Attachments)
 		{
-			if (!Utils::IsDepthFormat(spec.TextureFormat))
-				m_ColorAttachmentSpecifications.emplace_back(spec);
-			else
+			if (Utils::IsDepthFormat(spec.TextureFormat))
 				m_DepthAttachmentSpecification = spec;
+			else
+				m_ColorAttachmentSpecifications.emplace_back(spec);
 		}
 
 		Invalidate();
@@ -186,6 +186,7 @@ namespace Kairos
 	void OpenGLFramebuffer::Unbind()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)

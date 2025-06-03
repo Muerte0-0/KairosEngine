@@ -55,7 +55,7 @@ namespace Kairos
 		return commandBuffer;
 	}
 
-	void EndSingleTimeCommands(VkDevice logicalDevice, VkCommandBuffer commandBuffer, VkCommandPool commandPool, VkQueue graphicsQueue, VkFence renderFinishedFence)
+	void EndSingleTimeCommands(VkDevice logicalDevice, VkCommandBuffer commandBuffer, VkCommandPool commandPool, VkQueue graphicsQueue)
 	{
 		vkEndCommandBuffer(commandBuffer);
 
@@ -64,12 +64,9 @@ namespace Kairos
 		submitInfo.commandBufferCount = 1;
 		submitInfo.pCommandBuffers = &commandBuffer;
 
-		vkResetFences(logicalDevice, 1, &renderFinishedFence);
-
+		vkQueueSubmit(graphicsQueue, 1, &submitInfo, nullptr);
 		vkQueueWaitIdle(graphicsQueue);
-		vkQueueSubmit(graphicsQueue, 1, &submitInfo, renderFinishedFence);
 
-		vkWaitForFences(logicalDevice, 1, &renderFinishedFence, VK_TRUE, UINT64_MAX);
 		vkFreeCommandBuffers(logicalDevice, commandPool, 1, &commandBuffer);
 	}
 }

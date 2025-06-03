@@ -1,6 +1,8 @@
 #include "kepch.h"
 
 #include "VulkanFramebuffer.h"
+#include "VulkanContext.h"
+#include "Engine/Core/Application.h"
 
 #include "volk.h"
 
@@ -54,7 +56,15 @@ namespace Kairos
 
 	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec) : m_Specification(spec)
 	{
-		//Invalidate();
+		for (auto format : m_Specification.Attachments.Attachments)
+		{
+			if (Utils::IsDepthFormat(format.TextureFormat))
+				m_DepthAttachmentSpecification = format;
+			else
+				m_ColorAttachmentSpecifications.emplace_back(format);
+		}
+
+		Invalidate();
 	}
 
 	VulkanFramebuffer::~VulkanFramebuffer()
@@ -62,12 +72,7 @@ namespace Kairos
 		
 	}
 
-	void VulkanFramebuffer::Bind()
-	{
-		
-	}
-
-	void VulkanFramebuffer::Unbind()
+	void VulkanFramebuffer::Invalidate()
 	{
 		
 	}
@@ -83,7 +88,7 @@ namespace Kairos
 		m_Specification.Width = width;
 		m_Specification.Height = height;
 
-		//Invalidate();
+		Invalidate();
 	}
 
 	int VulkanFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
@@ -94,11 +99,5 @@ namespace Kairos
 	void VulkanFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	{
 		
-	}
-
-	uint32_t VulkanFramebuffer::GetColorAttachmentRendererID(uint32_t index) const
-	{
-		KE_CORE_ASSERT(index < m_ColorAttachments.size());
-		return m_ColorAttachments[index];
 	}
 }

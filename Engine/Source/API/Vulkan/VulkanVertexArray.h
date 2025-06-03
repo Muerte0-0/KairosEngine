@@ -1,4 +1,6 @@
 #pragma once
+#define VULKAN_HPP_NO_EXCEPTIONS
+#include <vulkan/vulkan.hpp>
 
 #include "Engine/Renderer/VertexArray.h"
 
@@ -10,8 +12,8 @@ namespace Kairos
 		VulkanVertexArray();
 		virtual ~VulkanVertexArray();
 
-		virtual void Bind() const override;
-		virtual void UnBind() const override;
+		virtual void Bind() const override {};
+		virtual void UnBind() const override {};
 
 		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
 		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer) override;

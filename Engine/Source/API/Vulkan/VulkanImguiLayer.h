@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Engine/ImGui/ImGuiLayer.h"
 
 #define VULKAN_HPP_NO_EXCEPTIONS

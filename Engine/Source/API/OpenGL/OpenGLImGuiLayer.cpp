@@ -38,8 +38,6 @@ namespace Kairos
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
-
-		ImGui::SetNextWindowSize(ImVec2(400, 400), ImGuiCond_Always);
 	}
 
 	void OpenGLImGuiLayer::OnDetach()
@@ -63,7 +61,6 @@ namespace Kairos
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 
 		// Rendering
-		glDisable(GL_SCISSOR_TEST);
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -78,7 +75,11 @@ namespace Kairos
 
 	void OpenGLImGuiLayer::OnImGuiRender()
 	{
-		
+		Application& app = Application::Get();
+		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
+		int width, height;
+		glfwGetWindowSize(window, &width, &height);
+		glViewport(0, 0, width, height);
 	}
 
 }

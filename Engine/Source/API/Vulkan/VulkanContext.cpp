@@ -121,7 +121,7 @@ namespace Kairos
 		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		submitInfo.pWaitDstStageMask = &waitStage;
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_Context.RenderFinishedSemaphore;
+		submitInfo.pSignalSemaphores = &m_Context.Frames[imageIndex].RenderFinishedSemaphore;
 
 		vkQueueSubmit(m_Context.GraphicsQueue, 1, &submitInfo, m_Context.RenderFinishedFence);
 
@@ -132,7 +132,7 @@ namespace Kairos
 		presentInfo.pSwapchains = &m_Context.Swapchain.Info().Swapchain;
 		presentInfo.pImageIndices = &imageIndex;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_Context.RenderFinishedSemaphore;
+		presentInfo.pWaitSemaphores = &m_Context.Frames[imageIndex].RenderFinishedSemaphore;
 
 		vkWaitForFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence, VK_TRUE, UINT64_MAX);
 		VkResult presentResult = vkQueuePresentKHR(m_Context.GraphicsQueue, &presentInfo);

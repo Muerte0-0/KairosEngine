@@ -11,27 +11,27 @@ namespace Kairos
 	{
 		KE_PROFILE_FUNCTION();
 
-		//m_VertexArray.reset(VertexArray::Create());
-		//
-		//float vertices[3 * 7] = {
-		//	-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
-		//	 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
-		//	 0.0f, -0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
-		//};
-		//
-		//Ref<VertexBuffer> vertexBuffer;
-		//vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
-		//BufferLayout layout = {
-		//	{ ShaderDataType::Float3, "a_Position" },
-		//	{ ShaderDataType::Float4, "a_Color" }
-		//};
-		//vertexBuffer->SetLayout(layout);
-		//m_VertexArray->AddVertexBuffer(vertexBuffer);
-		//
-		//uint32_t indices[3] = { 0, 1, 2 };
-		//Ref<IndexBuffer> indexBuffer;
-		//indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
-		//m_VertexArray->SetIndexBuffer(indexBuffer);
+		m_VertexArray.reset(VertexArray::Create());
+		
+		float vertices[3 * 7] = {
+			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
+			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
+			 0.0f, -0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
+		};
+		
+		Ref<VertexBuffer> vertexBuffer;
+		vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
+		BufferLayout layout = {
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float4, "a_Color" }
+		};
+		vertexBuffer->SetLayout(layout);
+		m_VertexArray->AddVertexBuffer(vertexBuffer);
+		
+		uint32_t indices[3] = { 0, 1, 2 };
+		Ref<IndexBuffer> indexBuffer;
+		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		m_VertexArray->SetIndexBuffer(indexBuffer);
 
 		m_TriangleShader = Shader::Create("Assets/Shaders/Triangle/Triangle.glsl");
 
@@ -39,7 +39,7 @@ namespace Kairos
 		spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		spec.Width = 1280;
 		spec.Height = 720;
-		//m_Framebuffer = Framebuffer::Create(spec);
+		m_Framebuffer = Framebuffer::Create(spec);
 	}
 
 	void EditorLayer::OnDetach()
@@ -51,29 +51,26 @@ namespace Kairos
 	{
 		KE_PROFILE_FUNCTION();
 
-		//if (FramebufferSpecification spec = m_Framebuffer->GetSpecification(); 
-		//m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // Zero sized Framebuffer is Invalid
-		//(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
-		//{
-		//	m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-		//}
+		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification(); 
+		m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // Zero sized Framebuffer is Invalid
+		(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+		{
+			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		}
 		
 		KE_PROFILE_SCOPE("Renderer Prep");
-		//m_Framebuffer->Bind();
+		m_Framebuffer->Bind();
+
 		RenderCommand::Clear();
-
-		//m_Framebuffer->ClearAttachment(1, -1);
-
+		m_Framebuffer->ClearAttachment(1, -1);
 		Renderer::Submit(m_TriangleShader, m_VertexArray, NULL);
 
-		//m_Framebuffer->Unbind();
+		m_Framebuffer->Unbind();
 	}
 
 	void EditorLayer::OnImGuiRender()
 	{
 		KE_PROFILE_FUNCTION();
-
-		//return; // Disable ImGui rendering for now
 
 		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
 
@@ -170,13 +167,18 @@ namespace Kairos
 			ImGui::EndMenuBar();
 		}
 
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Viewport");
 			ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 			m_ViewportSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
-			//uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-			//ImGui::Image(textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+			if (RenderAPI::GetAPI() == RenderAPI::API::OpenGL)
+			{
+				uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
+				ImGui::Image(textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+			}
 		ImGui::End();
-		
+		ImGui::PopStyleVar();
+
 		ImGui::Begin("Scene Hierarchy");
 		ImGui::End();
 		

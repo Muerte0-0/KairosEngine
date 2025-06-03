@@ -90,8 +90,6 @@ namespace Kairos
 		// Rendering
 		ImGui::Render();
 
-		vkDeviceWaitIdle(vctx->GetVkContext().LogicalDevice);
-
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			GLFWwindow* current_context_backup = glfwGetCurrentContext();

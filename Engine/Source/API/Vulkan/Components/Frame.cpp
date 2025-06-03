@@ -24,6 +24,7 @@ namespace Kairos
 	void Frame::RecordCommandBuffer(uint32_t imageIndex)
 	{
 		vkResetCommandBuffer(CommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
+
 		BuildColorAttachment(imageIndex);
 		BuildRenderingInfo();
 
