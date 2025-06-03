@@ -24,6 +24,17 @@ namespace Kairos
         CreateSwapchain(logicalDevice, physicalDevice, surface, width, height);
     }
 
+    void Swapchain::RecreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t width, uint32_t height)
+    {
+        KE_CORE_INFO("Recreating Swapchain...");
+
+        vkDeviceWaitIdle(logicalDevice);
+
+        Destroy(logicalDevice);
+
+        CreateSwapchain(logicalDevice, physicalDevice, surface, width, height);
+    }
+
     void Swapchain::Destroy(VkDevice logicalDevice)
     {
         while (m_DeletionQueue.size() > 0)

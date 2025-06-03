@@ -32,6 +32,7 @@ namespace Kairos
 	{
 	public:
 		void RecreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, GLFWwindow* window);
+		void RecreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t width, uint32_t height);
 
 		void Destroy(VkDevice logicalDevice);
 
