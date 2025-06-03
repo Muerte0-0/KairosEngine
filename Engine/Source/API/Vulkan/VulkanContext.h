@@ -38,8 +38,6 @@ namespace Kairos
 		VkSemaphore ImageAquiredSemaphore;
 		VkSemaphore RenderFinishedSemaphore;
 		VkFence RenderFinishedFence;
-
-		size_t CurrentFrame = 0;
 	};
 
 #define VK_CHECK(result) \
@@ -49,6 +47,8 @@ namespace Kairos
     }
 
 #define MAX_FRAMES_IN_FLIGHT 2
+
+	static uint16_t CurrentFrameIndex = 0;
 
 	class VulkanContext : public GraphicsContext
 	{

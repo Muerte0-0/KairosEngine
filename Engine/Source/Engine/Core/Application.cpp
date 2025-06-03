@@ -94,7 +94,7 @@ namespace Kairos
 
 		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
-		return false;
+		return true;
 	}
 
 	bool Application::OnWindowClose(WindowCloseEvent& e)

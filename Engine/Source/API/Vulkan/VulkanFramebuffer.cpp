@@ -100,4 +100,13 @@ namespace Kairos
 	{
 		
 	}
+
+	uint32_t VulkanFramebuffer::GetColorAttachmentRendererID(uint32_t index) const
+	{
+		Application& app = Application::Get();
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+
+		return 0;
+	}
 }

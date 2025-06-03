@@ -14,12 +14,12 @@ namespace Kairos
     {
 		KE_CORE_INFO("Recreating Swapchain...");
 
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
+
         vkDeviceWaitIdle(logicalDevice);
 
         Destroy(logicalDevice);
-
-        int width, height;
-        glfwGetWindowSize(window, &width, &height);
 
         CreateSwapchain(logicalDevice, physicalDevice, surface, width, height);
     }

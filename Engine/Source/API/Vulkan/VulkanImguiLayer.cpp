@@ -68,6 +68,8 @@ namespace Kairos
 
 	void VulkanImGuiLayer::OnDetach()
 	{
+		KE_PROFILE_FUNCTION();
+
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
 	}

@@ -103,6 +103,8 @@ namespace Kairos
 		uint32_t imageIndex;
 		VkResult aquireResult = vkAcquireNextImageKHR(m_Context.LogicalDevice, m_Context.Swapchain.Info().Swapchain, UINT64_MAX, m_Context.ImageAquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
 
+		CurrentFrameIndex = imageIndex;
+
 		if (aquireResult == VK_ERROR_OUT_OF_DATE_KHR)
 		{
 			m_Context.Swapchain.RecreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, m_WindowHandle);
@@ -147,6 +149,8 @@ namespace Kairos
 	void VulkanContext::Cleanup()
 	{
 		vkQueueWaitIdle(m_Context.GraphicsQueue);
+		vkDeviceWaitIdle(m_Context.LogicalDevice);
+
 		KE_CORE_INFO("Cleanup Started!");
 
 		ImGui_ImplVulkan_Shutdown();
