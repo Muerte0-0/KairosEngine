@@ -51,6 +51,7 @@ namespace Kairos
 
 		m_Context.Swapchain.CreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, width, height);
 		m_Context.Swapchain.CreateDescriptorPool(m_Context.LogicalDevice, m_DeviceDeletionQueue);
+		m_Context.Swapchain.CreateSampler(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 
 		m_Context.CommandPool = CreateCommandPool(m_Context.LogicalDevice, FindQueueFamilyIndex(m_Context.PhysicalDevice, m_Context.Surface, VK_QUEUE_GRAPHICS_BIT), m_DeviceDeletionQueue);
 

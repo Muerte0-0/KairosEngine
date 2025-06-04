@@ -55,7 +55,7 @@ namespace Kairos
 
 			AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs(vulkanVertexBuffer->GetLayout());
 
-			VkDeviceSize offsets = 0;//vulkanVertexBuffer->GetLayout().GetStride();
+			VkDeviceSize offsets = 0;
 
 			vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vulkanVertexBuffer->GetVertexBuffer(), &offsets);
 		}

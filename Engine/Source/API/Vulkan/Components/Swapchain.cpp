@@ -67,7 +67,7 @@ namespace Kairos
         swapchainCreateInfo.imageExtent = m_Info.Extent;
         swapchainCreateInfo.imageArrayLayers = 1;
         swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         swapchainCreateInfo.preTransform = support.Capabilities.currentTransform;
         swapchainCreateInfo.presentMode = presentMode;
@@ -134,6 +134,55 @@ namespace Kairos
             {
                 vkDestroyDescriptorPool(device, handle, nullptr);
             });
+    }
+
+    void Swapchain::CreateSampler(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue)
+    {
+        VkSamplerCreateInfo samplerInfo = {};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+
+        // For pixel-perfect rendering (sharp edges):
+        //samplerInfo.magFilter = VK_FILTER_NEAREST;
+        //samplerInfo.minFilter = VK_FILTER_NEAREST;
+
+        // Use linear filtering for smooth UI rendering
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+
+        // To clamp textures to their edges
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+
+        // Disable anisotropy for UI (not typically needed)
+        samplerInfo.anisotropyEnable = VK_FALSE;
+        samplerInfo.maxAnisotropy = 1.0f;
+
+        // Use black border color
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+
+        // Disable unnormalized coordinates
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+
+        // No comparison function
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+
+        // Standard mipmap settings (even though UI textures typically don't use mipmaps)
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerInfo.mipLodBias = 0.0f;
+        samplerInfo.minLod = 0.0f;
+        samplerInfo.maxLod = 0.0f;
+ 
+        VK_CHECK(vkCreateSampler(logicalDevice, &samplerInfo, nullptr, &m_Info.Sampler));
+
+		VkSampler handle = m_Info.Sampler;
+
+        deviceDeletionQueue.push_back([handle](VkDevice device)
+            {
+                vkDestroySampler(device, handle, nullptr);
+			});
+
     }
 
     SurfaceDetails Swapchain::QuerySurfaceSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)
