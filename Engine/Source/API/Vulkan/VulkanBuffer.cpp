@@ -68,7 +68,7 @@ namespace Kairos
 		Application& app = Application::Get();
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
-		CreateBuffer(vctx->GetVkContext().PhysicalDevice, vctx->GetVkContext().LogicalDevice, size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
+		CreateBuffer(vctx->GetVkContext().PhysicalDevice, vctx->GetVkContext().LogicalDevice, size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
 		VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_VertexBuffer, m_VertexBufferMemory);
 
 		void* data;

@@ -40,8 +40,8 @@ namespace Kairos
 		//ImGui::StyleColorsClassic();
 
 		float fontSize = 18.0f;
-		io.FontDefault = io.Fonts->AddFontFromFileTTF("Assets/Fonts/OpenSans/OpenSans-Regular.ttf", fontSize);
-		io.Fonts->AddFontFromFileTTF("Assets/Fonts/OpenSans/OpenSans-Bold.ttf", fontSize);
+		io.FontDefault = io.Fonts->AddFontFromFileTTF("D:/Dev/KairosEngine/Editor/Assets/Fonts/OpenSans/OpenSans-Regular.ttf", fontSize);
+		io.Fonts->AddFontFromFileTTF("D:/Dev/KairosEngine/Editor/Assets/Fonts/OpenSans/OpenSans-Bold.ttf", fontSize);
 
 		ImGuiStyle& style = ImGui::GetStyle();
 		style.FramePadding = ImVec2(10.0f, 6.0f);

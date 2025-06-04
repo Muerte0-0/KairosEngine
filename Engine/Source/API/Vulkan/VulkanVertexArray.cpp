@@ -37,6 +37,8 @@ namespace Kairos
 		bindingDescription.divisor = 1; // Instancing
 		bindingDescription.pNext = nullptr; // No additional data
 
+		//KE_CORE_INFO("Binding Description: Stride: {0}", bindingDescription.stride);
+
 		return bindingDescription;
 	}
 
@@ -54,6 +56,8 @@ namespace Kairos
 			desc.location = locationIndex; // Location in the shader
 			desc.format = ShaderDataTypeToVulkanBaseType(element.Type); // Format of the attribute (e.g., VK_FORMAT_R32G32B32_SFLOAT)
 			desc.offset = element.Offset; // Offset in bytes from the start of the vertex data
+
+			//KE_CORE_INFO("Attribute: {0}, Type: {1}, Offset: {2}", element.Name, (int)element.Type, element.Offset);
 
 			attributeDescriptions.push_back(desc);
 			locationIndex++;
