@@ -50,7 +50,7 @@ namespace Kairos
 		{
 			VkVertexInputAttributeDescription2EXT desc = {};
 			desc.sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT;
-			desc.binding = 0; // Binding index, should match the binding description
+			desc.binding = 0;
 			desc.location = locationIndex; // Location in the shader
 			desc.format = ShaderDataTypeToVulkanBaseType(element.Type); // Format of the attribute (e.g., VK_FORMAT_R32G32B32_SFLOAT)
 			desc.offset = element.Offset; // Offset in bytes from the start of the vertex data

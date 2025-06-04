@@ -26,5 +26,6 @@ layout(location = 1) in vec4 v_Color;
 
 void main()
 {
-	color = mix(vec4(v_Position * 0.5 + 0.5, 1.0), v_Color, 0.5);
+	//color = mix(vec4(v_Position * 0.5 + 0.5, 1.0), v_Color, 0.5);
+	color = v_Color;
 }
