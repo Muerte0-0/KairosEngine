@@ -14,9 +14,9 @@ namespace Kairos
 		m_VertexArray.reset(VertexArray::Create());
 		
 		float vertices[3 * 7] = {
-			-0.5f, -0.5f, 0.0f, 0.8f, 0.2f, 0.8f, 1.0f,
-			 0.5f, -0.5f, 0.0f, 0.2f, 0.3f, 0.8f, 1.0f,
-			 0.0f, -0.5f, 0.0f, 0.8f, 0.8f, 0.2f, 1.0f
+			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+			 0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f
 		};
 		
 		Ref<VertexBuffer> vertexBuffer;
@@ -33,7 +33,7 @@ namespace Kairos
 		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
-		m_TriangleShader = Shader::Create("Assets/Shaders/Triangle/Triangle.glsl");
+		m_ShaderLibrary.Load("Assets/Shaders/Triangle/Triangle.glsl");
 
 		FramebufferSpecification spec;
 		spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
@@ -63,7 +63,8 @@ namespace Kairos
 
 		RenderCommand::Clear();
 		m_Framebuffer->ClearAttachment(1, -1);
-		Renderer::Submit(m_TriangleShader, m_VertexArray, NULL);
+
+		Renderer::Submit(m_ShaderLibrary.Get("Triangle"), m_VertexArray, NULL);
 
 		m_Framebuffer->Unbind();
 	}
@@ -71,6 +72,7 @@ namespace Kairos
 	void EditorLayer::OnImGuiRender()
 	{
 		KE_PROFILE_FUNCTION();
+
 
 		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
 

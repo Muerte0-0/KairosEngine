@@ -41,6 +41,8 @@ namespace Kairos
 
 		SwapchainInfo& Info() {return m_Info;}
 
+		bool Outdated;
+
 	private:
 		SwapchainInfo m_Info;
 		std::deque<std::function<void(VkDevice)>> m_DeletionQueue;

@@ -31,6 +31,7 @@ namespace Kairos
 		inline static Application& Get() { return *s_Instance; }
 
 		inline bool IsMinimized() const { return m_Minimized; }
+
 	private:
 		bool OnWindowResize(WindowResizeEvent& e);
 		bool OnWindowClose(WindowCloseEvent& e);

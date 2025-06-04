@@ -44,15 +44,15 @@ namespace Kairos
 			shaderSources[source.first] = { source.second.begin(), source.second.end() };
 		}
 
-		PreProcessShader(shaderSources, options);
-		CompileToAssembly(shaderSources, options);
-
 		// Extract Name From File Path //
 		auto lastSlash = filepath.find_last_of("/\\");
 		lastSlash = lastSlash == std::string::npos ? 0 : lastSlash + 1;
 		auto lastDot = filepath.rfind('.');
 		auto count = lastDot == std::string::npos ? filepath.size() - lastSlash : lastDot - lastSlash;
 		m_ShaderName = filepath.substr(lastSlash, count);
+
+		PreProcessShader(shaderSources, options);
+		CompileToAssembly(shaderSources, options);
 
 		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
 										vctx->GetDeviceDeletionQueue(), true);
@@ -221,9 +221,6 @@ namespace Kairos
 	void VulkanShader::Bind() const
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
-
-		//for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); ++i)
-			//vctx->GetVkContext().Frames[i].UpdateShaders(m_Shaders);
 	}
 
 	void VulkanShader::UnBind() const
@@ -281,6 +278,7 @@ namespace Kairos
 			KE_CORE_ASSERT(eol != std::string::npos, "Syntax Error");
 			size_t begin = pos + typeTokenLength + 1;
 			std::string type = source.substr(begin, eol - begin);
+
 			//KE_CORE_ASSERT(ShaderTypeFromString(type), "Invalid Shader Type Specified");
 
 			size_t nextLinePos = source.find_first_not_of("\r\n", eol);

@@ -4,6 +4,9 @@
 #include "Synchronization.h"
 #include "Swapchain.h"
 
+#include "API/Vulkan/VulkanVertexArray.h"
+#include "API/Vulkan/VulkanBuffer.h"
+
 #include "Engine/Renderer/Renderer.h"
 
 #include "volk.h"
@@ -21,7 +24,7 @@ namespace Kairos
 		RenderFinishedFence = MakeFence(logicalDevice, deletionQueue);
 	}
 
-	void Frame::RecordCommandBuffer(uint32_t imageIndex)
+	void Frame::RecordCommandBuffer(uint32_t imageIndex, const Ref<VertexArray>& vertexArray)
 	{
 		vkResetCommandBuffer(CommandBuffer, VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT);
 
@@ -37,8 +40,6 @@ namespace Kairos
 			VkAccessFlagBits::VK_ACCESS_NONE, VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
 			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 
-		AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs();
-
 		vkCmdBeginRenderingKHR(CommandBuffer, &RenderingInfo);
 
 		VkShaderStageFlagBits stages[2] = {
@@ -48,9 +49,26 @@ namespace Kairos
 
 		vkCmdBindShadersEXT(CommandBuffer, Shaders.size(), stages, Shaders.data());
 
-		vkCmdDraw(CommandBuffer, 3, 1, 0, 0);
+		for (const auto vertexBuffer : vertexArray->GetVertexBuffers())
+		{
+			VulkanVertexBuffer* vulkanVertexBuffer = static_cast<VulkanVertexBuffer*>(vertexBuffer.get());
 
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBuffer);
+			AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs(vulkanVertexBuffer->GetLayout());
+
+			VkDeviceSize offsets = vulkanVertexBuffer->GetLayout().GetStride();
+
+			vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vulkanVertexBuffer->GetVertexBuffer(), &offsets);
+		}
+
+		VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(vertexArray->GetIndexBuffer().get());
+
+		if (vulkanIndexBuffer != nullptr)
+			vkCmdBindIndexBuffer(CommandBuffer, vulkanIndexBuffer->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+		vkCmdDrawIndexed(CommandBuffer, 3, 1, 0, 0, 0);
+
+		if (ImGui::GetDrawData() != nullptr)
+			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBuffer);
 
 		vkCmdEndRenderingKHR(CommandBuffer);
 
@@ -83,9 +101,12 @@ namespace Kairos
 		ColorAttachment.clearValue = { 0.1f, 0.1f, 0.1f, 1.0f };
 	}
 
-	void Frame::AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs()
+	void Frame::AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs(const BufferLayout& layout)
 	{
-		vkCmdSetVertexInputEXT(CommandBuffer, 0, nullptr, 0, nullptr);
+		VkVertexInputBindingDescription2EXT bindingDescription = GetBindingDescription(layout);
+		std::vector<VkVertexInputAttributeDescription2EXT> attributeDescriptions = GetAttributeDescriptions(layout);
+
+		vkCmdSetVertexInputEXT(CommandBuffer, 1, &bindingDescription, attributeDescriptions.size(), attributeDescriptions.data());
 
 		if (SwapchainRef.Info().Extent.width != 0 && SwapchainRef.Info().Extent.height != 0)
 		{
@@ -112,6 +133,7 @@ namespace Kairos
 
 		vkCmdSetAlphaToCoverageEnableEXT(CommandBuffer, VK_FALSE);
 		vkCmdSetCullModeEXT(CommandBuffer, VK_CULL_MODE_NONE);
+		vkCmdSetFrontFaceEXT(CommandBuffer, VK_FRONT_FACE_CLOCKWISE);
 		vkCmdSetDepthTestEnableEXT(CommandBuffer, VK_FALSE);
 		vkCmdSetDepthWriteEnableEXT(CommandBuffer, VK_FALSE);
 		vkCmdSetDepthBiasEnableEXT(CommandBuffer, VK_FALSE);

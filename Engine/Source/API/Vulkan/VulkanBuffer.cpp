@@ -24,6 +24,7 @@ namespace Kairos
 		}
 
 		KE_CORE_ERROR("Failed to Find Suitable Memory Type!");
+		return -1;
 	}
 
 	void CreateBuffer(VkPhysicalDevice physicalDevice, VkDevice logicalDevice, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)

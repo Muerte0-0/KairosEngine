@@ -1,37 +1,30 @@
 #type vertex
 #version 450
 
-// vulkan NDC:	x: -1(left), 1(right)
-//				y: -1(top), 1(bottom)
+layout(location = 0) in vec3 a_Position;
+layout(location = 1) in vec4 a_Color;
 
-vec2 positions[3] = vec2[](
-	vec2(0.0, -0.5),
-	vec2(0.5, 0.5),
-	vec2(-0.5, 0.5)
-);
 
-vec3 colors[3] = vec3[](
-	vec3(1.0, 0.0, 0.0),
-	vec3(0.0, 1.0, 0.0),
-	vec3(0.0, 0.0, 1.0)
-);
+layout(location = 0) out vec3 v_Position;
+layout(location = 1) out vec4 v_Color;
 
-layout(location = 0) out vec3 fragColor;
+void main()
+{
+	v_Position = a_Position;
+	v_Color = a_Color;
 
-void main() {
-	//gl_Position = vec4(positions[gl_VertexID].x, -positions[gl_VertexID].y, 0.1, 1.0);
-	//fragColor = colors[gl_VertexID];
-	gl_Position = vec4(positions[gl_VertexIndex], 0.1, 1.0);
-	fragColor = colors[gl_VertexIndex];
+	gl_Position = vec4(a_Position, 1.0);
 }
 
 #type fragment
 #version 450
 
-layout(location = 0) in vec3 fragColor;
+layout(location = 0) out vec4 color;
 
-layout(location = 0) out vec4 outColor;
+layout(location = 0) in vec3 v_Position;
+layout(location = 1) in vec4 v_Color;
 
-void main() {
-	outColor = vec4(fragColor, 1.0);
+void main()
+{
+	color = mix(vec4(v_Position * 0.5 + 0.5, 1.0), v_Color, 0.5);
 }

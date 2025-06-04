@@ -5,7 +5,7 @@
 
 namespace Kairos
 {
-	static VkFormat ShaderDataTypeToOpenGLBaseType(ShaderDataType type)
+	static VkFormat ShaderDataTypeToVulkanBaseType(ShaderDataType type)
 	{
 		switch (type)
 		{
@@ -26,22 +26,48 @@ namespace Kairos
 		return VK_FORMAT_MAX_ENUM;
 	}
 
+	VkVertexInputBindingDescription2EXT GetBindingDescription(const BufferLayout& layout)
+	{
+		VkVertexInputBindingDescription2EXT bindingDescription = {};
+
+		bindingDescription.sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_BINDING_DESCRIPTION_2_EXT;
+		bindingDescription.binding = 0;
+		bindingDescription.stride = layout.GetStride();
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // Each vertex has its own data
+		bindingDescription.divisor = 1; // Instancing
+		bindingDescription.pNext = nullptr; // No additional data
+
+		return bindingDescription;
+	}
+
+	std::vector<VkVertexInputAttributeDescription2EXT> GetAttributeDescriptions(const BufferLayout& layout)
+	{
+		std::vector<VkVertexInputAttributeDescription2EXT> attributeDescriptions = {};
+
+		int locationIndex = 0; // Location index for the shader attributes
+
+		for (auto element : layout.GetElements())
+		{
+			VkVertexInputAttributeDescription2EXT desc = {};
+			desc.sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT;
+			desc.binding = 0; // Binding index, should match the binding description
+			desc.location = locationIndex; // Location in the shader
+			desc.format = ShaderDataTypeToVulkanBaseType(element.Type); // Format of the attribute (e.g., VK_FORMAT_R32G32B32_SFLOAT)
+			desc.offset = element.Offset; // Offset in bytes from the start of the vertex data
+
+			attributeDescriptions.push_back(desc);
+			locationIndex++;
+		}
+
+		return attributeDescriptions;
+	}
+
 	VulkanVertexArray::VulkanVertexArray()
 	{
 		
 	}
 
 	VulkanVertexArray::~VulkanVertexArray()
-	{
-		
-	}
-
-	void VulkanVertexArray::AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer)
-	{
-		
-	}
-
-	void VulkanVertexArray::SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer)
 	{
 		
 	}

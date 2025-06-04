@@ -98,6 +98,8 @@ namespace Kairos
                 vkDestroyImageView(device, imageView, nullptr);
             });
         }
+
+		Outdated = false;
     }
 
     void Swapchain::CreateDescriptorPool(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue)

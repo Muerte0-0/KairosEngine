@@ -17,7 +17,7 @@ namespace Kairos
 		virtual void OnEvent(Event& event) override;
 	private:
 		Ref<VertexArray> m_VertexArray;
-		Ref<Shader> m_TriangleShader;
+		ShaderLibrary m_ShaderLibrary;
 		Ref<Framebuffer> m_Framebuffer;
 
 		bool m_ViewportFocused = false, m_ViewportHovered = false;

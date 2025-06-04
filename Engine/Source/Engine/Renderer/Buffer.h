@@ -41,7 +41,7 @@ namespace Kairos
 		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
 			: Name(name), Type(type), Size(ShaderDataTypeSize(type)), Offset(0), Normalized(normalized)
 		{
-
+			
 		}
 
 		uint32_t GetComponentCount() const

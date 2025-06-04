@@ -13,6 +13,8 @@
 #include "Components/Synchronization.h"
 #include "Components/Image.h"
 
+#include "Engine/Core/Application.h"
+
 #include "backends/imgui_impl_vulkan.h"
 
 namespace Kairos
@@ -96,54 +98,7 @@ namespace Kairos
 
 	void VulkanContext::SwapBuffers()
 	{
-		vkWaitForFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence, VK_TRUE, UINT64_MAX);
-
-		vkResetFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence);
-
-		uint32_t imageIndex;
-		VkResult aquireResult = vkAcquireNextImageKHR(m_Context.LogicalDevice, m_Context.Swapchain.Info().Swapchain, UINT64_MAX, m_Context.ImageAquiredSemaphore, VK_NULL_HANDLE, &imageIndex);
-
-		CurrentFrameIndex = imageIndex;
-
-		if (aquireResult == VK_ERROR_OUT_OF_DATE_KHR)
-		{
-			m_Context.Swapchain.RecreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, m_WindowHandle);
-			return;
-		}
-
-		m_Context.Frames[imageIndex].RecordCommandBuffer(imageIndex);
-
-		VkSubmitInfo submitInfo = {};
-		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submitInfo.pNext = nullptr;
-		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &m_Context.Frames[imageIndex].CommandBuffer;
-		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &m_Context.ImageAquiredSemaphore;
-		VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		submitInfo.pWaitDstStageMask = &waitStage;
-		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &m_Context.Frames[imageIndex].RenderFinishedSemaphore;
-
-		vkQueueSubmit(m_Context.GraphicsQueue, 1, &submitInfo, m_Context.RenderFinishedFence);
-
-		VkPresentInfoKHR presentInfo = {};
-		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		presentInfo.pNext = nullptr;
-		presentInfo.swapchainCount = 1;
-		presentInfo.pSwapchains = &m_Context.Swapchain.Info().Swapchain;
-		presentInfo.pImageIndices = &imageIndex;
-		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &m_Context.Frames[imageIndex].RenderFinishedSemaphore;
-
-		vkWaitForFences(m_Context.LogicalDevice, 1, &m_Context.RenderFinishedFence, VK_TRUE, UINT64_MAX);
-		VkResult presentResult = vkQueuePresentKHR(m_Context.GraphicsQueue, &presentInfo);
-
-		if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR)
-		{
-			m_Context.Swapchain.RecreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, m_WindowHandle);
-			return;
-		}
+		
 	}
 
 	void VulkanContext::Cleanup()

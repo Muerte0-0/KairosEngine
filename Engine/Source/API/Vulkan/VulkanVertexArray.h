@@ -6,6 +6,9 @@
 
 namespace Kairos
 {
+	VkVertexInputBindingDescription2EXT GetBindingDescription(const BufferLayout& layout);
+	std::vector<VkVertexInputAttributeDescription2EXT> GetAttributeDescriptions(const BufferLayout& layout);
+
 	class VulkanVertexArray : public VertexArray
 	{
 	public:
@@ -15,8 +18,8 @@ namespace Kairos
 		virtual void Bind() const override {};
 		virtual void UnBind() const override {};
 
-		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
-		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer) override;
+		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override { m_VertexBuffers.push_back(vertexBuffer); }
+		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer) override { m_IndexBuffer = indexBuffer; }
 
 		virtual const std::vector<Ref<VertexBuffer>>& GetVertexBuffers() const { return m_VertexBuffers; }
 		virtual const Ref<IndexBuffer>& GetIndexBuffer() const { return m_IndexBuffer; }
