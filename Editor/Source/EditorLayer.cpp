@@ -74,8 +74,6 @@ namespace Kairos
 	{
 		KE_PROFILE_FUNCTION();
 
-		return;
-
 		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
 
 		ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;

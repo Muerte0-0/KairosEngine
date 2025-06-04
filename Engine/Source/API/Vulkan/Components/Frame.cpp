@@ -55,7 +55,7 @@ namespace Kairos
 
 			AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs(vulkanVertexBuffer->GetLayout());
 
-			VkDeviceSize offsets = vulkanVertexBuffer->GetLayout().GetStride();
+			VkDeviceSize offsets = 0;//vulkanVertexBuffer->GetLayout().GetStride();
 
 			vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vulkanVertexBuffer->GetVertexBuffer(), &offsets);
 		}
@@ -112,9 +112,9 @@ namespace Kairos
 		{
 			VkViewport viewport = VkViewport
 			{
-				.x = 0.0f, .y = 0.0f,
+				.x = 0.0f, .y = (float)SwapchainRef.Info().Extent.height,
 				.width = (float)SwapchainRef.Info().Extent.width,
-				.height = (float)SwapchainRef.Info().Extent.height,
+				.height = -(float)SwapchainRef.Info().Extent.height,
 				.minDepth = 0.0f, .maxDepth = 1.0f
 			};
 
