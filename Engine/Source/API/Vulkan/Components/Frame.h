@@ -1,6 +1,6 @@
 #pragma once
-#define VULKAN_HPP_NO_EXCEPTIONS
-#include <vulkan/vulkan.hpp>
+
+#include <vulkan/vulkan.h>
 
 #include "Image.h"
 #include "Swapchain.h"

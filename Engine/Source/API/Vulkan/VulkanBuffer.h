@@ -1,8 +1,7 @@
 #pragma once
-#define VULKAN_HPP_NO_EXCEPTIONS
-#include <vulkan/vulkan.hpp>
-
 #include "Engine/Renderer/Buffer.h"
+
+#include <vulkan/vulkan.h>
 
 namespace Kairos
 {
@@ -27,11 +26,14 @@ namespace Kairos
 		virtual void SetLayout(const BufferLayout& layout) override { m_Layout = layout; }
 
 		VkBuffer& GetVertexBuffer() { return m_VertexBuffer; }
+		VkDeviceSize& GetOffsets() { return m_Offsets; }
 	private:
 		BufferLayout m_Layout;
 
 		VkBuffer m_VertexBuffer = VK_NULL_HANDLE;
 		VkDeviceMemory m_VertexBufferMemory = VK_NULL_HANDLE;
+
+		VkDeviceSize m_Offsets = 0;
 	};
 
 	// Index Buffer //

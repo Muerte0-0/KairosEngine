@@ -1,8 +1,8 @@
 #pragma once
 #include "Engine/Renderer/Shader.h"
 
-#define VULKAN_HPP_NO_EXCEPTIONS
-#include <vulkan/vulkan.hpp>
+
+#include <vulkan/vulkan.h>
 #include <shaderc/shaderc.hpp>
 
 namespace Kairos

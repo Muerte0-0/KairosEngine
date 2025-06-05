@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/Renderer/GraphicsContext.h"
 
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan.h>
 #include <vma/vk_mem_alloc.h>
 
 #define GLFW_INCLUDE_VULKAN

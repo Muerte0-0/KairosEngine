@@ -1,8 +1,7 @@
 #pragma once
-#define VULKAN_HPP_NO_EXCEPTIONS
-#include <vulkan/vulkan.hpp>
-
 #include "Engine/Renderer/Framebuffer.h"
+
+#include <vulkan/vulkan.h>
 
 namespace Kairos
 {

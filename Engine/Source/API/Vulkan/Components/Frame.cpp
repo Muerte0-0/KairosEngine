@@ -55,9 +55,7 @@ namespace Kairos
 
 			AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs(vulkanVertexBuffer->GetLayout());
 
-			VkDeviceSize offsets = 0;
-
-			vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vulkanVertexBuffer->GetVertexBuffer(), &offsets);
+			vkCmdBindVertexBuffers(CommandBuffer, 0, 1, &vulkanVertexBuffer->GetVertexBuffer(), &vulkanVertexBuffer->GetOffsets());
 		}
 
 		VulkanIndexBuffer* vulkanIndexBuffer = static_cast<VulkanIndexBuffer*>(vertexArray->GetIndexBuffer().get());
