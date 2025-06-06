@@ -37,12 +37,14 @@ namespace Kairos
 		vkBeginCommandBuffer(CommandBuffer, &beginInfo);
 
 		Ref<VulkanFramebuffer> frameBuffer = std::dynamic_pointer_cast<VulkanFramebuffer>(Renderer::GetFramebuffer());
-		frameBuffer->RenderOffscreenTarget(CommandBuffer, vertexArray);
+		frameBuffer->RenderOffscreenTarget(CommandBuffer, vertexArray, imageIndex);
+
+		vkDeviceWaitIdle(volkGetLoadedDevice());
 
 		TransitionImageLayout(CommandBuffer, SwapchainRef.Info().Images[imageIndex],
-			VkImageLayout::VK_IMAGE_LAYOUT_UNDEFINED, VkImageLayout::VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VkAccessFlagBits::VK_ACCESS_NONE, VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+			VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_ACCESS_NONE, VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 
 		vkCmdBeginRenderingKHR(CommandBuffer, &RenderingInfo);
 
@@ -52,9 +54,9 @@ namespace Kairos
 		vkCmdEndRenderingKHR(CommandBuffer);
 
 		TransitionImageLayout(CommandBuffer, SwapchainRef.Info().Images[imageIndex],
-			VkImageLayout::VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL, VkImageLayout::VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-			VkAccessFlagBits::VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VkAccessFlagBits::VK_ACCESS_MEMORY_READ_BIT,
-			VkPipelineStageFlagBits::VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VkPipelineStageFlagBits::VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
+			VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+			VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_ACCESS_MEMORY_READ_BIT,
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 
 		vkEndCommandBuffer(CommandBuffer);
 	}

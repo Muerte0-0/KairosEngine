@@ -223,9 +223,15 @@ namespace Kairos
 			.dynamicRendering = VK_TRUE,
 		};
 
+		VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT graphicsPipelineLibraryFeatures = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_FEATURES_EXT,
+			.graphicsPipelineLibrary = VK_TRUE,
+		};
+
 		deviceFeatures2.pNext = &shaderObjectFeatures;
 		shaderObjectFeatures.pNext = &shaderDrawParamsFeatures;
-		shaderDrawParamsFeatures.pNext = &vulkan13Features;
+		shaderDrawParamsFeatures.pNext = &graphicsPipelineLibraryFeatures;
+		graphicsPipelineLibraryFeatures.pNext = &vulkan13Features;
 
 
 		std::vector<const char*> enabledLayers;
@@ -242,6 +248,8 @@ namespace Kairos
 			VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
 			VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
 			VK_EXT_VERTEX_INPUT_DYNAMIC_STATE_EXTENSION_NAME,
+			VK_EXT_GRAPHICS_PIPELINE_LIBRARY_EXTENSION_NAME,
+			VK_KHR_PIPELINE_LIBRARY_EXTENSION_NAME,
 		};
 
 		VkDeviceCreateInfo deviceCreateInfo;

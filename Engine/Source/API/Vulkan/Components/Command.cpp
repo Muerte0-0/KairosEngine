@@ -55,7 +55,7 @@ namespace Kairos
 		return commandBuffer;
 	}
 
-	void EndSingleTimeCommands(VkDevice logicalDevice, VkCommandBuffer commandBuffer, VkCommandPool commandPool, VkQueue graphicsQueue)
+	void EndSingleTimeCommands(VkDevice logicalDevice, VkCommandPool commandPool, VkCommandBuffer commandBuffer, VkQueue graphicsQueue)
 	{
 		vkEndCommandBuffer(commandBuffer);
 

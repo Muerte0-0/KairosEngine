@@ -17,7 +17,7 @@ namespace Kairos
 	VkPipelineLayout PipelineLayoutBuilder::Build(std::deque<std::function<void(VkDevice)>>& deletionQueue)
 	{
 		VkPipelineLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-		layoutInfo.flags = VkPipelineLayoutCreateFlagBits();
+		layoutInfo.flags = VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT;
 		layoutInfo.setLayoutCount = (uint32_t)m_DescriptorLayouts.size();
 		layoutInfo.pSetLayouts = m_DescriptorLayouts.data();
 

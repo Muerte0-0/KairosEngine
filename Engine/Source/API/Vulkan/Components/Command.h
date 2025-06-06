@@ -8,5 +8,5 @@ namespace Kairos
 	VkCommandBuffer AllocateCommandBuffer(VkDevice logicalDevice, VkCommandPool commandPool);
 
 	VkCommandBuffer BeginSingleTimeCommands(VkDevice logicalDevice, VkCommandPool commandPool);
-	void EndSingleTimeCommands(VkDevice logicalDevice, VkCommandBuffer commandBuffer, VkCommandPool commandPool, VkQueue graphicsQueue);
+	void EndSingleTimeCommands(VkDevice logicalDevice, VkCommandPool commandPool, VkCommandBuffer commandBuffer, VkQueue graphicsQueue);
 }

@@ -80,7 +80,7 @@ namespace Kairos
 		copyRegion.size = size;
 		vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
 
-		EndSingleTimeCommands(logicalDevice, commandBuffer, commandPool, queue);
+		EndSingleTimeCommands(logicalDevice, commandPool, commandBuffer, queue);
 	}
 
 	VkVertexInputBindingDescription2EXT GetBindingDescription(const BufferLayout& layout)

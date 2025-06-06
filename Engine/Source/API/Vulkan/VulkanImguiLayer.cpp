@@ -74,11 +74,6 @@ namespace Kairos
 		Application& app = Application::Get();
 		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
 
-		if (ImGui::GetIO().BackendRendererUserData == nullptr) {
-			ImGui_ImplVulkan_Shutdown();
-			InitImGuiForVulkan();
-		}
-
 		// Rendering
 		ImGui::Render();
 
@@ -108,19 +103,22 @@ namespace Kairos
 		initInfo.Device = vctx->GetVkContext().LogicalDevice;
 		initInfo.Queue = vctx->GetVkContext().GraphicsQueue;
 		initInfo.QueueFamily = FindQueueFamilyIndex(vctx->GetVkContext().PhysicalDevice, vctx->GetVkContext().Surface, VK_QUEUE_GRAPHICS_BIT);
-		initInfo.DescriptorPool = vctx->GetVkContext().Swapchain.Info().DescriptorPool;
+		initInfo.DescriptorPool = vctx->GetVkContext().Swapchain.Info().DescriptorPool; // Adjust size as needed
 		initInfo.MinImageCount = 2;
-		initInfo.ImageCount = MAX_FRAMES_IN_FLIGHT;
+		initInfo.ImageCount = initInfo.MinImageCount;
+		initInfo.RenderPass = nullptr;
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 		initInfo.UseDynamicRendering = true; // Use Dynamic Rendering [Vulkan 1.3 & Above]
 		initInfo.PipelineRenderingCreateInfo = pipelineRenderingCreateInfo;
+		initInfo.Allocator = nullptr; // Use default allocator
+		initInfo.CheckVkResultFn = [](VkResult err) {
+			if (err != VK_SUCCESS)
+			{
+				KE_CORE_ERROR("Vulkan Error: {0}", (char*)err);
+			}
+			};
 
 		ImGui_ImplVulkan_Init(&initInfo);
-
-		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
-		ImGui_ImplVulkan_CreateFontsTexture();
-		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, cmd, vctx->GetVkContext().CommandPool, vctx->GetVkContext().GraphicsQueue);
-		ImGui_ImplVulkan_DestroyFontsTexture();
 	}
 
 	void VulkanImGuiLayer::OnImGuiRender()

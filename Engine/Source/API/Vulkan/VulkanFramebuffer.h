@@ -23,7 +23,7 @@ namespace Kairos
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) override { return 0; }
 
 		void DestroyOffscreenTarget();
-		void RenderOffscreenTarget(VkCommandBuffer commandBuffer, const Ref<class VertexArray>& vertexArray);
+		void RenderOffscreenTarget(VkCommandBuffer commandBuffer, const Ref<class VertexArray>& vertexArray, uint32_t imageIndex);
 
 		virtual void ClearAttachment(uint32_t attachmentIndex, int value) override;
 
@@ -37,12 +37,22 @@ namespace Kairos
 		std::vector<FramebufferTextureSpecification> m_ColorAttachmentSpecifications;
 		FramebufferTextureSpecification m_DepthAttachmentSpecification = FramebufferTextureFormat::None;
 
-		std::vector<VkImage> m_ViewportImages;
-		std::vector<VkDeviceMemory> m_DstImageMemory;
-		std::vector<VkImageView> m_ViewportImageViews;
-		std::vector<VkDescriptorSet> m_ImGuiDescriptorSets;
+		struct FrameResources
+		{
+			VkImage Image = VK_NULL_HANDLE;
+			VkDeviceMemory Memory = VK_NULL_HANDLE;
+			VkImageView ImageView = VK_NULL_HANDLE;
+			VkDescriptorSet DescriptorSet = VK_NULL_HANDLE;
+			bool DescriptorValid = false;
+		};
+
+		std::vector<FrameResources> m_FrameResources;
 
 		VkDescriptorSetLayout m_DescriptorSetLayout = VK_NULL_HANDLE;
 		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
+
+		uint32_t m_LastFrameIndex = 0;
+
+		VkDescriptorSet dst;
 	};
 }
