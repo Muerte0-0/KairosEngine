@@ -16,7 +16,7 @@ namespace Kairos
 
 	void DescriptorSetLayoutBuilder::AddEntry(VkShaderStageFlags stage, VkDescriptorType type)
 	{
-		vkDescriprotSetLayoutBinding
+		//vkDescriprotSetLayoutBinding
 	}
 
 	void DescriptorSetLayoutBuilder::Reset()
