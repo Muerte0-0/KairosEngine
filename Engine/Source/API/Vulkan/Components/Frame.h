@@ -10,14 +10,13 @@ namespace Kairos
 	class Frame
 	{
 	public:
-		Frame(Swapchain& swapchainRef, VkDevice logicalDevice, std::vector<VkShaderEXT>& shaders, VkCommandBuffer commandBuffer, std::deque<std::function<void(VkDevice)>>& deletionQueue);
+		Frame(Swapchain& swapchainRef, VkDevice logicalDevice, VkCommandBuffer commandBuffer, std::deque<std::function<void(VkDevice)>>& deletionQueue);
 
 		void RecordCommandBuffer(uint32_t imageIndex, const Ref<class VertexArray>& vertexArray);
 
 		VkCommandBuffer CommandBuffer;
 
 		Swapchain& SwapchainRef;
-		std::vector<VkShaderEXT>& Shaders;
 
 		VkSemaphore ImageAquiredSemaphore;
 		VkSemaphore RenderFinishedSemaphore;
@@ -27,7 +26,6 @@ namespace Kairos
 	private:
 		void BuildRenderingInfo();
 		void BuildColorAttachment(uint32_t imageIndex);
-		void AnnoyingBoilerplateThatDynamicRenderingWasMeantToSpareUs(const class BufferLayout& layout);
 
 		VkRenderingInfoKHR RenderingInfo = {};
 		VkRenderingAttachmentInfoKHR ColorAttachment = {};

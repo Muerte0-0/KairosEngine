@@ -34,13 +34,13 @@ namespace Kairos
 		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
-		m_ShaderLibrary.Load("D:/Dev/KairosEngine/Editor/Assets/Shaders/Triangle/Triangle.glsl");
+		Renderer::GetShaderLibrary().Load("D:/Dev/KairosEngine/Editor/Assets/Shaders/Triangle/Triangle.glsl");
 
 		FramebufferSpecification spec;
 		spec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
 		spec.Width = 1280;
 		spec.Height = 720;
-		m_Framebuffer = Framebuffer::Create(spec);
+		Renderer::Init_Framebuffer(spec);
 	}
 
 	void EditorLayer::OnDetach()
@@ -52,22 +52,24 @@ namespace Kairos
 	{
 		KE_PROFILE_FUNCTION();
 
-		if (FramebufferSpecification spec = m_Framebuffer->GetSpecification(); 
+		if (FramebufferSpecification spec = Renderer::GetFramebuffer()->GetSpecification();
 		m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // Zero sized Framebuffer is Invalid
 		(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
 		{
-			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			Renderer::GetFramebuffer()->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 		
 		KE_PROFILE_SCOPE("Renderer Prep");
-		m_Framebuffer->Bind();
+		Renderer::GetFramebuffer()->Bind();
 
 		RenderCommand::Clear();
-		m_Framebuffer->ClearAttachment(1, -1);
+		Renderer::GetFramebuffer()->ClearAttachment(1, -1);
 
-		Renderer::Submit(m_ShaderLibrary.Get("Triangle"), m_VertexArray, NULL);
+		Ref<Shader> triangleShader = Renderer::GetShaderLibrary().Get("Triangle");
 
-		m_Framebuffer->Unbind();
+		Renderer::Submit(triangleShader, m_VertexArray, NULL);
+
+		Renderer::GetFramebuffer()->Unbind();
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -174,11 +176,9 @@ namespace Kairos
 		ImGui::Begin("Viewport");
 			ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 			m_ViewportSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
-			if (RenderAPI::GetAPI() == RenderAPI::API::OpenGL)
-			{
-				uint32_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-				ImGui::Image(textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-			}
+			uint32_t textureID = Renderer::GetFramebuffer()->GetColorAttachmentRendererID();
+			if (textureID != 0)
+				ImGui::Image((ImTextureID)textureID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 
 		ImGui::PopStyleVar();
@@ -202,5 +202,4 @@ namespace Kairos
 	{
 		
 	}
-
 }

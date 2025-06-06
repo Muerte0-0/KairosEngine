@@ -35,16 +35,12 @@ namespace Kairos
 
 		VkCommandPool CommandPool = VK_NULL_HANDLE;
 
+		VkSampler Sampler;
+
 		VkSemaphore ImageAquiredSemaphore;
 		VkSemaphore RenderFinishedSemaphore;
 		VkFence RenderFinishedFence;
 	};
-
-#define VK_CHECK(result) \
-    if (result != VK_SUCCESS) { \
-        KE_CORE_ERROR("Vulkan error: {}", (char*)result); \
-        abort(); \
-    }
 
 #define MAX_FRAMES_IN_FLIGHT 2
 

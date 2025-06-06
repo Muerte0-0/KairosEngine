@@ -6,9 +6,6 @@
 
 namespace Kairos
 {
-	VkVertexInputBindingDescription2EXT GetBindingDescription(const BufferLayout& layout);
-	std::vector<VkVertexInputAttributeDescription2EXT> GetAttributeDescriptions(const BufferLayout& layout);
-
 	class VulkanVertexArray : public VertexArray
 	{
 	public:

@@ -59,9 +59,17 @@ filter "system:windows"
 
 links
 {
-	"%{Library.WinSock}",
+	"Ws2_32.lib",
 	"dxgi",
 	"gdi32",
+}
+
+filter "system:linux"
+	systemversion "latest"
+
+links
+{
+	"X11",
 }
 
 filter "configurations:Debug"

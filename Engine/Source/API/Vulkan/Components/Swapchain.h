@@ -19,8 +19,6 @@ namespace Kairos
 		// Dynamic rendering
 		VkDescriptorPool DescriptorPool;
 		std::vector<VkDescriptorSet> DescriptorSets;
-
-		VkSampler Sampler;
 	};
 
 	struct SurfaceDetails
@@ -40,7 +38,7 @@ namespace Kairos
 
 		void CreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t width, uint32_t height);
 		void CreateDescriptorPool(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue);
-		void CreateSampler(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue);
+		VkSampler CreateSampler(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue);
 
 		SwapchainInfo& Info() {return m_Info;}
 

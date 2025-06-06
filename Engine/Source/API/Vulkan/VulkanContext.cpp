@@ -1,6 +1,9 @@
 #include "kepch.h"
 #include "VulkanContext.h"
 
+#include "VulkanUtils.h"
+#include "VulkanFramebuffer.h"
+
 #define VOLK_IMPLEMENTATION
 #include "volk.h"
 
@@ -14,6 +17,7 @@
 #include "Components/Image.h"
 
 #include "Engine/Core/Application.h"
+#include "Engine/Renderer/Renderer.h"
 
 #include "backends/imgui_impl_vulkan.h"
 
@@ -31,6 +35,7 @@ namespace Kairos
 
 		m_Context.Instance = CreateInstance(glfwGetWindowTitle(m_WindowHandle), m_InstanceDeletionQueue);
 		volkLoadInstance(m_Context.Instance);
+		//m_Context.Messenger = CreateDebugMessenger(m_Context.Instance, m_InstanceDeletionQueue); // Debug Messesnger
 		m_Context.Surface = CreateSurface(m_Context.Instance, m_WindowHandle, m_InstanceDeletionQueue);
 
 		m_Context.PhysicalDevice = ChoosePhysicalDevice(m_Context.Instance);
@@ -51,13 +56,19 @@ namespace Kairos
 
 		m_Context.Swapchain.CreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, width, height);
 		m_Context.Swapchain.CreateDescriptorPool(m_Context.LogicalDevice, m_DeviceDeletionQueue);
-		m_Context.Swapchain.CreateSampler(m_Context.LogicalDevice, m_DeviceDeletionQueue);
+		m_Context.Sampler = m_Context.Swapchain.CreateSampler(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 
 		m_Context.CommandPool = CreateCommandPool(m_Context.LogicalDevice, FindQueueFamilyIndex(m_Context.PhysicalDevice, m_Context.Surface, VK_QUEUE_GRAPHICS_BIT), m_DeviceDeletionQueue);
 
 		m_Context.ImageAquiredSemaphore = MakeSemaphore(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 		m_Context.RenderFinishedSemaphore = MakeSemaphore(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 		m_Context.RenderFinishedFence = MakeFence(m_Context.LogicalDevice, m_DeviceDeletionQueue);
+
+		for (uint32_t i = 0; i < m_Context.Swapchain.Info().Images.size(); ++i)
+		{
+			VkCommandBuffer commandBuffer = AllocateCommandBuffer(m_Context.LogicalDevice, m_Context.CommandPool);
+			m_Context.Frames.push_back(Frame(m_Context.Swapchain, m_Context.LogicalDevice, commandBuffer, m_DeviceDeletionQueue));
+		}
 
 		// Logging Vulkan Info
 		uint32_t version;
@@ -108,6 +119,8 @@ namespace Kairos
 		vkDeviceWaitIdle(m_Context.LogicalDevice);
 
 		KE_CORE_INFO("Cleanup Started!");
+
+		std::dynamic_pointer_cast<VulkanFramebuffer>(Renderer::GetFramebuffer())->Destroy();
 
 		ImGui_ImplVulkan_Shutdown();
 

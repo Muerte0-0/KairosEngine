@@ -30,6 +30,3 @@ Library["ShaderC_Combined_Debug"] = "%{LibraryDir.VulkanSDK}/shaderc_combinedd.l
 
 -- Shader C Release Libraries
 Library["ShaderC_Combined_Release"] = "%{Dependencies}/Vulkan/lib/shaderc_combined.lib"
-
--- Windows
-Library["WinSock"] = "Ws2_32.lib"

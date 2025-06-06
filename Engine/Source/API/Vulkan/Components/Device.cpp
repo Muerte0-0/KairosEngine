@@ -1,7 +1,7 @@
 #include "kepch.h"
 #include "Device.h"
 
-#include "API/Vulkan/VulkanContext.h"
+#include "API/Vulkan/VulkanUtils.h"
 
 #include "volk.h"
 
@@ -227,6 +227,7 @@ namespace Kairos
 		shaderObjectFeatures.pNext = &shaderDrawParamsFeatures;
 		shaderDrawParamsFeatures.pNext = &vulkan13Features;
 
+
 		std::vector<const char*> enabledLayers;
 #ifdef KE_DEBUG
 		enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
@@ -250,13 +251,13 @@ namespace Kairos
 		deviceCreateInfo.pEnabledFeatures = nullptr;
 		deviceCreateInfo.pNext = &deviceFeatures2;
 
-		deviceCreateInfo.queueCreateInfoCount = queueCreateInfos.size();
+		deviceCreateInfo.queueCreateInfoCount = (uint32_t)queueCreateInfos.size();
 		deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
 
-		deviceCreateInfo.enabledExtensionCount = enabledExtensions.size();
+		deviceCreateInfo.enabledExtensionCount = (uint32_t)enabledExtensions.size();
 		deviceCreateInfo.ppEnabledExtensionNames = enabledExtensions.data();
 
-		deviceCreateInfo.enabledLayerCount = enabledLayers.size();
+		deviceCreateInfo.enabledLayerCount = (uint32_t)enabledLayers.size();
 		deviceCreateInfo.ppEnabledLayerNames = enabledLayers.data();
 
 		VkDevice logicalDevice;

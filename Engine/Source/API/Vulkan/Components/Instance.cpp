@@ -1,13 +1,13 @@
 #include "kepch.h"
 
 #include "Instance.h"
-#include "API/Vulkan/VulkanContext.h"
+#include "API/Vulkan/VulkanUtils.h"
 
 #include "volk.h"
 
 namespace Kairos
 {
-	bool SupportedByInstance(const char** extensionNames, int extensionCount, const char** layerNames, int layerCount)
+	bool SupportedByInstance(const char** extensionNames, uint32_t extensionCount, const char** layerNames, uint32_t layerCount)
 	{
 		uint32_t supportedExtensionsCount;
 		std::vector<VkExtensionProperties> supportedExtensions;
@@ -92,7 +92,7 @@ namespace Kairos
 		enabledLayers.push_back("VK_LAYER_KHRONOS_validation");
 #endif // KE_DEBUG
 		
-		if (!SupportedByInstance(enabledExtensions.data(), enabledExtensions.size(), enabledLayers.data(), enabledLayers.size()))
+		if (!SupportedByInstance(enabledExtensions.data(), (uint32_t)enabledExtensions.size(), enabledLayers.data(), (uint32_t)enabledLayers.size()))
 			return nullptr;
 
 		VkInstanceCreateInfo info = {};
@@ -101,10 +101,10 @@ namespace Kairos
 		info.flags = VkInstanceCreateFlags();
 		info.pApplicationInfo = &appInfo;
 
-		info.enabledExtensionCount = enabledExtensions.size();
+		info.enabledExtensionCount = (uint32_t)enabledExtensions.size();
 		info.ppEnabledExtensionNames = enabledExtensions.data();
 
-		info.enabledLayerCount = enabledLayers.size();
+		info.enabledLayerCount = (uint32_t)enabledLayers.size();
 		info.ppEnabledLayerNames = enabledLayers.data();
 
 		VkInstance instance;
@@ -143,12 +143,13 @@ namespace Kairos
 		return VK_FALSE;
 	}
 
-	VkDebugUtilsMessengerEXT MakeDebugMessenger(VkInstance instance, std::deque<std::function<void(VkInstance)>> instanceDeletionQueue)
+	VkDebugUtilsMessengerEXT CreateDebugMessenger(VkInstance instance, std::deque<std::function<void(VkInstance)>> instanceDeletionQueue)
 	{
 #ifdef KE_DEBUG
 		KE_CORE_INFO("Creating Debug Messenger!");
 
 		VkDebugUtilsMessengerCreateInfoEXT dci;
+		dci.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 		dci.flags = VkDebugUtilsMessengerCreateFlagsEXT();
 		dci.messageSeverity =
 		VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |

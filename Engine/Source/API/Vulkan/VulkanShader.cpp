@@ -56,12 +56,6 @@ namespace Kairos
 
 		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
 										vctx->GetDeviceDeletionQueue(), true);
-
-		for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); ++i)
-		{
-			VkCommandBuffer commandBuffer = AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
-			vctx->GetVkContext().Frames.push_back(Frame(vctx->GetVkContext().Swapchain, vctx->GetVkContext().LogicalDevice, m_Shaders, commandBuffer, vctx->GetDeviceDeletionQueue()));
-		}
 	}
 
 	VulkanShader::VulkanShader(const std::string& vertFilepath, const std::string& fragFilepath)
@@ -80,12 +74,6 @@ namespace Kairos
 
 		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), vertSrc, fragSrc,
 			vctx->GetDeviceDeletionQueue(), false);
-
-		for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); ++i)
-		{
-			VkCommandBuffer commandBuffer = AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
-			vctx->GetVkContext().Frames.push_back(Frame(vctx->GetVkContext().Swapchain, vctx->GetVkContext().LogicalDevice, m_Shaders, commandBuffer, vctx->GetDeviceDeletionQueue()));
-		}
 	}
 
 	VulkanShader::VulkanShader(std::string& shaderName, std::string& vertCode, std::string& fragCode) : m_ShaderName(shaderName)
@@ -113,12 +101,6 @@ namespace Kairos
 
 		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
 			vctx->GetDeviceDeletionQueue(), true);
-
-		for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); ++i)
-		{
-			VkCommandBuffer commandBuffer = AllocateCommandBuffer(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
-			vctx->GetVkContext().Frames.push_back(Frame(vctx->GetVkContext().Swapchain, vctx->GetVkContext().LogicalDevice, m_Shaders, commandBuffer, vctx->GetDeviceDeletionQueue()));
-		}
 	}
 
 	std::vector<VkShaderEXT> VulkanShader::MakeShaderObjects(VkDevice device, const char* name, std::vector<char> vertSrc, std::vector<char> fragSrc,
@@ -190,7 +172,7 @@ namespace Kairos
 
 		VkShaderEXT shaders[2];
 
-		if (vkCreateShadersEXT(device, shaderInfos.size(), shaderInfos.data(), nullptr, shaders) == VK_SUCCESS)
+		if (vkCreateShadersEXT(device, (uint32_t)shaderInfos.size(), shaderInfos.data(), nullptr, shaders) == VK_SUCCESS)
 		{
 			KE_CORE_INFO("{0} -> Shader Creation Success", m_ShaderName);
 			

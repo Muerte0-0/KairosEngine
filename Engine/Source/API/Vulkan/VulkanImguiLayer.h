@@ -21,5 +21,7 @@ namespace Kairos
 	private:
 		float m_Time = 0.0f;
 
+		void InitImGuiForVulkan();
+
 	};
 }

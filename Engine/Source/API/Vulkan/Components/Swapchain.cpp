@@ -5,8 +5,7 @@
 
 #include "volk.h"
 
-#include "API/Vulkan/VulkanContext.h"
-#include "Engine/Core/Application.h"
+#include "API/Vulkan/VulkanUtils.h"
 
 namespace Kairos
 {
@@ -104,7 +103,7 @@ namespace Kairos
 
     void Swapchain::CreateDescriptorPool(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue)
     {
-        VkDescriptorPoolSize pool_sizes[] =
+        VkDescriptorPoolSize poolSizes[] =
         {
             { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
             { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -119,14 +118,14 @@ namespace Kairos
             { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
         };
 
-        VkDescriptorPoolCreateInfo pool_info = {};
-        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        pool_info.maxSets = 1000 * ((int)(sizeof(pool_sizes) / sizeof(*(pool_sizes))));
-        pool_info.poolSizeCount = (uint32_t)((int)(sizeof(pool_sizes) / sizeof(*(pool_sizes))));
-        pool_info.pPoolSizes = pool_sizes;
+        VkDescriptorPoolCreateInfo poolInfo = {};
+        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+        poolInfo.maxSets = 1000 * ((int)(sizeof(poolSizes) / sizeof(*(poolSizes))));
+        poolInfo.poolSizeCount = (uint32_t)((int)(sizeof(poolSizes) / sizeof(*(poolSizes))));
+        poolInfo.pPoolSizes = poolSizes;
 
-        VK_CHECK(vkCreateDescriptorPool(logicalDevice, &pool_info, nullptr, &m_Info.DescriptorPool));
+        VK_CHECK(vkCreateDescriptorPool(logicalDevice, &poolInfo, nullptr, &m_Info.DescriptorPool));
 
         VkDescriptorPool handle = m_Info.DescriptorPool;
 
@@ -136,7 +135,7 @@ namespace Kairos
             });
     }
 
-    void Swapchain::CreateSampler(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue)
+    VkSampler Swapchain::CreateSampler(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue)
     {
         VkSamplerCreateInfo samplerInfo = {};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -174,15 +173,15 @@ namespace Kairos
         samplerInfo.minLod = 0.0f;
         samplerInfo.maxLod = 0.0f;
  
-        VK_CHECK(vkCreateSampler(logicalDevice, &samplerInfo, nullptr, &m_Info.Sampler));
+        VkSampler sampler;
+        VK_CHECK(vkCreateSampler(logicalDevice, &samplerInfo, nullptr, &sampler));
 
-		VkSampler handle = m_Info.Sampler;
-
-        deviceDeletionQueue.push_back([handle](VkDevice device)
+        deviceDeletionQueue.push_back([sampler](VkDevice device)
             {
-                vkDestroySampler(device, handle, nullptr);
+                vkDestroySampler(device, sampler, nullptr);
 			});
 
+		return sampler;
     }
 
     SurfaceDetails Swapchain::QuerySurfaceSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface)

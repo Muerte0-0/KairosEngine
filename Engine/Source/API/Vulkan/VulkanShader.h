@@ -18,6 +18,7 @@ namespace Kairos
 		virtual void UnBind() const override;
 
 		virtual const std::string& GetName() const override { return m_ShaderName; }
+		const std::vector<VkShaderEXT>& GetShaders() const { return m_Shaders; }
 
 		std::vector<VkShaderEXT> MakeShaderObjects(VkDevice device, const char* name, std::vector<char> vertSrc, std::vector<char> fragSrc,
 			std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue, bool compileCode);

@@ -16,6 +16,8 @@
 
 #include "volk.h"
 
+IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
+
 namespace Kairos
 {
 	VulkanImGuiLayer::VulkanImGuiLayer()
@@ -41,29 +43,10 @@ namespace Kairos
 
 		Application& app = Application::Get();
 		GLFWwindow* window = static_cast<GLFWwindow*>(app.GetWindow().GetNativeWindow());
-		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+		VulkanContext* vctx = (VulkanContext*)app.GetWindow().GetGraphicsContext();
 
 		ImGui_ImplGlfw_InitForVulkan(window, true);
-
-		VkPipelineRenderingCreateInfo pipeline_rendering_create_info = {};
-		pipeline_rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-		pipeline_rendering_create_info.colorAttachmentCount = 1;
-		pipeline_rendering_create_info.pColorAttachmentFormats = &vctx->GetVkContext().Swapchain.Info().ImageFormat.format;
-
-		// Initialize ImGui For Vulkan
-		ImGui_ImplVulkan_InitInfo init_info = {};
-		init_info.Instance = vctx->GetVkContext().Instance;
-		init_info.PhysicalDevice = vctx->GetVkContext().PhysicalDevice;
-		init_info.Device = vctx->GetVkContext().LogicalDevice;
-		init_info.Queue = vctx->GetVkContext().GraphicsQueue;
-		init_info.DescriptorPool = vctx->GetVkContext().Swapchain.Info().DescriptorPool;
-		init_info.MinImageCount = 2;
-		init_info.ImageCount = MAX_FRAMES_IN_FLIGHT;
-		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		init_info.UseDynamicRendering = true; // Use Dynamic Rendering [Vulkan 1.3 & Above]
-		init_info.PipelineRenderingCreateInfo = pipeline_rendering_create_info;
-
-		ImGui_ImplVulkan_Init(&init_info);
+		InitImGuiForVulkan();
 	}
 
 	void VulkanImGuiLayer::OnDetach()
@@ -87,7 +70,12 @@ namespace Kairos
 
 		ImGuiIO& io = ImGui::GetIO();
 		Application& app = Application::Get();
-		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
+		io.DisplaySize = ImVec2((float)app.GetWindow().GetWidth(), (float)app.GetWindow().GetHeight());
+
+		if (ImGui::GetIO().BackendRendererUserData == nullptr) {
+			ImGui_ImplVulkan_Shutdown();
+			InitImGuiForVulkan();
+		}
 
 		// Rendering
 		ImGui::Render();
@@ -99,6 +87,31 @@ namespace Kairos
 			ImGui::RenderPlatformWindowsDefault();
 			glfwMakeContextCurrent(current_context_backup);
 		}
+	}
+
+	void VulkanImGuiLayer::InitImGuiForVulkan()
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkPipelineRenderingCreateInfo pipeline_rendering_create_info = {};
+		pipeline_rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+		pipeline_rendering_create_info.colorAttachmentCount = 1;
+		pipeline_rendering_create_info.pColorAttachmentFormats = &vctx->GetVkContext().Swapchain.Info().ImageFormat.format;
+
+		// Initialize ImGui For Vulkan
+		ImGui_ImplVulkan_InitInfo init_info = {};
+		init_info.Instance = vctx->GetVkContext().Instance;
+		init_info.PhysicalDevice = vctx->GetVkContext().PhysicalDevice;
+		init_info.Device = vctx->GetVkContext().LogicalDevice;
+		init_info.Queue = vctx->GetVkContext().GraphicsQueue;
+		init_info.DescriptorPool = vctx->GetVkContext().Swapchain.Info().DescriptorPool;
+		init_info.MinImageCount = 2;
+		init_info.ImageCount = MAX_FRAMES_IN_FLIGHT;
+		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		init_info.UseDynamicRendering = true; // Use Dynamic Rendering [Vulkan 1.3 & Above]
+		init_info.PipelineRenderingCreateInfo = pipeline_rendering_create_info;
+
+		ImGui_ImplVulkan_Init(&init_info);
 	}
 
 	void VulkanImGuiLayer::OnImGuiRender()

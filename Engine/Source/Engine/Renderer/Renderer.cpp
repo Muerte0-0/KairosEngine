@@ -4,6 +4,8 @@
 namespace Kairos
 {
 	Renderer::SceneData* Renderer::m_SceneData = new Renderer::SceneData;
+	ShaderLibrary Renderer::m_ShaderLibrary;
+	std::shared_ptr<Framebuffer> Renderer::m_Framebuffer;
 
 	void Renderer::Init()
 	{

@@ -31,9 +31,10 @@ links
 
 filter "system:windows"
 	systemversion "latest"
+
 links
 {
-	"%{Library.WinSock}",
+	"Ws2_32.lib",
 }
 
 filter "configurations:Debug"
