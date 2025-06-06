@@ -41,8 +41,6 @@ namespace Kairos
 		std::vector<VkImage> m_ViewportImages;
 		std::vector<VkDeviceMemory> m_DstImageMemory;
 		std::vector<VkImageView> m_ViewportImageViews;
-
 		std::vector<VkDescriptorSet> m_ImGuiDescriptorSets;
-		VkDescriptorSetLayout m_DescriptorSetLayout;
 	};
 }

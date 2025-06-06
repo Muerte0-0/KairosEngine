@@ -16,9 +16,7 @@ namespace Kairos
 		std::vector<VkImageView> ImageViews;
 		std::vector<VkImage> Images;
 
-		// Dynamic rendering
 		VkDescriptorPool DescriptorPool;
-		std::vector<VkDescriptorSet> DescriptorSets;
 	};
 
 	struct SurfaceDetails

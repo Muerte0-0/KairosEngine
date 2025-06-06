@@ -112,6 +112,11 @@ namespace Kairos
 		init_info.PipelineRenderingCreateInfo = pipeline_rendering_create_info;
 
 		ImGui_ImplVulkan_Init(&init_info);
+
+		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+		ImGui_ImplVulkan_CreateFontsTexture();
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, cmd, vctx->GetVkContext().CommandPool, vctx->GetVkContext().GraphicsQueue);
+		ImGui_ImplVulkan_DestroyFontsTexture();
 	}
 
 	void VulkanImGuiLayer::OnImGuiRender()

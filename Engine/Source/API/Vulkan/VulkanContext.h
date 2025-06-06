@@ -37,6 +37,8 @@ namespace Kairos
 
 		VkSampler Sampler;
 
+		VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
+
 		VkSemaphore ImageAquiredSemaphore;
 		VkSemaphore RenderFinishedSemaphore;
 		VkFence RenderFinishedFence;
