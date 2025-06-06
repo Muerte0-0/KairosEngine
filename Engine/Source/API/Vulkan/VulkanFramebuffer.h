@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/Renderer/Framebuffer.h"
 
-#include <vulkan/vulkan.h>
+#include "volk.h"
 
 #include "backends/imgui_impl_vulkan.h"
 
@@ -22,7 +22,6 @@ namespace Kairos
 		virtual void Resize(uint32_t width, uint32_t height) override;
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) override { return 0; }
 
-		void Destroy();
 		void DestroyOffscreenTarget();
 		void RenderOffscreenTarget(VkCommandBuffer commandBuffer, const Ref<class VertexArray>& vertexArray);
 
@@ -42,5 +41,8 @@ namespace Kairos
 		std::vector<VkDeviceMemory> m_DstImageMemory;
 		std::vector<VkImageView> m_ViewportImageViews;
 		std::vector<VkDescriptorSet> m_ImGuiDescriptorSets;
+
+		VkDescriptorSetLayout m_DescriptorSetLayout = VK_NULL_HANDLE;
+		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
 	};
 }

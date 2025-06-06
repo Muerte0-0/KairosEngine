@@ -2,10 +2,12 @@
 
 #include "VulkanImguiLayer.h"
 
-#include "Engine/Core/Application.h"
 #include "VulkanContext.h"
+#include "Engine/Core/Application.h"
+#include "VulkanUtils.h"
 #include "Components/Command.h"
 #include "Components/Image.h"
+#include "Components/Device.h"
 
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
@@ -93,25 +95,27 @@ namespace Kairos
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
-		VkPipelineRenderingCreateInfo pipeline_rendering_create_info = {};
-		pipeline_rendering_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-		pipeline_rendering_create_info.colorAttachmentCount = 1;
-		pipeline_rendering_create_info.pColorAttachmentFormats = &vctx->GetVkContext().Swapchain.Info().ImageFormat.format;
+		VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo = {};
+		pipelineRenderingCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+		pipelineRenderingCreateInfo.viewMask = 0;
+		pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+		pipelineRenderingCreateInfo.pColorAttachmentFormats = &vctx->GetVkContext().Swapchain.Info().ImageFormat.format;
 
 		// Initialize ImGui For Vulkan
-		ImGui_ImplVulkan_InitInfo init_info = {};
-		init_info.Instance = vctx->GetVkContext().Instance;
-		init_info.PhysicalDevice = vctx->GetVkContext().PhysicalDevice;
-		init_info.Device = vctx->GetVkContext().LogicalDevice;
-		init_info.Queue = vctx->GetVkContext().GraphicsQueue;
-		init_info.DescriptorPool = vctx->GetVkContext().Swapchain.Info().DescriptorPool;
-		init_info.MinImageCount = 2;
-		init_info.ImageCount = MAX_FRAMES_IN_FLIGHT;
-		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		init_info.UseDynamicRendering = true; // Use Dynamic Rendering [Vulkan 1.3 & Above]
-		init_info.PipelineRenderingCreateInfo = pipeline_rendering_create_info;
+		ImGui_ImplVulkan_InitInfo initInfo = {};
+		initInfo.Instance = vctx->GetVkContext().Instance;
+		initInfo.PhysicalDevice = vctx->GetVkContext().PhysicalDevice;
+		initInfo.Device = vctx->GetVkContext().LogicalDevice;
+		initInfo.Queue = vctx->GetVkContext().GraphicsQueue;
+		initInfo.QueueFamily = FindQueueFamilyIndex(vctx->GetVkContext().PhysicalDevice, vctx->GetVkContext().Surface, VK_QUEUE_GRAPHICS_BIT);
+		initInfo.DescriptorPool = vctx->GetVkContext().Swapchain.Info().DescriptorPool;
+		initInfo.MinImageCount = 2;
+		initInfo.ImageCount = MAX_FRAMES_IN_FLIGHT;
+		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+		initInfo.UseDynamicRendering = true; // Use Dynamic Rendering [Vulkan 1.3 & Above]
+		initInfo.PipelineRenderingCreateInfo = pipelineRenderingCreateInfo;
 
-		ImGui_ImplVulkan_Init(&init_info);
+		ImGui_ImplVulkan_Init(&initInfo);
 
 		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
 		ImGui_ImplVulkan_CreateFontsTexture();

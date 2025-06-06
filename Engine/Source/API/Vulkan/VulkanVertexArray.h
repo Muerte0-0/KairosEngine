@@ -1,8 +1,7 @@
 #pragma once
-
-#include <vulkan/vulkan.h>
-
 #include "Engine/Renderer/VertexArray.h"
+
+#include "volk.h"
 
 namespace Kairos
 {

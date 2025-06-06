@@ -7,6 +7,21 @@
 
 namespace Kairos
 {
+	class PipelineLayoutBuilder
+	{
+	public:
+		PipelineLayoutBuilder(VkDevice& logicalDevice);
+
+		VkPipelineLayout Build(std::deque<std::function<void(VkDevice)>>& deletionQueue);
+
+		inline void Add(VkDescriptorSetLayout descriptorSetLayout) { m_DescriptorLayouts.push_back(descriptorSetLayout); }
+	private:
+		VkDevice& m_LogicalDevice;
+		std::vector<VkDescriptorSetLayout> m_DescriptorLayouts;
+
+		void Reset();
+	};
+
 	class VulkanShader : public Shader
 	{
 	public:

@@ -3,6 +3,7 @@
 
 #include "VulkanUtils.h"
 #include "VulkanFramebuffer.h"
+#include "VulkanShader.h"
 
 #define VOLK_IMPLEMENTATION
 #include "volk.h"
@@ -15,6 +16,7 @@
 #include "Components/Command.h"
 #include "Components/Synchronization.h"
 #include "Components/Image.h"
+#include "Components/Descriptors.h"
 
 #include "Engine/Core/Application.h"
 #include "Engine/Renderer/Renderer.h"
@@ -57,6 +59,14 @@ namespace Kairos
 		m_Context.Swapchain.CreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, width, height);
 		m_Context.Swapchain.CreateDescriptorPool(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 		m_Context.Sampler = m_Context.Swapchain.CreateSampler(m_Context.LogicalDevice, m_DeviceDeletionQueue);
+
+		DescriptorSetLayoutBuilder descriptorSetLyoutBuilder(m_Context.LogicalDevice);
+		descriptorSetLyoutBuilder.AddEntry(VK_SHADER_STAGE_COMPUTE_BIT, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+		m_Context.DescriptorSetLayout = descriptorSetLyoutBuilder.Build(m_DeviceDeletionQueue);
+
+		PipelineLayoutBuilder pipelineLayoutBuilder(m_Context.LogicalDevice);
+		pipelineLayoutBuilder.Add(m_Context.DescriptorSetLayout);
+		m_Context.PipelineLayout = pipelineLayoutBuilder.Build(m_DeviceDeletionQueue);
 
 		m_Context.CommandPool = CreateCommandPool(m_Context.LogicalDevice, FindQueueFamilyIndex(m_Context.PhysicalDevice, m_Context.Surface, VK_QUEUE_GRAPHICS_BIT), m_DeviceDeletionQueue);
 
@@ -120,7 +130,7 @@ namespace Kairos
 
 		KE_CORE_INFO("Cleanup Started!");
 
-		std::dynamic_pointer_cast<VulkanFramebuffer>(Renderer::GetFramebuffer())->Destroy();
+		std::dynamic_pointer_cast<VulkanFramebuffer>(Renderer::GetFramebuffer())->DestroyOffscreenTarget();
 
 		ImGui_ImplVulkan_Shutdown();
 

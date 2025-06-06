@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/Renderer/GraphicsContext.h"
 
-#include <vulkan/vulkan.h>
+#include <volk.h>
 #include <vma/vk_mem_alloc.h>
 
 #define GLFW_INCLUDE_VULKAN
@@ -37,6 +37,7 @@ namespace Kairos
 
 		VkSampler Sampler;
 
+		VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 		VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
 
 		VkSemaphore ImageAquiredSemaphore;

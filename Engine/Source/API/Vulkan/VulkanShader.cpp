@@ -3,6 +3,7 @@
 
 #include "Engine/Core/Application.h"
 #include "VulkanContext.h"
+#include "VulkanUtils.h"
 
 #include "Components/Command.h"
 #include "Components/Frame.h"
@@ -11,6 +12,34 @@
 
 namespace Kairos
 {
+	PipelineLayoutBuilder::PipelineLayoutBuilder(VkDevice& logicalDevice) : m_LogicalDevice(logicalDevice) {}
+
+	VkPipelineLayout PipelineLayoutBuilder::Build(std::deque<std::function<void(VkDevice)>>& deletionQueue)
+	{
+		VkPipelineLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+		layoutInfo.flags = VkPipelineLayoutCreateFlagBits();
+		layoutInfo.setLayoutCount = (uint32_t)m_DescriptorLayouts.size();
+		layoutInfo.pSetLayouts = m_DescriptorLayouts.data();
+
+		VkPipelineLayout layout;
+		VK_CHECK(vkCreatePipelineLayout(m_LogicalDevice, &layoutInfo, nullptr, &layout));
+
+		Reset();
+
+		deletionQueue.push_back([layout](VkDevice device)
+			{
+				vkDestroyPipelineLayout(device, layout, nullptr);
+				KE_CORE_INFO("Destroyed Pipeline Layout");
+			});
+
+		return layout;
+	}
+
+	void PipelineLayoutBuilder::Reset()
+	{
+		m_DescriptorLayouts.clear();
+	}
+
 	shaderc_shader_kind ShaderTypeFromString(const std::string& type)
 	{
 		if (type == "vertex")

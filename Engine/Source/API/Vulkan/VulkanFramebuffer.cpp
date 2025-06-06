@@ -12,6 +12,7 @@
 
 #include "Components/Image.h"
 #include "Components/Command.h"
+#include "Components/Descriptors.h"
 
 #include "volk.h"
 
@@ -73,6 +74,14 @@ namespace Kairos
 		Invalidate();
 
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		DescriptorSetLayoutBuilder descriptorSetLyoutBuilder(vctx->GetVkContext().LogicalDevice);
+		descriptorSetLyoutBuilder.AddEntry(VK_SHADER_STAGE_FRAGMENT_BIT, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		m_DescriptorSetLayout = descriptorSetLyoutBuilder.Build(vctx->GetDeviceDeletionQueue());
+		
+		PipelineLayoutBuilder pipelineLayoutBuilder(vctx->GetVkContext().LogicalDevice);
+		pipelineLayoutBuilder.Add(m_DescriptorSetLayout);
+		m_PipelineLayout = pipelineLayoutBuilder.Build(vctx->GetDeviceDeletionQueue());
 	}
 
 	VulkanFramebuffer::~VulkanFramebuffer()
@@ -88,53 +97,60 @@ namespace Kairos
 
 		for (uint32_t i = 0; i < vctx->GetVkContext().Swapchain.Info().Images.size(); i++)
 		{
-			VkImageCreateInfo imageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+			VkImageCreateInfo imageInfo = {};
+			imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 			imageInfo.imageType = VK_IMAGE_TYPE_2D;
-			imageInfo.format = VK_FORMAT_B8G8R8A8_SRGB;
-			imageInfo.extent = { m_Specification.Width, m_Specification.Height, 1 };
-			imageInfo.arrayLayers = 1;
+			imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+			imageInfo.extent.width = m_Specification.Width;
+			imageInfo.extent.height = m_Specification.Height;
+			imageInfo.extent.depth = 1;
 			imageInfo.mipLevels = 1;
-			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			imageInfo.arrayLayers = 1;
 			imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-			imageInfo.tiling = VK_IMAGE_TILING_LINEAR;
+			imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
 			imageInfo.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 			imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-			VK_CHECK(vkCreateImage(volkGetLoadedDevice(), &imageInfo, nullptr, &m_ViewportImages[i]));
+			imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+			VK_CHECK(vkCreateImage(vctx->GetVkContext().LogicalDevice, &imageInfo, nullptr, &m_ViewportImages[i]));
 
 			VkMemoryRequirements memRequirements;
+			vkGetImageMemoryRequirements(vctx->GetVkContext().LogicalDevice, m_ViewportImages[i], &memRequirements);
 
 			VkMemoryAllocateInfo memAllocInfo{};
 			memAllocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-
-			vkGetImageMemoryRequirements(volkGetLoadedDevice(), m_ViewportImages[i], &memRequirements);
-
 			memAllocInfo.allocationSize = memRequirements.size;
-			memAllocInfo.memoryTypeIndex = FindMemoryType( vctx->GetVkContext().PhysicalDevice, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-			vkAllocateMemory(volkGetLoadedDevice(), &memAllocInfo, nullptr, &m_DstImageMemory[i]);
-			vkBindImageMemory(volkGetLoadedDevice(), m_ViewportImages[i], m_DstImageMemory[i], 0);
+			memAllocInfo.memoryTypeIndex = FindMemoryType(vctx->GetVkContext().PhysicalDevice, memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			VK_CHECK(vkAllocateMemory(vctx->GetVkContext().LogicalDevice, &memAllocInfo, nullptr, &m_DstImageMemory[i]));
+			VK_CHECK(vkBindImageMemory(vctx->GetVkContext().LogicalDevice, m_ViewportImages[i], m_DstImageMemory[i], 0));
 
 			VkCommandBuffer commandBuffer = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
-
+			
 			TransitionImageLayout(commandBuffer, m_ViewportImages[i],
 				VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 				VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_MEMORY_READ_BIT,
 				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
-
+			
 			EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, commandBuffer, vctx->GetVkContext().CommandPool, vctx->GetVkContext().GraphicsQueue);
 		}
 
 		m_ViewportImageViews.resize(m_ViewportImages.size());
+		m_ImGuiDescriptorSets.resize(m_ViewportImages.size());
 
 		for (uint32_t i = 0; i < m_ViewportImages.size(); i++)
-			m_ViewportImageViews[i] = CreateImageView(volkGetLoadedDevice(), m_ViewportImages[i], VK_FORMAT_B8G8R8A8_SRGB);
+		{
+			VkImageViewCreateInfo info = {};
+			info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			info.image = m_ViewportImages[i];
+			info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			info.format = VK_FORMAT_R8G8B8A8_UNORM;
+			info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			info.subresourceRange.levelCount = 1;
+			info.subresourceRange.layerCount = 1;
+			VK_CHECK(vkCreateImageView(vctx->GetVkContext().LogicalDevice, &info, nullptr, &m_ViewportImageViews[i]));
 
-		m_ImGuiDescriptorSets.clear();
-		m_ImGuiDescriptorSets.resize(m_ViewportImageViews.size());
-
-		for (uint32_t i = 0; i < m_ViewportImageViews.size(); i++)
 			m_ImGuiDescriptorSets[i] = ImGui_ImplVulkan_AddTexture(vctx->GetVkContext().Sampler, m_ViewportImageViews[i], VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+
 	}
 
 	void VulkanFramebuffer::Resize(uint32_t width, uint32_t height)
@@ -155,16 +171,6 @@ namespace Kairos
 		Invalidate();
 	}
 
-	void VulkanFramebuffer::Destroy()
-	{
-		VkDevice logicalDevice = volkGetLoadedDevice();
-
-		for (auto descriptor : m_ImGuiDescriptorSets)
-			ImGui_ImplVulkan_RemoveTexture(descriptor);
-
-		DestroyOffscreenTarget();
-	}
-
 	void VulkanFramebuffer::DestroyOffscreenTarget()
 	{
 		VkDevice logicalDevice = volkGetLoadedDevice();
@@ -178,6 +184,9 @@ namespace Kairos
 				vkFreeMemory(logicalDevice, m_DstImageMemory[i], nullptr);
 			}
 		}
+
+		for (auto descriptor : m_ImGuiDescriptorSets)
+			ImGui_ImplVulkan_RemoveTexture(descriptor);
 
 		m_ViewportImages.clear();
 		m_ViewportImageViews.clear();
@@ -205,8 +214,6 @@ namespace Kairos
 		offscreenRenderingInfo.layerCount = 1;
 		offscreenRenderingInfo.colorAttachmentCount = 1;
 		offscreenRenderingInfo.pColorAttachments = &colorAttachment;
-
-		//vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vctx->GetVkContext().PipelineLayout, 0, 1, &m_ImGuiDescriptorSets[CurrentFrameIndex], 0, nullptr);
 
 		vkCmdBeginRenderingKHR(commandBuffer, &offscreenRenderingInfo);
 
@@ -253,9 +260,10 @@ namespace Kairos
 
 	void VulkanFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
 	{
-		
-	}
+		DestroyOffscreenTarget();
 
+		Invalidate();
+	}
 	uint32_t VulkanFramebuffer::GetColorAttachmentRendererID(uint32_t index) const
 	{
 		return (ImTextureID)m_ImGuiDescriptorSets[CurrentFrameIndex];
