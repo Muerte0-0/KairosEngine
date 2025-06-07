@@ -54,7 +54,7 @@ namespace Kairos
         VkPresentModeKHR presentMode = ChoosePresentMode(support.PresentModes);
         m_Info.Extent = ChooseExtent(width, height, support.Capabilities);
 
-        m_Info.ImageCount = std::min(support.Capabilities.maxImageCount, support.Capabilities.minImageCount + 1);
+        m_Info.ImageCount = 2;
 
         VkSwapchainCreateInfoKHR swapchainCreateInfo;
         swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;

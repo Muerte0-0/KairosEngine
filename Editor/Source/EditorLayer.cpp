@@ -1,5 +1,6 @@
 #include "EditorLayer.h"
 
+
 namespace Kairos
 {
 	EditorLayer::EditorLayer() : Layer("Kairos Editor")

@@ -130,7 +130,7 @@ namespace Kairos
 
 		KE_CORE_INFO("Cleanup Started!");
 
-		std::dynamic_pointer_cast<VulkanFramebuffer>(Renderer::GetFramebuffer())->DestroyOffscreenTarget();
+		std::dynamic_pointer_cast<VulkanFramebuffer>(Renderer::GetFramebuffer())->CleanupFrameBuffer();
 
 		ImGui_ImplVulkan_Shutdown();
 

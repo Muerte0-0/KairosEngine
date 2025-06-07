@@ -6,6 +6,9 @@
 
 #include "API/Vulkan/VulkanUtils.h"
 #include "API/Vulkan/VulkanFramebuffer.h"
+#include "API/Vulkan/VulkanShader.h"
+#include "API/Vulkan/VulkanBuffer.h"
+#include "API/Vulkan/VulkanVertexArray.h"
 
 #include "Engine/Core/Application.h"
 #include "Engine/Renderer/Renderer.h"
@@ -47,6 +50,14 @@ namespace Kairos
 			VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
 
 		vkCmdBeginRenderingKHR(CommandBuffer, &RenderingInfo);
+
+		auto shaders = Renderer::GetShaderLibrary().GetShaders();
+
+		VkShaderStageFlagBits stages[2] =
+		{
+			VK_SHADER_STAGE_VERTEX_BIT,
+			VK_SHADER_STAGE_FRAGMENT_BIT,
+		};
 
 		if (ImGui::GetDrawData() != nullptr)
 			ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), CommandBuffer);

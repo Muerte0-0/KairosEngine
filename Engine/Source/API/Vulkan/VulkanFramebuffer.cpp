@@ -53,8 +53,8 @@ namespace Kairos
 		{
 			switch (format)
 			{
-			case FramebufferTextureFormat::RGBA8:       return VK_FORMAT_R8G8B8A8_UINT;
-			case FramebufferTextureFormat::RED_INTEGER: return VK_FORMAT_R8_UINT;
+			case FramebufferTextureFormat::RGBA8:       return VK_FORMAT_R8G8B8A8_UNORM;
+			case FramebufferTextureFormat::RED_INTEGER: return VK_FORMAT_R8_UNORM;
 			}
 
 			KE_CORE_ASSERT(false);
@@ -76,10 +76,6 @@ namespace Kairos
 		Invalidate();
 	}
 
-	VulkanFramebuffer::~VulkanFramebuffer()
-	{
-	}
-
 	void VulkanFramebuffer::Invalidate()
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
@@ -93,10 +89,12 @@ namespace Kairos
 		{
 			auto& frame = m_FrameResources[i];
 
+			VkFormat colorFormat = Utils::KairosFBTextureFormatToGL(m_ColorAttachmentSpecifications[0].TextureFormat);
+
 			VkImageCreateInfo imageInfo = {};
 			imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-			imageInfo.imageType = VK_IMAGE_TYPE_2D;
-			imageInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
+			imageInfo.imageType = Utils::TextureTarget(true);
+			imageInfo.format = colorFormat;
 			imageInfo.extent = { m_Specification.Width, m_Specification.Height, 1 };
 			imageInfo.mipLevels = 1;
 			imageInfo.arrayLayers = 1;
@@ -118,23 +116,32 @@ namespace Kairos
 			VK_CHECK(vkAllocateMemory(vctx->GetVkContext().LogicalDevice, &allocInfo, nullptr, &frame.Memory));
 			VK_CHECK(vkBindImageMemory(vctx->GetVkContext().LogicalDevice, frame.Image, frame.Memory, 0));
 
-			VkImageViewCreateInfo viewInfo = {};
-			viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			viewInfo.image = frame.Image;
-			viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			viewInfo.format = VK_FORMAT_R8G8B8A8_UNORM;
-			viewInfo.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
-			VK_CHECK(vkCreateImageView(vctx->GetVkContext().LogicalDevice, &viewInfo, nullptr, &frame.ImageView));
+			frame.ImageView = CreateImageView(vctx->GetVkContext().LogicalDevice, frame.Image, colorFormat);
 
 			VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+
 			TransitionImageLayout(cmd, frame.Image,
-				VK_IMAGE_LAYOUT_UNDEFINED,
-				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-				VK_ACCESS_NONE,
-				VK_ACCESS_SHADER_READ_BIT,
-				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-				VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+				VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_ACCESS_NONE, VK_ACCESS_SHADER_READ_BIT,
+				VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
 			EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
+
+			if (!frame.DescriptorValid)
+			{
+				if (frame.DescriptorSet != VK_NULL_HANDLE)
+					ImGui_ImplVulkan_RemoveTexture(frame.DescriptorSet);
+
+				frame.DescriptorSet = ImGui_ImplVulkan_AddTexture(vctx->GetVkContext().Sampler, frame.ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				frame.DescriptorValid = true;
+			}
+
+			m_DeletionQueue.push_back([frame](VkDevice device)
+				{
+					vkDestroyImage(device, frame.Image, nullptr);
+					vkDestroyImageView(device, frame.ImageView, nullptr);
+					vkFreeMemory(device, frame.Memory, nullptr);
+				});
 		}
 	}
 
@@ -146,64 +153,22 @@ namespace Kairos
 			return;
 		}
 
-		vkDeviceWaitIdle(volkGetLoadedDevice());
+		KE_CORE_INFO("Resizing Viewport!");
 
 		m_Specification.Width = width;
 		m_Specification.Height = height;
 
-		DestroyOffscreenTarget();
-
 		Invalidate();
 	}
 
-	void VulkanFramebuffer::DestroyOffscreenTarget()
-	{
-		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
-
-		VkDevice device = vctx->GetVkContext().LogicalDevice;
-
-		for (auto& frame : m_FrameResources)
-		{
-			if (frame.DescriptorValid)
-			{
-				ImGui_ImplVulkan_RemoveTexture(frame.DescriptorSet);
-				frame.DescriptorSet = VK_NULL_HANDLE;
-			}
-
-			if (frame.ImageView != VK_NULL_HANDLE)
-			{
-				vkDestroyImageView(device, frame.ImageView, nullptr);
-				frame.ImageView = VK_NULL_HANDLE;
-			}
-
-			if (frame.Image != VK_NULL_HANDLE)
-			{
-				vkDestroyImage(device, frame.Image, nullptr);
-				frame.Image = VK_NULL_HANDLE;
-			}
-
-			if (frame.Memory != VK_NULL_HANDLE)
-			{
-				vkFreeMemory(device, frame.Memory, nullptr);
-				frame.Memory = VK_NULL_HANDLE;
-			}
-		}
-	}
-
-	void VulkanFramebuffer::RenderOffscreenTarget(VkCommandBuffer commandBuffer, const Ref<class VertexArray>& vertexArray, uint32_t imageIndex)
+	bool VulkanFramebuffer::RenderOffscreenTarget(VkCommandBuffer commandBuffer, const Ref<class VertexArray>& vertexArray, uint32_t imageIndex)
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
 		auto& frame = m_FrameResources[imageIndex];
 
 		if (!frame.DescriptorValid)
-		{
-			if (frame.DescriptorSet != VK_NULL_HANDLE)
-				ImGui_ImplVulkan_RemoveTexture(frame.DescriptorSet);
-
-			frame.DescriptorSet = ImGui_ImplVulkan_AddTexture(vctx->GetVkContext().Sampler, frame.ImageView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-			frame.DescriptorValid = true;
-		}
+			return false;
 
 		TransitionImageLayout(commandBuffer, frame.Image,
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
@@ -264,18 +229,24 @@ namespace Kairos
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
 			VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT, VK_ACCESS_SHADER_READ_BIT,
 			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+
+		return true;
 	}
 
-	void VulkanFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
+	void VulkanFramebuffer::CleanupFrameBuffer()
 	{
-		
+		KE_CORE_INFO("Cleaning up Framebuffer");
+
+		while (m_DeletionQueue.size() > 0)
+		{
+			m_DeletionQueue.back()(volkGetLoadedDevice());
+			m_DeletionQueue.pop_back();
+		}
 	}
 
-	uint32_t VulkanFramebuffer::GetColorAttachmentRendererID(uint32_t index) const
+	uint64_t VulkanFramebuffer::GetColorAttachmentRendererID(uint32_t index) const
 	{
-		if (CurrentFrameIndex >= m_FrameResources.size() || !m_FrameResources[CurrentFrameIndex].DescriptorValid)
-			return 0;
-
+		KE_CORE_ASSERT(m_FrameResources[CurrentFrameIndex].DescriptorValid, "Descriptor Set is Not Valid");
 		return (ImTextureID)m_FrameResources[CurrentFrameIndex].DescriptorSet;
 	}
 }

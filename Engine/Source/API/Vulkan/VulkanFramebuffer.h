@@ -11,7 +11,7 @@ namespace Kairos
 	{
 	public:
 		VulkanFramebuffer(const FramebufferSpecification& spec);
-		virtual ~VulkanFramebuffer();
+		virtual ~VulkanFramebuffer() {};
 
 		void Invalidate();
 
@@ -22,12 +22,12 @@ namespace Kairos
 		virtual void Resize(uint32_t width, uint32_t height) override;
 		virtual int ReadPixel(uint32_t attachmentIndex, int x, int y) override { return 0; }
 
-		void DestroyOffscreenTarget();
-		void RenderOffscreenTarget(VkCommandBuffer commandBuffer, const Ref<class VertexArray>& vertexArray, uint32_t imageIndex);
+		bool RenderOffscreenTarget(VkCommandBuffer commandBuffer, const Ref<class VertexArray>& vertexArray, uint32_t imageIndex);
+		void CleanupFrameBuffer();
 
-		virtual void ClearAttachment(uint32_t attachmentIndex, int value) override;
+		virtual void ClearAttachment(uint32_t attachmentIndex, int value) override {}
 
-		virtual uint32_t GetColorAttachmentRendererID(uint32_t index = 0) const override;
+		virtual uint64_t GetColorAttachmentRendererID(uint32_t index = 0) const override;
 
 		virtual const FramebufferSpecification& GetSpecification() const override { return m_Specification; }
 
@@ -47,12 +47,6 @@ namespace Kairos
 		};
 
 		std::vector<FrameResources> m_FrameResources;
-
-		VkDescriptorSetLayout m_DescriptorSetLayout = VK_NULL_HANDLE;
-		VkPipelineLayout m_PipelineLayout = VK_NULL_HANDLE;
-
-		uint32_t m_LastFrameIndex = 0;
-
-		VkDescriptorSet dst;
+		std::deque<std::function<void(VkDevice)>> m_DeletionQueue;
 	};
 }

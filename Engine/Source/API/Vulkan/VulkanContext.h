@@ -16,36 +16,34 @@ namespace Kairos
 {
 	struct VkContext 
 	{
-		VkInstance Instance;
-		VkDebugUtilsMessengerEXT Messenger;
+		VkInstance Instance = VK_NULL_HANDLE;
+		VkDebugUtilsMessengerEXT Messenger = VK_NULL_HANDLE;
 
 		VkSurfaceKHR Surface = VK_NULL_HANDLE;
-		VkPhysicalDevice PhysicalDevice;
-		VkDevice LogicalDevice;
+		VkPhysicalDevice PhysicalDevice = VK_NULL_HANDLE;
+		VkDevice LogicalDevice = VK_NULL_HANDLE;
 
 		VmaAllocator Allocator = VK_NULL_HANDLE;
-		VkAllocationCallbacks* AllocationCallbacks;
+		VkAllocationCallbacks* AllocationCallbacks = VK_NULL_HANDLE;
 
-		VkQueue GraphicsQueue;
-		VkQueue PresentQueue;
-		VkQueue ComputeQueue;
+		VkQueue GraphicsQueue = VK_NULL_HANDLE;
+		VkQueue PresentQueue = VK_NULL_HANDLE;
+		VkQueue ComputeQueue = VK_NULL_HANDLE;
 
 		Swapchain Swapchain;
 		std::vector<Frame> Frames;
 
 		VkCommandPool CommandPool = VK_NULL_HANDLE;
 
-		VkSampler Sampler;
+		VkSampler Sampler = VK_NULL_HANDLE;
 
 		VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 		VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
 
-		VkSemaphore ImageAquiredSemaphore;
-		VkSemaphore RenderFinishedSemaphore;
-		VkFence RenderFinishedFence;
+		VkSemaphore ImageAquiredSemaphore = VK_NULL_HANDLE;
+		VkSemaphore RenderFinishedSemaphore = VK_NULL_HANDLE;
+		VkFence RenderFinishedFence = VK_NULL_HANDLE;
 	};
-
-#define MAX_FRAMES_IN_FLIGHT 2
 
 	static uint16_t CurrentFrameIndex = 0;
 
