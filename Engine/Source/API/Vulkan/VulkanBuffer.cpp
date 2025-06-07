@@ -33,10 +33,9 @@ namespace Kairos
 		vkFreeMemory(logicalDevice, m_VertexBufferMemory, nullptr);
 	}
 
-	VulkanIndexBuffer::VulkanIndexBuffer(uint32_t* indices, uint32_t count)
+	VulkanIndexBuffer::VulkanIndexBuffer(uint32_t* indices, uint32_t count) : m_Count(count)
 	{
 		VkDeviceSize size = count * sizeof(uint32_t);
-		m_Count = size;
 
 		Application& app = Application::Get();
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();

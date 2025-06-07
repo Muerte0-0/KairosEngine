@@ -149,11 +149,9 @@ namespace Kairos
 	{
 		if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize)
 		{
-			KE_CORE_WARN("Attempted to rezize framebuffer to {0}, {1}", width, height);
+			KE_CORE_WARN("Attempted to Rezize Framebuffer to {0}, {1}", width, height);
 			return;
 		}
-
-		KE_CORE_INFO("Resizing Viewport!");
 
 		m_Specification.Width = width;
 		m_Specification.Height = height;
