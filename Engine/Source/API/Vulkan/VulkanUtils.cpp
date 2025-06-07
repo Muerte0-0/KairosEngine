@@ -130,9 +130,9 @@ namespace Kairos
 		{
 			VkViewport viewport = VkViewport
 			{
-				.x = 0.0f, .y = (float)extent.height,
+				.x = 0.0f, .y = 0.0f,
 				.width = (float)extent.width,
-				.height = -(float)extent.height,
+				.height = (float)extent.height,
 				.minDepth = 0.0f, .maxDepth = 1.0f
 			};
 
