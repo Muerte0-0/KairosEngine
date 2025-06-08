@@ -150,7 +150,7 @@ namespace Kairos
 		vkCmdSetSampleMaskEXT(commandBuffer, VK_SAMPLE_COUNT_1_BIT, &sampleMask);
 
 		vkCmdSetAlphaToCoverageEnableEXT(commandBuffer, VK_FALSE);
-		vkCmdSetCullModeEXT(commandBuffer, VK_CULL_MODE_NONE);
+		vkCmdSetCullModeEXT(commandBuffer, VK_CULL_MODE_BACK_BIT);
 		vkCmdSetFrontFaceEXT(commandBuffer, VK_FRONT_FACE_CLOCKWISE);
 		vkCmdSetDepthTestEnableEXT(commandBuffer, VK_FALSE);
 		vkCmdSetDepthWriteEnableEXT(commandBuffer, VK_FALSE);
@@ -159,7 +159,7 @@ namespace Kairos
 		vkCmdSetPrimitiveTopologyEXT(commandBuffer, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 		vkCmdSetPrimitiveRestartEnableEXT(commandBuffer, VK_FALSE);
 
-		VkBool32 colorBlendEnable = VK_FALSE;
+		VkBool32 colorBlendEnable = VK_TRUE;
 		vkCmdSetColorBlendEnableEXT(commandBuffer, 0, 1, &colorBlendEnable);
 
 		VkColorBlendEquationEXT equation;
