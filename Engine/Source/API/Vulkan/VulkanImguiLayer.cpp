@@ -103,14 +103,14 @@ namespace Kairos
 		initInfo.Device = vctx->GetVkContext().LogicalDevice;
 		initInfo.Queue = vctx->GetVkContext().GraphicsQueue;
 		initInfo.QueueFamily = FindQueueFamilyIndex(vctx->GetVkContext().PhysicalDevice, vctx->GetVkContext().Surface, VK_QUEUE_GRAPHICS_BIT);
-		initInfo.DescriptorPool = vctx->GetVkContext().Swapchain.Info().DescriptorPool; // Adjust size as needed
+		initInfo.DescriptorPool = vctx->GetVkContext().DescriptorPool;
 		initInfo.MinImageCount = 2;
 		initInfo.ImageCount = 2;
 		initInfo.RenderPass = nullptr;
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-		initInfo.UseDynamicRendering = true; // Use Dynamic Rendering [Vulkan 1.3 & Above]
+		initInfo.UseDynamicRendering = true; // Using Dynamic Rendering [Vulkan 1.3 & Above]
 		initInfo.PipelineRenderingCreateInfo = pipelineRenderingCreateInfo;
-		initInfo.Allocator = nullptr; // Use default allocator
+		initInfo.Allocator = nullptr;
 
 		ImGui_ImplVulkan_Init(&initInfo);
 	}

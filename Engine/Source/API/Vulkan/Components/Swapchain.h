@@ -15,8 +15,6 @@ namespace Kairos
 		uint32_t ImageCount;
 		std::vector<VkImageView> ImageViews;
 		std::vector<VkImage> Images;
-
-		VkDescriptorPool DescriptorPool;
 	};
 
 	struct SurfaceDetails

@@ -22,6 +22,8 @@ namespace Kairos
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		glm::vec2 m_ViewportBounds[2];
 
+		OrthographicCamera m_OrthographicCamera;
+
 		float NumFrames = 0;
 	};
 }

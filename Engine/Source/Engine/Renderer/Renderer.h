@@ -1,11 +1,14 @@
 #pragma once
 
 #include "RenderCommand.h"
+
 #include "Shader.h"
 #include "VertexArray.h"
 #include "Framebuffer.h"
 
 #include "GraphicsContext.h"
+
+#include "Cameras.h"
 
 namespace Kairos
 {
@@ -18,7 +21,7 @@ namespace Kairos
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
-		static void BeginScene();
+		static void BeginScene(OrthographicCamera& camera);
 		static void EndScene();
 
 		static void Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
@@ -28,15 +31,9 @@ namespace Kairos
 		inline static ShaderLibrary& GetShaderLibrary() { return m_ShaderLibrary; }
 
 	private:
-		struct SceneData
-		{
-			glm::mat4 ViewProjectionMatrix;
-		};
+		static SceneData* m_SceneData;
 
 		static ShaderLibrary m_ShaderLibrary;
-
 		static Ref<Framebuffer> m_Framebuffer;
-
-		static SceneData* m_SceneData;
 	};
 }

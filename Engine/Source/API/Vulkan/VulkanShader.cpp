@@ -17,7 +17,6 @@ namespace Kairos
 	VkPipelineLayout PipelineLayoutBuilder::Build(std::deque<std::function<void(VkDevice)>>& deletionQueue)
 	{
 		VkPipelineLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-		layoutInfo.flags = VK_PIPELINE_LAYOUT_CREATE_INDEPENDENT_SETS_BIT_EXT;
 		layoutInfo.setLayoutCount = (uint32_t)m_DescriptorLayouts.size();
 		layoutInfo.pSetLayouts = m_DescriptorLayouts.data();
 
@@ -135,8 +134,10 @@ namespace Kairos
 	std::vector<VkShaderEXT> VulkanShader::MakeShaderObjects(VkDevice device, const char* name, std::vector<char> vertSrc, std::vector<char> fragSrc,
 		std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue, bool compileCode)
 	{
-		VkShaderCreateFlagsEXT flags = VkShaderCreateFlagBitsEXT::VK_SHADER_CREATE_LINK_STAGE_BIT_EXT;
-		VkShaderStageFlags nextStage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkShaderCreateFlagsEXT flags = VK_SHADER_CREATE_LINK_STAGE_BIT_EXT;
+		VkShaderStageFlags nextStage = VK_SHADER_STAGE_FRAGMENT_BIT;
 
 		std::vector<uint32_t> vertexCode;
 		std::vector<uint32_t> fragmentCode;
@@ -163,6 +164,8 @@ namespace Kairos
 		vertexInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
 		vertexInfo.nextStage = nextStage;
 		vertexInfo.codeType = codeType;
+		vertexInfo.setLayoutCount = 1;
+		vertexInfo.pSetLayouts = &vctx->GetVkContext().DescriptorSetLayout;
 
 		if (compileCode)
 		{
@@ -182,6 +185,8 @@ namespace Kairos
 		fragmentInfo.flags = flags;
 		fragmentInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
 		fragmentInfo.codeType = codeType;
+		fragmentInfo.setLayoutCount = 1;
+		fragmentInfo.pSetLayouts = &vctx->GetVkContext().DescriptorSetLayout;
 
 		if (compileCode)
 		{
@@ -227,16 +232,6 @@ namespace Kairos
 		};
 
 		return vShaders;
-	}
-
-	void VulkanShader::Bind() const
-	{
-		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
-	}
-
-	void VulkanShader::UnBind() const
-	{
-		
 	}
 
 	std::vector<char> VulkanShader::ReadCode(const std::string& filepath)
@@ -353,4 +348,125 @@ namespace Kairos
 		return output;
 	}
 
+	void VulkanShader::CreateDescriptorSet()
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkDescriptorSetAllocateInfo allocInfo{};
+		allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocInfo.descriptorPool = vctx->GetVkContext().DescriptorPool;
+		allocInfo.descriptorSetCount = 1;
+		allocInfo.pSetLayouts = &vctx->GetVkContext().DescriptorSetLayout;
+
+		vkAllocateDescriptorSets(vctx->GetVkContext().LogicalDevice, &allocInfo, &m_DescriptorSet);
+	}
+
+	void VulkanShader::UploadUniformInt(const std::string& name, int value)
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+		vkCmdPushConstants(cmd, vctx->GetVkContext().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(values), &values);
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
+	}
+
+	void VulkanShader::UploadUniformFloat(const std::string & name, float value)
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+		vkCmdPushConstants(cmd, vctx->GetVkContext().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(values), &values);
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
+	}
+
+	void VulkanShader::UploadUniformVec2(const std::string & name, const glm::vec2 & values)
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+		vkCmdPushConstants(cmd, vctx->GetVkContext().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(values), &values);
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
+	}
+
+	void VulkanShader::UploadUniformVec3(const std::string & name, const glm::vec3 & values)
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+		vkCmdPushConstants(cmd, vctx->GetVkContext().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(values), &values);
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
+	}
+
+	void VulkanShader::UploadUniformVec4(const std::string & name, const glm::vec4 & values)
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+		vkCmdPushConstants(cmd, vctx->GetVkContext().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(values), &values);
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
+	}
+
+	void VulkanShader::UploadUniformMat3(const std::string & name, const glm::mat3 & matrix)
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+		vkCmdPushConstants(cmd, vctx->GetVkContext().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(matrix), &matrix);
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
+	}
+
+	void VulkanShader::UploadUniformMat4(const std::string & name, const glm::mat4 & matrix)
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		VkCommandBuffer cmd = BeginSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool);
+		vkCmdPushConstants(cmd, vctx->GetVkContext().PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(matrix), &matrix);
+		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
+	}
+
+	void VulkanShader::UploadSceneData(const std::string& name, const SceneData& sceneData)
+	{
+		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
+
+		if (m_SceneDataBuffer == VK_NULL_HANDLE)
+		{
+			CreateBuffer(vctx->GetVkContext().PhysicalDevice, vctx->GetVkContext().LogicalDevice, sizeof(SceneData),
+						VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+						VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+						m_SceneDataBuffer, m_SceneDataMemory);
+
+			vctx->GetDeviceDeletionQueue().push_back([this](VkDevice device)
+			{
+				if (m_SceneDataBuffer)
+				{
+					vkDestroyBuffer(device, m_SceneDataBuffer, nullptr);
+					vkFreeMemory(device, m_SceneDataMemory, nullptr);
+				}
+			});
+		}
+
+		if (m_DescriptorSet == VK_NULL_HANDLE)
+			CreateDescriptorSet();
+
+		void* data;
+		vkMapMemory(vctx->GetVkContext().LogicalDevice, m_SceneDataMemory, 0, sizeof(SceneData), 0, &data);
+		memcpy(data, &sceneData, sizeof(SceneData));
+		vkUnmapMemory(vctx->GetVkContext().LogicalDevice, m_SceneDataMemory);
+
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = m_SceneDataBuffer;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(SceneData);
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_DescriptorSet;
+		descriptorWrite.dstBinding = 0;
+		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(vctx->GetVkContext().LogicalDevice, 1, &descriptorWrite, 0, nullptr);
+	}
 }

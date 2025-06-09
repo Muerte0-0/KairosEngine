@@ -1,16 +1,25 @@
 #type vertex
 #version 450
-#extension GL_EXT_debug_printf : enable
+#extension GL_KHR_vulkan_glsl : enable
+#extension GL_EXT_scalar_block_layout : enable
 
-layout(location = 0) in vec4 a_Position;
+layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec4 a_Color;
 
-layout(location = 0) out vec4 v_Color;
+layout(location = 0) out vec4 v_Position;
+layout(location = 1) out vec4 v_Color;
+
+layout(set = 0, binding = 0) uniform SceneData
+{
+	mat4 ViewProjectionMatrix;
+	vec3 CameraPosition;
+} u_SceneData;
 
 void main()
 {
-	gl_Position = a_Position;
+	v_Position = vec4(a_Position, 1.0);
 	v_Color = a_Color;
+	gl_Position = u_SceneData.ViewProjectionMatrix * vec4(a_Position, 1.0);
 }
 
 #type fragment
@@ -18,10 +27,10 @@ void main()
 
 layout(location = 0) out vec4 color;
 
-layout(location = 0) in vec4 v_Color;
+layout(location = 0) in vec4 v_Position;
+layout(location = 1) in vec4 v_Color;
 
 void main()
 {
-	//color = mix(vec4(v_Position * 0.5 + 0.5), v_Color, 0.5);
-	color = v_Color;
+	color =  mix(vec4(v_Position * 0.5 + 0.5), v_Color, 0.5);
 }

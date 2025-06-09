@@ -66,8 +66,7 @@ namespace Kairos
 		allocInfo.memoryTypeIndex = FindMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
 
 		VK_CHECK(vkAllocateMemory(logicalDevice, &allocInfo, nullptr, &bufferMemory));
-
-		vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0);
+		VK_CHECK(vkBindBufferMemory(logicalDevice, buffer, bufferMemory, 0));
 	}
 
 	void CopyBuffer(VkDevice logicalDevice, VkCommandPool commandPool, VkQueue queue, VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)

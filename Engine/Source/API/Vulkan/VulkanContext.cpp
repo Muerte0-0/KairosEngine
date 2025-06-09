@@ -57,11 +57,12 @@ namespace Kairos
 		glfwGetWindowSize(m_WindowHandle, &width, &height);
 
 		m_Context.Swapchain.CreateSwapchain(m_Context.LogicalDevice, m_Context.PhysicalDevice, m_Context.Surface, width, height);
-		m_Context.Swapchain.CreateDescriptorPool(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 		m_Context.Sampler = m_Context.Swapchain.CreateSampler(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 
+		m_Context.DescriptorPool = CreateDescriptorPool(m_Context.LogicalDevice, m_DeviceDeletionQueue);
+
 		DescriptorSetLayoutBuilder descriptorSetLyoutBuilder(m_Context.LogicalDevice);
-		descriptorSetLyoutBuilder.AddEntry(VK_SHADER_STAGE_COMPUTE_BIT, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+		descriptorSetLyoutBuilder.AddEntry(VK_SHADER_STAGE_VERTEX_BIT, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 		m_Context.DescriptorSetLayout = descriptorSetLyoutBuilder.Build(m_DeviceDeletionQueue);
 
 		PipelineLayoutBuilder pipelineLayoutBuilder(m_Context.LogicalDevice);

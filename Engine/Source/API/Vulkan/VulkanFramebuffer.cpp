@@ -80,7 +80,7 @@ namespace Kairos
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
-		const uint32_t frameCount = vctx->GetVkContext().Swapchain.Info().Images.size();
+		const uint32_t frameCount = (uint32_t)vctx->GetVkContext().Swapchain.Info().Images.size();
 
 		if (m_FrameResources.size() < frameCount)
 			m_FrameResources.resize(frameCount);
@@ -200,7 +200,7 @@ namespace Kairos
 		{
 			VulkanShader* vkShader = static_cast<VulkanShader*>(shader.second.get());
 
-			vkCmdBindShadersEXT(commandBuffer, vkShader->GetShaders().size(), stages, vkShader->GetShaders().data());
+			vkCmdBindShadersEXT(commandBuffer, (uint32_t)vkShader->GetShaders().size(), stages, vkShader->GetShaders().data());
 
 			for (const auto vertexBuffer : vertexArray->GetVertexBuffers())
 			{
@@ -217,6 +217,8 @@ namespace Kairos
 
 			if (vulkanIndexBuffer != nullptr)
 				vkCmdBindIndexBuffer(commandBuffer, vulkanIndexBuffer->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vctx->GetVkContext().PipelineLayout, 0, 1, &vkShader->GetDescriptorSet(), 0, 0);
 
 			vkCmdDrawIndexed(commandBuffer, 3, 1, 0, 0, 0);
 		}

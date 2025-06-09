@@ -17,6 +17,8 @@
 #include "Engine/ImGui/ImGuiLayer.h"
 // --------------------------------- //
 
+#include "Engine/Renderer/Cameras.h"
+
 // ---------------- Renderer ---------------- //
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/RenderCommand.h"

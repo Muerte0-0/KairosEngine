@@ -40,6 +40,8 @@ namespace Kairos
 		VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 		VkPipelineLayout PipelineLayout = VK_NULL_HANDLE;
 
+		VkDescriptorPool DescriptorPool = VK_NULL_HANDLE;
+
 		VkSemaphore ImageAquiredSemaphore = VK_NULL_HANDLE;
 		VkSemaphore RenderFinishedSemaphore = VK_NULL_HANDLE;
 		VkFence RenderFinishedFence = VK_NULL_HANDLE;

@@ -1,9 +1,8 @@
 #include "EditorLayer.h"
 
-
 namespace Kairos
 {
-	EditorLayer::EditorLayer() : Layer("Kairos Editor")
+	EditorLayer::EditorLayer() : Layer("Kairos Editor"), m_OrthographicCamera(-1.6f, 1.6f, -0.9f, 0.9f)
 	{
 		
 	}
@@ -14,16 +13,16 @@ namespace Kairos
 
 		m_VertexArray.reset(VertexArray::Create());
 		
-		float vertices[3 * 8] = {
-			-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-			 0.0f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		float vertices[3 * 7] = {
+			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+			 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+			 0.0f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
 		};
 		
 		Ref<VertexBuffer> vertexBuffer;
 		vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
 		BufferLayout layout = {
-			{ ShaderDataType::Float4, "a_Position" },
+			{ ShaderDataType::Float3, "a_Position" },
 			{ ShaderDataType::Float4, "a_Color" }
 		};
 
@@ -59,7 +58,9 @@ namespace Kairos
 		{
 			Renderer::GetFramebuffer()->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
-		
+
+		Renderer::BeginScene(m_OrthographicCamera);
+
 		KE_PROFILE_SCOPE("Renderer Prep");
 		Renderer::GetFramebuffer()->Bind();
 
@@ -67,10 +68,11 @@ namespace Kairos
 		Renderer::GetFramebuffer()->ClearAttachment(1, -1);
 
 		Ref<Shader> triangleShader = Renderer::GetShaderLibrary().Get("Triangle");
-
 		Renderer::Submit(triangleShader, m_VertexArray, NULL);
 
 		Renderer::GetFramebuffer()->Unbind();
+
+		Renderer::EndScene();
 	}
 
 	void EditorLayer::OnImGuiRender()

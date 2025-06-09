@@ -194,19 +194,19 @@ namespace Kairos
 		glUniform1f(location, value);
 	}
 
-	void OpenGLShader::UploadUniformFloat2(const std::string& name, const glm::vec2& values)
+	void OpenGLShader::UploadUniformVec2(const std::string& name, const glm::vec2& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform2f(location, values.x, values.y);
 	}
 
-	void OpenGLShader::UploadUniformFloat3(const std::string& name, const glm::vec3& values)
+	void OpenGLShader::UploadUniformVec3(const std::string& name, const glm::vec3& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform3f(location, values.x, values.y, values.z);
 	}
 
-	void OpenGLShader::UploadUniformFloat4(const std::string& name, const glm::vec4& values)
+	void OpenGLShader::UploadUniformVec4(const std::string& name, const glm::vec4& values)
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniform4f(location, values.x, values.y, values.z, values.w);
@@ -222,6 +222,24 @@ namespace Kairos
 	{
 		GLint location = glGetUniformLocation(m_RendererID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+	}
+
+	void OpenGLShader::UploadSceneData(const std::string& name, const SceneData& sceneData)
+	{
+		if (m_SceneDataUBO == 0)
+			glGenBuffers(1, &m_SceneDataUBO);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, m_SceneDataUBO);
+		glBufferData(GL_UNIFORM_BUFFER, sizeof(SceneData), nullptr, GL_DYNAMIC_DRAW);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		glBindBuffer(GL_UNIFORM_BUFFER, m_SceneDataUBO);
+		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(SceneData), &sceneData);
+		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
+		GLint blockIndex = glGetUniformBlockIndex(m_RendererID, name.c_str());
+		glUniformBlockBinding(m_RendererID, blockIndex, 0);
+		glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_SceneDataUBO);
 	}
 
 #pragma endregion

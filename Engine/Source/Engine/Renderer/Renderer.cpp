@@ -3,9 +3,9 @@
 
 namespace Kairos
 {
-	Renderer::SceneData* Renderer::m_SceneData = new Renderer::SceneData;
+	SceneData* Renderer::m_SceneData = new SceneData;
 	ShaderLibrary Renderer::m_ShaderLibrary;
-	std::shared_ptr<Framebuffer> Renderer::m_Framebuffer;
+	Ref<Framebuffer> Renderer::m_Framebuffer;
 
 	void Renderer::Init()
 	{
@@ -17,9 +17,10 @@ namespace Kairos
 		RenderCommand::SetViewport(0, 0, width, height);
 	}
 
-	void Renderer::BeginScene()
+	void Renderer::BeginScene(OrthographicCamera& camera)
 	{
-		
+		m_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
+		m_SceneData->CameraPosition = camera.GetPosition();
 	}
 
 	void Renderer::EndScene()
@@ -30,6 +31,8 @@ namespace Kairos
 	void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform)
 	{
 		shader->Bind();
+
+		shader->UploadSceneData("SceneData", *m_SceneData);
 
 		RenderCommand::DrawIndexed(vertexArray);
 	}

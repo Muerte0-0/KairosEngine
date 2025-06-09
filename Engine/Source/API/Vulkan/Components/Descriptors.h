@@ -4,6 +4,8 @@
 
 namespace Kairos
 {
+	VkDescriptorPool CreateDescriptorPool(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue);
+
 	class DescriptorSetLayoutBuilder
 	{
 	public:

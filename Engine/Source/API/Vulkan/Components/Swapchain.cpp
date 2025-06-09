@@ -99,40 +99,6 @@ namespace Kairos
 		Outdated = false;
     }
 
-    void Swapchain::CreateDescriptorPool(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue)
-    {
-        VkDescriptorPoolSize poolSizes[] =
-        {
-            { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-            { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-            { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
-            { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
-            { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
-            { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
-        };
-
-        VkDescriptorPoolCreateInfo poolInfo = {};
-        poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-        poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-        poolInfo.maxSets = 1000 * ((int)(sizeof(poolSizes) / sizeof(*(poolSizes))));
-        poolInfo.poolSizeCount = (uint32_t)((int)(sizeof(poolSizes) / sizeof(*(poolSizes))));
-        poolInfo.pPoolSizes = poolSizes;
-
-        VK_CHECK(vkCreateDescriptorPool(logicalDevice, &poolInfo, nullptr, &m_Info.DescriptorPool));
-
-        VkDescriptorPool handle = m_Info.DescriptorPool;
-
-        deviceDeletionQueue.push_back([handle](VkDevice device)
-            {
-                vkDestroyDescriptorPool(device, handle, nullptr);
-            });
-    }
-
     VkSampler Swapchain::CreateSampler(VkDevice logicalDevice, std::deque<std::function<void(VkDevice)>>& deviceDeletionQueue)
     {
         VkSamplerCreateInfo samplerInfo = {};

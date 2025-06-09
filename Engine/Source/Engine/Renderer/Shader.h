@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Utils/RendererUtils.h"
+
 #include "GraphicsContext.h"
 
 namespace Kairos
@@ -22,6 +24,18 @@ namespace Kairos
 
 		// Shader Code
 		static Ref<Shader> Create(std::string& shaderName, std::string& vertCode, std::string& fragCode);
+
+		virtual void UploadUniformInt(const std::string& name, int value) = 0;
+
+		virtual void UploadUniformFloat(const std::string& name, float value) = 0;
+		virtual void UploadUniformVec2(const std::string& name, const glm::vec2& values) = 0;
+		virtual void UploadUniformVec3(const std::string& name, const glm::vec3& values) = 0;
+		virtual void UploadUniformVec4(const std::string& name, const glm::vec4& values) = 0;
+
+		virtual void UploadUniformMat3(const std::string& name, const glm::mat3& matrix) = 0;
+		virtual void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) = 0;
+
+		virtual void UploadSceneData(const std::string& name, const SceneData& sceneData) = 0;
 	};
 
 	class ShaderLibrary
