@@ -9,7 +9,7 @@ layout(location = 1) in vec4 a_Color;
 layout(location = 0) out vec4 v_Position;
 layout(location = 1) out vec4 v_Color;
 
-layout(set = 0, binding = 0) uniform SceneData
+layout(set = 0, binding = 0, scalar) uniform SceneData
 {
 	mat4 ViewProjectionMatrix;
 	vec3 CameraPosition;
