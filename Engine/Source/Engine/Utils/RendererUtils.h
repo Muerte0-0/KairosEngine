@@ -6,5 +6,6 @@ namespace Kairos
 	{
 		glm::mat4 ViewProjectionMatrix;
 		glm::vec3 CameraPosition;
+		float _padding;
 	};
 }

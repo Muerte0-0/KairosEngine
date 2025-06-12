@@ -58,7 +58,7 @@ namespace Kairos
 		void PreProcessShader(std::unordered_map<shaderc_shader_kind, std::vector<char>>& shaderSources, shaderc::CompileOptions& options);
 		std::vector<uint32_t> Compile(std::vector<char>& shaderSource, shaderc::CompileOptions& options, shaderc_shader_kind kind);
 
-		void CreateDescriptorSet();
+		void CreateDescriptorSet(uint32_t bindingIndex);
 
 		std::string m_ShaderName;
 

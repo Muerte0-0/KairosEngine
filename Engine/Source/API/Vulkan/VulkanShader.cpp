@@ -321,7 +321,7 @@ namespace Kairos
 		return { module.cbegin(), module.cend() };
 	}
 
-	void VulkanShader::CreateDescriptorSet()
+	void VulkanShader::CreateDescriptorSet(uint32_t bindingIndex)
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
@@ -332,6 +332,21 @@ namespace Kairos
 		allocInfo.pSetLayouts = &vctx->GetVkContext().DescriptorSetLayout;
 
 		vkAllocateDescriptorSets(vctx->GetVkContext().LogicalDevice, &allocInfo, &m_DescriptorSet);
+
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = m_SceneDataBuffer;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(SceneData);
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_DescriptorSet;
+		descriptorWrite.dstBinding = bindingIndex;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(vctx->GetVkContext().LogicalDevice, 1, &descriptorWrite, 0, nullptr);
 	}
 
 	void VulkanShader::UploadUniformInt(const std::string& name, int value)
@@ -419,26 +434,11 @@ namespace Kairos
 		}
 
 		if (m_DescriptorSet == VK_NULL_HANDLE)
-			CreateDescriptorSet();
+			CreateDescriptorSet(bindingIndex);
 
 		void* data;
 		vkMapMemory(vctx->GetVkContext().LogicalDevice, m_SceneDataMemory, 0, sizeof(SceneData), 0, &data);
 		memcpy(data, &sceneData, sizeof(SceneData));
 		vkUnmapMemory(vctx->GetVkContext().LogicalDevice, m_SceneDataMemory);
-
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = m_SceneDataBuffer;
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(SceneData);	
-
-		VkWriteDescriptorSet descriptorWrite{};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = m_DescriptorSet;
-		descriptorWrite.dstBinding = bindingIndex;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
-
-		vkUpdateDescriptorSets(vctx->GetVkContext().LogicalDevice, 1, &descriptorWrite, 0, nullptr);
 	}
 }
