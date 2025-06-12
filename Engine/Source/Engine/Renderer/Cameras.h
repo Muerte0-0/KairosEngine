@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Core/Timestep.h"
+
 #include <glm/glm.hpp>
 
 namespace Kairos
@@ -19,6 +21,8 @@ namespace Kairos
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
 		const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
 
+		void OnUpdate(Timestep delaTime);
+
 	private:
 		void RecalculateViewMatrix();
 
@@ -29,5 +33,8 @@ namespace Kairos
 
 		glm::vec3 m_Position = {0.0f, 0.0f , 0.0f};
 		float m_Rotation = 0.0f;
+
+		float m_CameraMoveSpeed = 1.0f;
+		float m_CameraRotationSpeed = 1.0f;
 	};
 }

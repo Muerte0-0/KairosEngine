@@ -194,7 +194,7 @@ namespace Kairos
 				});
 		}
 
-		VkPhysicalDeviceFeatures deviceFeatures = 
+		VkPhysicalDeviceFeatures deviceFeatures =
 		{
 			.multiViewport = VK_TRUE,
 		};

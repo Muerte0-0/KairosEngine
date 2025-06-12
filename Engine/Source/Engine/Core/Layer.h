@@ -14,7 +14,7 @@ namespace Kairos
 
 		virtual void OnAttach() {}
 		virtual void OnDetach() {}
-		virtual void OnUpdate(Timestep delta) {}
+		virtual void OnUpdate(Timestep deltaTime) {}
 		virtual void OnImGuiRender() {}
 		virtual void OnEvent(Event& event) {}
 

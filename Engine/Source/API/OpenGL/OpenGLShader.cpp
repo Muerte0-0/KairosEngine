@@ -224,7 +224,7 @@ namespace Kairos
 		glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 	}
 
-	void OpenGLShader::UploadSceneData(const std::string& name, const SceneData& sceneData)
+	void OpenGLShader::UploadSceneData(const uint32_t& bindingIndex, const SceneData& sceneData)
 	{
 		if (m_SceneDataUBO == 0)
 			glGenBuffers(1, &m_SceneDataUBO);
@@ -236,9 +236,7 @@ namespace Kairos
 		glBindBuffer(GL_UNIFORM_BUFFER, m_SceneDataUBO);
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(SceneData), &sceneData);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-		GLint blockIndex = glGetUniformBlockIndex(m_RendererID, name.c_str());
-		glUniformBlockBinding(m_RendererID, blockIndex, 0);
+		glUniformBlockBinding(m_RendererID, bindingIndex, 0);
 		glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_SceneDataUBO);
 	}
 

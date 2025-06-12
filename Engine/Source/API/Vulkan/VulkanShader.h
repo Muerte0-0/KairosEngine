@@ -48,7 +48,7 @@ namespace Kairos
 		void UploadUniformMat3(const std::string& name, const glm::mat3& matrix) override;
 		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) override;
 
-		void UploadSceneData(const std::string& name, const SceneData& sceneData) override;
+		void UploadSceneData(const uint32_t& bindingIndex, const SceneData& sceneData) override;
 
 	private:
 		std::vector<char> ReadCode(const std::string& filepath);
@@ -56,8 +56,7 @@ namespace Kairos
 
 		std::unordered_map<shaderc_shader_kind, std::string> PreProcess(const std::string& source);
 		void PreProcessShader(std::unordered_map<shaderc_shader_kind, std::vector<char>>& shaderSources, shaderc::CompileOptions& options);
-		void CompileToAssembly(std::unordered_map<shaderc_shader_kind, std::vector<char>>& shaderSources, shaderc::CompileOptions& options);
-		std::vector<uint32_t> Compile(std::vector<char>& shaderSource, shaderc::CompileOptions& options);
+		std::vector<uint32_t> Compile(std::vector<char>& shaderSource, shaderc::CompileOptions& options, shaderc_shader_kind kind);
 
 		void CreateDescriptorSet();
 

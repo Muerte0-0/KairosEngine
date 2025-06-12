@@ -48,16 +48,18 @@ namespace Kairos
 		KE_PROFILE_FUNCTION();
 	}
 
-	void EditorLayer::OnUpdate(Timestep delta)
+	void EditorLayer::OnUpdate(Timestep deltaTime)
 	{
 		KE_PROFILE_FUNCTION();
 
 		if (FramebufferSpecification spec = Renderer::GetFramebuffer()->GetSpecification();
 		m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // Zero sized Framebuffer is Invalid
 		(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
-		{
 			Renderer::GetFramebuffer()->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-		}
+
+		m_OrthographicCamera.SetRotation(m_OrthographicCamera.GetRotation() + 5.0f);
+
+		m_OrthographicCamera.OnUpdate(deltaTime);
 
 		Renderer::BeginScene(m_OrthographicCamera);
 

@@ -80,7 +80,6 @@ namespace Kairos
 		m_ShaderName = filepath.substr(lastSlash, count);
 
 		PreProcessShader(shaderSources, options);
-		CompileToAssembly(shaderSources, options);
 
 		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
 										vctx->GetDeviceDeletionQueue(), true);
@@ -125,7 +124,6 @@ namespace Kairos
 		shaderSources[shaderc_fragment_shader] = fragSrc;
 
 		PreProcessShader(shaderSources, options);
-		CompileToAssembly(shaderSources, options);
 
 		m_Shaders = MakeShaderObjects(vctx->GetVkContext().LogicalDevice, m_ShaderName.c_str(), shaderSources.at(shaderc_vertex_shader), shaderSources.at(shaderc_fragment_shader),
 			vctx->GetDeviceDeletionQueue(), true);
@@ -146,22 +144,21 @@ namespace Kairos
 		{
 			shaderc::CompileOptions options;
 
-			options.SetTargetEnvironment(shaderc_target_env_opengl, shaderc_env_version_opengl_4_5);
 			options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_4);
 			options.SetSourceLanguage(shaderc_source_language_glsl);
-			options.SetTargetSpirv(shaderc_spirv_version_1_6);
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
+			options.SetForcedVersionProfile(450, shaderc_profile_core);
 
-			vertexCode = Compile(vertSrc, options);
-			fragmentCode = Compile(fragSrc, options);
+			vertexCode = Compile(vertSrc, options, shaderc_glsl_vertex_shader);
+			fragmentCode = Compile(fragSrc, options, shaderc_glsl_fragment_shader);
 		}
 
-		VkShaderCodeTypeEXT codeType = VkShaderCodeTypeEXT::VK_SHADER_CODE_TYPE_SPIRV_EXT;
+		VkShaderCodeTypeEXT codeType = VK_SHADER_CODE_TYPE_SPIRV_EXT;
 
 		VkShaderCreateInfoEXT vertexInfo = {};
 		vertexInfo.sType = VK_STRUCTURE_TYPE_SHADER_CREATE_INFO_EXT;
 		vertexInfo.flags  = flags;
-		vertexInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_VERTEX_BIT;
+		vertexInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
 		vertexInfo.nextStage = nextStage;
 		vertexInfo.codeType = codeType;
 		vertexInfo.setLayoutCount = 1;
@@ -180,13 +177,9 @@ namespace Kairos
 
 		vertexInfo.pName  = "main";
 
-		VkShaderCreateInfoEXT fragmentInfo = {};
-		fragmentInfo.sType = VK_STRUCTURE_TYPE_SHADER_CREATE_INFO_EXT;
-		fragmentInfo.flags = flags;
-		fragmentInfo.stage = VkShaderStageFlagBits::VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragmentInfo.codeType = codeType;
-		fragmentInfo.setLayoutCount = 1;
-		fragmentInfo.pSetLayouts = &vctx->GetVkContext().DescriptorSetLayout;
+		VkShaderCreateInfoEXT fragmentInfo = vertexInfo;
+		fragmentInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragmentInfo.nextStage = 0;
 
 		if (compileCode)
 		{
@@ -313,39 +306,19 @@ namespace Kairos
 		}
 	}
 
-	void VulkanShader::CompileToAssembly(std::unordered_map<shaderc_shader_kind, std::vector<char>>& shaderSources, shaderc::CompileOptions& options)
+	std::vector<uint32_t> VulkanShader::Compile(std::vector<char>& shaderSource, shaderc::CompileOptions& options, shaderc_shader_kind kind)
 	{
 		shaderc::Compiler compiler;
 
-		for (auto& shaderSource : shaderSources)
-		{
-			shaderc::AssemblyCompilationResult result = compiler.CompileGlslToSpvAssembly(shaderSource.second.data(), shaderSource.second.size(), shaderSource.first, m_ShaderName.c_str(), options);
-
-			if (result.GetCompilationStatus() != shaderc_compilation_status_success)
-				KE_CORE_ERROR(result.GetErrorMessage());
-
-			const char* src = result.cbegin();
-			size_t newSize = result.cend() - src;
-			shaderSource.second.resize(newSize);
-			memcpy(shaderSource.second.data(), src, newSize);
-		}
-	}
-
-	std::vector<uint32_t> VulkanShader::Compile(std::vector<char>& shaderSource, shaderc::CompileOptions& options)
-	{
-		shaderc::Compiler compiler;
-
-		shaderc::SpvCompilationResult module = compiler.AssembleToSpv(shaderSource.data(), shaderSource.size(), options);
+		shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(
+			shaderSource.data(), shaderSource.size(),
+			kind,
+			m_ShaderName.c_str(), "main", options);
 
 		if (module.GetCompilationStatus() != shaderc_compilation_status_success)
-			KE_CORE_ERROR("Assemble To Binary Compilation : \n {0}", module.GetErrorMessage());
+			KE_CORE_ERROR("GLSL to SPIR-V Compilation : \n {0}", module.GetErrorMessage());
 
-		const uint32_t* src = module.cbegin();
-		size_t wordCount = module.cend() - src;
-		std::vector<uint32_t> output(wordCount);
-		memcpy(output.data(), src, wordCount * sizeof(uint32_t));
-
-		return output;
+		return { module.cbegin(), module.cend() };
 	}
 
 	void VulkanShader::CreateDescriptorSet()
@@ -424,7 +397,7 @@ namespace Kairos
 		EndSingleTimeCommands(vctx->GetVkContext().LogicalDevice, vctx->GetVkContext().CommandPool, cmd, vctx->GetVkContext().GraphicsQueue);
 	}
 
-	void VulkanShader::UploadSceneData(const std::string& name, const SceneData& sceneData)
+	void VulkanShader::UploadSceneData(const uint32_t& bindingIndex, const SceneData& sceneData)
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
@@ -456,13 +429,12 @@ namespace Kairos
 		VkDescriptorBufferInfo bufferInfo{};
 		bufferInfo.buffer = m_SceneDataBuffer;
 		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(SceneData);
+		bufferInfo.range = sizeof(SceneData);	
 
 		VkWriteDescriptorSet descriptorWrite{};
 		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 		descriptorWrite.dstSet = m_DescriptorSet;
-		descriptorWrite.dstBinding = 0;
-		descriptorWrite.dstArrayElement = 0;
+		descriptorWrite.dstBinding = bindingIndex;
 		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		descriptorWrite.descriptorCount = 1;
 		descriptorWrite.pBufferInfo = &bufferInfo;

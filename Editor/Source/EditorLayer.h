@@ -12,7 +12,7 @@ namespace Kairos
 		virtual void OnAttach() override;
 		virtual void OnDetach() override;
 
-		virtual void OnUpdate(Timestep delta) override;
+		virtual void OnUpdate(Timestep deltaTime) override;
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Event& event) override;
 	private:

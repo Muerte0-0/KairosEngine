@@ -218,7 +218,7 @@ namespace Kairos
 			if (vulkanIndexBuffer != nullptr)
 				vkCmdBindIndexBuffer(commandBuffer, vulkanIndexBuffer->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vctx->GetVkContext().PipelineLayout, 0, 1, &vkShader->GetDescriptorSet(), 0, 0);
+			vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vctx->GetVkContext().PipelineLayout, 0, 1, &vkShader->GetDescriptorSet(), 0, nullptr);
 
 			vkCmdDrawIndexed(commandBuffer, 3, 1, 0, 0, 0);
 		}

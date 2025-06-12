@@ -32,7 +32,7 @@ namespace Kairos
 	{
 		shader->Bind();
 
-		shader->UploadSceneData("SceneData", *m_SceneData);
+		shader->UploadSceneData(0, *m_SceneData);
 
 		RenderCommand::DrawIndexed(vertexArray);
 	}

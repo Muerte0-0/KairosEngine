@@ -11,8 +11,6 @@ namespace Kairos
 {
     void Swapchain::RecreateSwapchain(VkDevice logicalDevice, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, GLFWwindow* window)
     {
-		KE_CORE_INFO("Recreating Swapchain...");
-
         int width, height;
         glfwGetWindowSize(window, &width, &height);
 

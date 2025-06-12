@@ -35,7 +35,7 @@ namespace Kairos
 		virtual void UploadUniformMat3(const std::string& name, const glm::mat3& matrix) = 0;
 		virtual void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) = 0;
 
-		virtual void UploadSceneData(const std::string& name, const SceneData& sceneData) = 0;
+		virtual void UploadSceneData(const uint32_t& bindingIndex, const SceneData& sceneData) = 0;
 	};
 
 	class ShaderLibrary

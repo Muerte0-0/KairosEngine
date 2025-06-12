@@ -1,19 +1,16 @@
 #type vertex
 #version 450
-#extension GL_KHR_vulkan_glsl : enable
-#extension GL_EXT_scalar_block_layout : enable
+layout(set = 0, binding = 0) uniform SceneDataBlock
+{
+	mat4 ViewProjectionMatrix;
+	vec3 CameraPosition;
+}u_SceneData;
 
 layout(location = 0) in vec3 a_Position;
 layout(location = 1) in vec4 a_Color;
 
 layout(location = 0) out vec4 v_Position;
 layout(location = 1) out vec4 v_Color;
-
-layout(set = 0, binding = 0, scalar) uniform SceneData
-{
-	mat4 ViewProjectionMatrix;
-	vec3 CameraPosition;
-} u_SceneData;
 
 void main()
 {

@@ -143,7 +143,7 @@ namespace Kairos
 		return VK_FALSE;
 	}
 
-	VkDebugUtilsMessengerEXT CreateDebugMessenger(VkInstance instance, std::deque<std::function<void(VkInstance)>> instanceDeletionQueue)
+	VkDebugUtilsMessengerEXT CreateDebugMessenger(VkInstance instance, std::deque<std::function<void(VkInstance)>>& instanceDeletionQueue)
 	{
 #ifdef KE_DEBUG
 		KE_CORE_INFO("Creating Debug Messenger!");

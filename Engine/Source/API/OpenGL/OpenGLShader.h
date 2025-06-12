@@ -28,7 +28,7 @@ namespace Kairos
 		void UploadUniformMat3(const std::string& name, const glm::mat3& matrix) override;
 		void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) override;
 
-		void UploadSceneData(const std::string& name, const SceneData& sceneData) override;
+		void UploadSceneData(const uint32_t& bindingIndex, const SceneData& sceneData) override;
 
 	private:
 		std::string ReadFile(const std::string& filepath);

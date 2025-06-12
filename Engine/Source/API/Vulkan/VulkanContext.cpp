@@ -37,7 +37,7 @@ namespace Kairos
 
 		m_Context.Instance = CreateInstance(glfwGetWindowTitle(m_WindowHandle), m_InstanceDeletionQueue);
 		volkLoadInstance(m_Context.Instance);
-		//m_Context.Messenger = CreateDebugMessenger(m_Context.Instance, m_InstanceDeletionQueue); // Debug Messesnger
+		m_Context.Messenger = CreateDebugMessenger(m_Context.Instance, m_InstanceDeletionQueue); // Debug Messesnger
 		m_Context.Surface = CreateSurface(m_Context.Instance, m_WindowHandle, m_InstanceDeletionQueue);
 
 		m_Context.PhysicalDevice = ChoosePhysicalDevice(m_Context.Instance);
@@ -62,7 +62,7 @@ namespace Kairos
 		m_Context.DescriptorPool = CreateDescriptorPool(m_Context.LogicalDevice, m_DeviceDeletionQueue);
 
 		DescriptorSetLayoutBuilder descriptorSetLyoutBuilder(m_Context.LogicalDevice);
-		descriptorSetLyoutBuilder.AddEntry(VK_SHADER_STAGE_VERTEX_BIT, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+		descriptorSetLyoutBuilder.AddEntry(VK_SHADER_STAGE_ALL_GRAPHICS, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 		m_Context.DescriptorSetLayout = descriptorSetLyoutBuilder.Build(m_DeviceDeletionQueue);
 
 		PipelineLayoutBuilder pipelineLayoutBuilder(m_Context.LogicalDevice);

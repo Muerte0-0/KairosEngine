@@ -1,6 +1,8 @@
 #include "kepch.h"
 #include "Cameras.h"
 
+#include "Engine/Input/Input.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Kairos
@@ -17,5 +19,25 @@ namespace Kairos
 
 		m_ViewMatrix = glm::inverse(transform);
 		m_ViewProjectionMatrix = m_ProjectionMatrix * m_ViewMatrix;
+	}
+
+	void OrthographicCamera::OnUpdate(Timestep deltaTime)
+	{
+		if (Input::IsKeyPressed(KeyBoard::W))
+			m_Position.y += m_CameraMoveSpeed;
+		else if (Input::IsKeyPressed(KeyBoard::S))
+			m_Position.y -= m_CameraMoveSpeed;
+
+		if (Input::IsKeyPressed(KeyBoard::A))
+			m_Position.x -= m_CameraMoveSpeed;
+		else if (Input::IsKeyPressed(KeyBoard::D))
+			m_Position.x += m_CameraMoveSpeed;
+
+		if (Input::IsKeyPressed(KeyBoard::Q))
+			m_Rotation += m_CameraRotationSpeed;
+		else if (Input::IsKeyPressed(KeyBoard::E))
+			m_Rotation -= m_CameraRotationSpeed;
+
+		RecalculateViewMatrix();
 	}
 }
