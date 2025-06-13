@@ -149,7 +149,7 @@ namespace Kairos
 		vkCmdSetSampleMaskEXT(commandBuffer, VK_SAMPLE_COUNT_1_BIT, &sampleMask);
 
 		vkCmdSetAlphaToCoverageEnableEXT(commandBuffer, VK_FALSE);
-		vkCmdSetCullModeEXT(commandBuffer, VK_CULL_MODE_BACK_BIT);
+		vkCmdSetCullModeEXT(commandBuffer, VK_CULL_MODE_NONE);
 		vkCmdSetFrontFaceEXT(commandBuffer, VK_FRONT_FACE_CLOCKWISE);
 		vkCmdSetDepthTestEnableEXT(commandBuffer, VK_FALSE);
 		vkCmdSetDepthWriteEnableEXT(commandBuffer, VK_FALSE);

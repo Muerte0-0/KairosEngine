@@ -147,7 +147,7 @@ namespace Kairos
 			options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_4);
 			options.SetSourceLanguage(shaderc_source_language_glsl);
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
-			options.SetForcedVersionProfile(450, shaderc_profile_core);
+			//options.SetForcedVersionProfile(450, shaderc_profile_core);
 
 			vertexCode = Compile(vertSrc, options, shaderc_glsl_vertex_shader);
 			fragmentCode = Compile(fragSrc, options, shaderc_glsl_fragment_shader);
