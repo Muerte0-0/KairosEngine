@@ -5,7 +5,6 @@ namespace Kairos
 	struct SceneData
 	{
 		glm::mat4 ViewProjectionMatrix;
-		glm::vec3 CameraPosition;
-		float _padding;
+		glm::mat4 CameraTransform;
 	};
 }

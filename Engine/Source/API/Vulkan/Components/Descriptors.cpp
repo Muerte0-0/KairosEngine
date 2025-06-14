@@ -35,7 +35,7 @@ namespace Kairos
 
 	void DescriptorSetLayoutBuilder::AddEntry(VkShaderStageFlags stage, VkDescriptorType type)
 	{
-		VkDescriptorSetLayoutBinding entry = {};
+		VkDescriptorSetLayoutBinding entry = { VK_DESCRIPTOR_SET_LAYOUT_CREATE_PUSH_DESCRIPTOR_BIT };
 		entry.binding = m_LayoutBindings.size();
 		entry.descriptorType = type;
 		entry.descriptorCount = 1;

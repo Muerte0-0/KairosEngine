@@ -88,7 +88,7 @@ namespace Kairos
 
 		bindingDescription.sType = VK_STRUCTURE_TYPE_VERTEX_INPUT_BINDING_DESCRIPTION_2_EXT;
 		bindingDescription.binding = 0;
-		bindingDescription.stride = layout.GetStride();
+		bindingDescription.stride = sizeof(glm::vec3) * 2;
 		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX; // Each vertex has its own data
 		bindingDescription.divisor = 1; // Instancing
 		bindingDescription.pNext = nullptr; // No additional data
@@ -149,8 +149,8 @@ namespace Kairos
 		vkCmdSetSampleMaskEXT(commandBuffer, VK_SAMPLE_COUNT_1_BIT, &sampleMask);
 
 		vkCmdSetAlphaToCoverageEnableEXT(commandBuffer, VK_FALSE);
-		vkCmdSetCullModeEXT(commandBuffer, VK_CULL_MODE_NONE);
-		vkCmdSetFrontFaceEXT(commandBuffer, VK_FRONT_FACE_CLOCKWISE);
+		vkCmdSetCullModeEXT(commandBuffer, VK_CULL_MODE_BACK_BIT);
+		vkCmdSetFrontFaceEXT(commandBuffer, VK_FRONT_FACE_COUNTER_CLOCKWISE);
 		vkCmdSetDepthTestEnableEXT(commandBuffer, VK_FALSE);
 		vkCmdSetDepthWriteEnableEXT(commandBuffer, VK_FALSE);
 		vkCmdSetDepthBiasEnableEXT(commandBuffer, VK_FALSE);

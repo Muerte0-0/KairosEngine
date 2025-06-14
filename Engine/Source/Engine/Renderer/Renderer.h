@@ -21,12 +21,13 @@ namespace Kairos
 
 		static void OnWindowResize(uint32_t width, uint32_t height);
 
-		static void BeginScene(OrthographicCamera& camera);
+		static void BeginScene(PerspectiveCamera& camera);
 		static void EndScene();
 
 		static void Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const glm::mat4& transform = glm::mat4(1.0f));
 
 		inline static RenderAPI::API GetAPI() { return RenderAPI::GetAPI(); }
+		inline static SceneData GetSceneData() { return *m_SceneData; }
 		inline static Ref<Framebuffer> GetFramebuffer() { return m_Framebuffer; }
 		inline static ShaderLibrary& GetShaderLibrary() { return m_ShaderLibrary; }
 

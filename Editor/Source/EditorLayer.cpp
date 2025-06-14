@@ -2,7 +2,7 @@
 
 namespace Kairos
 {
-	EditorLayer::EditorLayer() : Layer("Kairos Editor"), m_OrthographicCamera(-1.6f, 1.6f, -0.9f, 0.9f)
+	EditorLayer::EditorLayer() : Layer("Kairos Editor"), m_PerspectiveCamera(45.0f, 1280, 720)
 	{
 		
 	}
@@ -12,27 +12,100 @@ namespace Kairos
 		KE_PROFILE_FUNCTION();
 
 		m_VertexArray.reset(VertexArray::Create());
+
 		
-		float vertices[4 * 7] = {
-			-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-			 0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f,
-		};
+		std::array<Vertex, 24> vertexData;
+
+		// Front
+		vertexData[0].Position = glm::vec3(-0.5f, -0.5f, 0.5f);
+		vertexData[0].Normal = glm::vec3(0.0f, 0.0f, 1.0f);
+		vertexData[1].Position = glm::vec3(-0.5f, 0.5f, 0.5f);
+		vertexData[1].Normal = glm::vec3(0.0f, 0.0f, 1.0f);
+		vertexData[2].Position = glm::vec3(0.5f, 0.5f, 0.5f);
+		vertexData[2].Normal = glm::vec3(0.0f, 0.0f, 1.0f);
+		vertexData[3].Position = glm::vec3(0.5f, -0.5f, 0.5f);
+		vertexData[3].Normal = glm::vec3(0.0f, 0.0f, 1.0f);
+
+		// Right
+		vertexData[4].Position = glm::vec3(0.5f, -0.5f, 0.5f);
+		vertexData[4].Normal = glm::vec3(1.0f, 0.0f, 0.0f);
+		vertexData[5].Position = glm::vec3(0.5f, 0.5f, 0.5f);
+		vertexData[5].Normal = glm::vec3(1.0f, 0.0f, 0.0f);
+		vertexData[6].Position = glm::vec3(0.5f, 0.5f, -0.5f);
+		vertexData[6].Normal = glm::vec3(1.0f, 0.0f, 0.0f);
+		vertexData[7].Position = glm::vec3(0.5f, -0.5f, -0.5f);
+		vertexData[7].Normal = glm::vec3(1.0f, 0.0f, 0.0f);
+
+		// Back
+		vertexData[8].Position = glm::vec3(0.5f, -0.5f, -0.5f);
+		vertexData[8].Normal = glm::vec3(0.0f, 0.0f, -1.0f);
+		vertexData[9].Position = glm::vec3(0.5f, 0.5f, -0.5f);
+		vertexData[9].Normal = glm::vec3(0.0f, 0.0f, -1.0f);
+		vertexData[10].Position = glm::vec3(-0.5f, 0.5f, -0.5f);
+		vertexData[10].Normal = glm::vec3(0.0f, 0.0f, -1.0f);
+		vertexData[11].Position = glm::vec3(-0.5f, -0.5f, -0.5f);
+		vertexData[11].Normal = glm::vec3(0.0f, 0.0f, -1.0f);
+
+		// Left
+		vertexData[12].Position = glm::vec3(-0.5f, -0.5f, -0.5f);
+		vertexData[12].Normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+		vertexData[13].Position = glm::vec3(-0.5f, 0.5f, -0.5f);
+		vertexData[13].Normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+		vertexData[14].Position = glm::vec3(-0.5f, 0.5f, 0.5f);
+		vertexData[14].Normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+		vertexData[15].Position = glm::vec3(-0.5f, -0.5f, 0.5f);
+		vertexData[15].Normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+
+		// Top
+		vertexData[16].Position = glm::vec3(-0.5f, 0.5f, 0.5f);
+		vertexData[16].Normal = glm::vec3(0.0f, 1.0f, 0.0f);
+		vertexData[17].Position = glm::vec3(-0.5f, 0.5f, -0.5f);
+		vertexData[17].Normal = glm::vec3(0.0f, 1.0f, 0.0f);
+		vertexData[18].Position = glm::vec3(0.5f, 0.5f, -0.5f);
+		vertexData[18].Normal = glm::vec3(0.0f, 1.0f, 0.0f);
+		vertexData[19].Position = glm::vec3(0.5f, 0.5f, 0.5f);
+		vertexData[19].Normal = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		// Bottom
+		vertexData[20].Position = glm::vec3(-0.5f, -0.5f, -0.5f);
+		vertexData[20].Normal = glm::vec3(0.0f, -1.0f, 0.0f);
+		vertexData[21].Position = glm::vec3(-0.5f, -0.5f, 0.5f);
+		vertexData[21].Normal = glm::vec3(0.0f, -1.0f, 0.0f);
+		vertexData[22].Position = glm::vec3(0.5f, -0.5f, 0.5f);
+		vertexData[22].Normal = glm::vec3(0.0f, -1.0f, 0.0f);
+		vertexData[23].Position = glm::vec3(0.5f, -0.5f, -0.5f);
+		vertexData[23].Normal = glm::vec3(0.0f, -1.0f, 0.0f);
 		
+
 		Ref<VertexBuffer> vertexBuffer;
-		vertexBuffer.reset(VertexBuffer::Create(vertices, sizeof(vertices)));
-		BufferLayout layout = {
+		vertexBuffer.reset(VertexBuffer::Create((float*)vertexData.data(), vertexData.size() * sizeof(Vertex)));
+		BufferLayout layout =
+		{
 			{ ShaderDataType::Float3, "a_Position" },
-			{ ShaderDataType::Float4, "a_Color" }
+			{ ShaderDataType::Float3, "a_Normal" },
 		};
 
 		vertexBuffer->SetLayout(layout);
 		m_VertexArray->AddVertexBuffer(vertexBuffer);
 		
-		uint32_t indices[6] = { 0, 1, 2, 2, 3, 0};
+		std::array<uint32_t, 36> indices;
+
+		uint32_t offset = 0;
+
+		for (int i = 0; i < 36; i += 6)
+		{
+			indices[i + 0] = 0 + offset;
+			indices[i + 1] = 1 + offset;
+			indices[i + 2] = 2 + offset;
+			indices[i + 3] = 2 + offset;
+			indices[i + 4] = 3 + offset;
+			indices[i + 5] = 0 + offset;
+
+			offset += 4;
+		}
+
 		Ref<IndexBuffer> indexBuffer;
-		indexBuffer.reset(IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t)));
+		indexBuffer.reset(IndexBuffer::Create(indices.data(), indices.size()));
 		m_VertexArray->SetIndexBuffer(indexBuffer);
 
 		Renderer::GetShaderLibrary().Load("D:/Dev/KairosEngine/Editor/Assets/Shaders/Triangle/Triangle.glsl");
@@ -56,13 +129,14 @@ namespace Kairos
 		if (FramebufferSpecification spec = Renderer::GetFramebuffer()->GetSpecification();
 		m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // Zero sized Framebuffer is Invalid
 		(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+		{
 			Renderer::GetFramebuffer()->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_PerspectiveCamera.ViewportResized(m_ViewportSize.x, m_ViewportSize.y);
+		}
 
-		m_OrthographicCamera.SetRotation(m_OrthographicCamera.GetRotation() + 5.0f);
+		m_PerspectiveCamera.OnUpdate(deltaTime);
 
-		m_OrthographicCamera.OnUpdate(deltaTime);
-
-		Renderer::BeginScene(m_OrthographicCamera);
+		Renderer::BeginScene(m_PerspectiveCamera);
 
 		KE_PROFILE_SCOPE("Renderer Prep");
 		Renderer::GetFramebuffer()->Bind();

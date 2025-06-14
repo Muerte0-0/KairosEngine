@@ -16,9 +16,16 @@ namespace Kairos
 
 	VkPipelineLayout PipelineLayoutBuilder::Build(std::deque<std::function<void(VkDevice)>>& deletionQueue)
 	{
+		VkPushConstantRange pushConstantRanges;
+		pushConstantRanges.offset = 0;
+		pushConstantRanges.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
+		pushConstantRanges.size = sizeof(SceneData);
+
 		VkPipelineLayoutCreateInfo layoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
 		layoutInfo.setLayoutCount = (uint32_t)m_DescriptorLayouts.size();
 		layoutInfo.pSetLayouts = m_DescriptorLayouts.data();
+		//layoutInfo.pushConstantRangeCount = 1;
+		//layoutInfo.pPushConstantRanges = &pushConstantRanges;
 
 		VkPipelineLayout layout;
 		VK_CHECK(vkCreatePipelineLayout(m_LogicalDevice, &layoutInfo, nullptr, &layout));
@@ -147,7 +154,6 @@ namespace Kairos
 			options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_4);
 			options.SetSourceLanguage(shaderc_source_language_glsl);
 			options.SetOptimizationLevel(shaderc_optimization_level_performance);
-			//options.SetForcedVersionProfile(450, shaderc_profile_core);
 
 			vertexCode = Compile(vertSrc, options, shaderc_glsl_vertex_shader);
 			fragmentCode = Compile(fragSrc, options, shaderc_glsl_fragment_shader);
@@ -321,7 +327,7 @@ namespace Kairos
 		return { module.cbegin(), module.cend() };
 	}
 
-	void VulkanShader::CreateDescriptorSet(uint32_t bindingIndex)
+	void VulkanShader::CreateDescriptorSet(uint32_t bindingIndex, uint32_t offset, uint32_t range, VkBuffer buffer)
 	{
 		VulkanContext* vctx = (VulkanContext*)Application::Get().GetWindow().GetGraphicsContext();
 
@@ -332,21 +338,6 @@ namespace Kairos
 		allocInfo.pSetLayouts = &vctx->GetVkContext().DescriptorSetLayout;
 
 		vkAllocateDescriptorSets(vctx->GetVkContext().LogicalDevice, &allocInfo, &m_DescriptorSet);
-
-		VkDescriptorBufferInfo bufferInfo{};
-		bufferInfo.buffer = m_SceneDataBuffer;
-		bufferInfo.offset = 0;
-		bufferInfo.range = sizeof(SceneData);
-
-		VkWriteDescriptorSet descriptorWrite{};
-		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		descriptorWrite.dstSet = m_DescriptorSet;
-		descriptorWrite.dstBinding = bindingIndex;
-		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		descriptorWrite.descriptorCount = 1;
-		descriptorWrite.pBufferInfo = &bufferInfo;
-
-		vkUpdateDescriptorSets(vctx->GetVkContext().LogicalDevice, 1, &descriptorWrite, 0, nullptr);
 	}
 
 	void VulkanShader::UploadUniformInt(const std::string& name, int value)
@@ -419,9 +410,9 @@ namespace Kairos
 		if (m_SceneDataBuffer == VK_NULL_HANDLE)
 		{
 			CreateBuffer(vctx->GetVkContext().PhysicalDevice, vctx->GetVkContext().LogicalDevice, sizeof(SceneData),
-						VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-						VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-						m_SceneDataBuffer, m_SceneDataMemory);
+						 VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+						 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+						 m_SceneDataBuffer, m_SceneDataMemory);
 
 			vctx->GetDeviceDeletionQueue().push_back([this](VkDevice device)
 			{
@@ -434,11 +425,26 @@ namespace Kairos
 		}
 
 		if (m_DescriptorSet == VK_NULL_HANDLE)
-			CreateDescriptorSet(bindingIndex);
+			CreateDescriptorSet(bindingIndex, 0, sizeof(SceneData), m_SceneDataBuffer);
 
 		void* data;
 		vkMapMemory(vctx->GetVkContext().LogicalDevice, m_SceneDataMemory, 0, sizeof(SceneData), 0, &data);
 		memcpy(data, &sceneData, sizeof(SceneData));
 		vkUnmapMemory(vctx->GetVkContext().LogicalDevice, m_SceneDataMemory);
+
+		VkDescriptorBufferInfo bufferInfo{};
+		bufferInfo.buffer = m_SceneDataBuffer;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(SceneData);
+
+		VkWriteDescriptorSet descriptorWrite{};
+		descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		descriptorWrite.dstSet = m_DescriptorSet;
+		descriptorWrite.dstBinding = bindingIndex;
+		descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorWrite.descriptorCount = 1;
+		descriptorWrite.pBufferInfo = &bufferInfo;
+
+		vkUpdateDescriptorSets(vctx->GetVkContext().LogicalDevice, 1, &descriptorWrite, 0, nullptr);
 	}
 }

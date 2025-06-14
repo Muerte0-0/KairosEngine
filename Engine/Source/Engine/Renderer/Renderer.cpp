@@ -17,10 +17,10 @@ namespace Kairos
 		RenderCommand::SetViewport(0, 0, width, height);
 	}
 
-	void Renderer::BeginScene(OrthographicCamera& camera)
+	void Renderer::BeginScene(PerspectiveCamera& camera)
 	{
 		m_SceneData->ViewProjectionMatrix = camera.GetViewProjectionMatrix();
-		m_SceneData->CameraPosition = camera.GetPosition();
+		m_SceneData->CameraTransform = camera.GetTransform();
 	}
 
 	void Renderer::EndScene()

@@ -3,6 +3,12 @@
 
 namespace Kairos
 {
+	struct Vertex
+	{
+		glm::vec3 Position;
+		glm::vec3 Normal;
+	};
+
 	class EditorLayer : public Layer
 	{
 	public:
@@ -22,7 +28,7 @@ namespace Kairos
 		glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
 		glm::vec2 m_ViewportBounds[2];
 
-		OrthographicCamera m_OrthographicCamera;
+		PerspectiveCamera m_PerspectiveCamera;
 
 		float NumFrames = 0;
 	};
