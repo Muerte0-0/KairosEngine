@@ -3,17 +3,11 @@ include "ProjectDependencies.lua"
 workspace "KairosEngine"
 	architecture "x86_64"
 	startproject "Sandbox"
+	configurations { "Debug", "Release", "Dist" }
 
 filter "action:vs*"
 	buildoptions { "/utf-8", }
 	linkoptions { "/IGNORE:4006" }
-
-configurations
-{
-	"Debug",
-	"Release",
-	"Dist"
-}
 
 linktimeoptimization ("Default")
 multiprocessorcompile ("On")
