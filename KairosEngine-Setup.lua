@@ -34,7 +34,7 @@ group ""
 
 group "ThirdParty"
 	include "Vendor/GLFW/Build-GLFW.lua"
-	include "Vendor/ocornut/Build-Imgui.lua"
+	include "Vendor/ocornut/Build-ImGui.lua"
 group ""
 
 group "Misc"
