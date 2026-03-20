@@ -21,6 +21,7 @@ externalincludedirs {
 
 links {
 	"Engine",
+	"GLFW",
 }
 
 filter "system:windows"

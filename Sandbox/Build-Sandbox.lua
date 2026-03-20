@@ -21,32 +21,33 @@ externalincludedirs {
 
 links {
 	"Engine",
+	"GLFW",
 }
 
 filter "system:windows"
-	systemversion "latest"
+systemversion "latest"
 
 links {
 	"Ws2_32.lib",
 }
 
 filter "configurations:Debug"
-        defines { "DEBUG", "_DEBUG", "KE_DEBUG" }
-        symbols "On"
-        runtime "Debug"
-        optimize "Off"
+defines { "DEBUG", "_DEBUG", "KE_DEBUG" }
+symbols "On"
+runtime "Debug"
+optimize "Off"
 
 filter "configurations:Release"
-    defines { "NDEBUG", "KE_RELEASE" }
-	linktimeoptimization "On"
-    symbols "On"
-    runtime "Release"
-    optimize "Speed"
-	
+defines { "NDEBUG", "KE_RELEASE" }
+linktimeoptimization "On"
+symbols "On"
+runtime "Release"
+optimize "Speed"
+
 
 filter "configurations:Dist"
-    defines { "NDEBUG", "KE_DIST" }
-	linktimeoptimization "On"
-    symbols "Off"
-    runtime "Release"
-    optimize "Speed"
+defines { "NDEBUG", "KE_DIST" }
+linktimeoptimization "On"
+symbols "Off"
+runtime "Release"
+optimize "Speed"
