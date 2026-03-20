@@ -60,4 +60,8 @@ LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
 
 Library = {}
+filter "system:windows"
 Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
+
+filter "system:linux"
+Library["Vulkan"] = "vulkan"
