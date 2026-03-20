@@ -28,7 +28,6 @@ includedirs {
 
 links {
 	"GLFW",
-	"%{Library.Vulkan}",
 	"ImGui",
 }
 
@@ -49,6 +48,7 @@ links {
 	"d3d12",
 	"d3dcompiler",
 	"gdi32",
+	"%{Library.Vulkan}",
 }
 
 filter "system:linux"
@@ -56,6 +56,7 @@ filter "system:linux"
 
 links {
 	"X11",
+	"vulkan",
 }
 
 filter "configurations:Debug"
