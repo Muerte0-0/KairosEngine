@@ -52,6 +52,7 @@ print("======================================================================")
 ThirdParty = "%{wks.location}/Vendor"
 
 IncludeDir = {}
+IncludeDir["Vulkan"] = "%{VULKAN_SDK}/include"
 IncludeDir["GLFW"] =  "%{ThirdParty}/GLFW/include"
 
 LibraryDir = {}
@@ -59,4 +60,3 @@ LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
 
 Library = {}
 Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
-Library["GLFW"] = "%{ThirdParty}/GLFW/lib/glfw3.lib"

@@ -1,0 +1,10 @@
+[submodule "Vendor/GLFW"]
+	path = Vendor/GLFW
+	url = https://github.com/glfw/glfw.git
+[submodule "Vendor/ocornut/ImGui"]
+	path = Vendor/ocornut/ImGui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
+[submodule "Vendor/ocornut/ImGuizmo"]
+	path = Vendor/ocornut/ImGuizmo
+	url = https://github.com/ocornut/ImGuizmo.git

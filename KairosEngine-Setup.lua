@@ -33,7 +33,7 @@ group "Core"
 group ""
 
 group "ThirdParty"
-	--include "ThirdParty/ocornut/Build-Imgui.lua"
+	include "Vendor/ocornut/Build-Imgui.lua"
 group ""
 
 group "Misc"
