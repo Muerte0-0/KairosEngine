@@ -1,7 +1,5 @@
 #!/bin/bash
 
-pushd .. > /dev/null
+pushd ..
 
 Vendor/Premake/Linux/premake5 --file=KairosEngine-Setup.lua gmake
-
-popd > /dev/null
