@@ -405,3 +405,4 @@ FodyWeavers.xsd
 /Intermediate
 *.filters
 Makefile
+*.sln
