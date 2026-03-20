@@ -31,16 +31,22 @@ links {
 }
 
 filter "configurations:Debug"
-	defines "KE_DEBUG"
-	runtime "Debug"
-	symbols "on"
+        defines { "DEBUG", "_DEBUG", "KE_DEBUG" }
+        symbols "On"
+        runtime "Debug"
+        optimize "Off"
 
 filter "configurations:Release"
-	defines "KE_RELEASE"
-	runtime "Release"
-	optimize "on"
+    defines { "NDEBUG", "KE_RELEASE" }
+	linktimeoptimization "On"
+    symbols "On"
+    runtime "Release"
+    optimize "Speed"
+	
 
 filter "configurations:Dist"
-	defines "KE_DIST"
-	runtime "Release"
-	optimize "on"
+    defines { "NDEBUG", "KE_DIST" }
+	linktimeoptimization "On"
+    symbols "Off"
+    runtime "Release"
+    optimize "Speed"

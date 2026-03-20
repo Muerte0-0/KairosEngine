@@ -7,33 +7,26 @@ project "Sandbox"
 targetdir (ProjectBinDir)
 objdir (ProjectIntDir)
 
-files
-{
+files {
 	"Source/**.h",
-	"Source/**.cpp"
+	"Source/**.cpp",
+	"Resources/Shaders/**.slang",
 }
 
-externalincludedirs
-{
+externalincludedirs {
 	"%{wks.location}/Engine/Source",
 	"%{wks.location}/ThirdParty/",
 	"%{IncludeDir.GLFW}",
 }
 
-links
-{
+links {
 	"Engine",
-}
-
-postbuildcommands {
-	
 }
 
 filter "system:windows"
 	systemversion "latest"
 
-links
-{
+links {
 	"Ws2_32.lib",
 }
 

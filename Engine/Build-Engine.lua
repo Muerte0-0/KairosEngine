@@ -7,8 +7,8 @@ project "Engine"
 targetdir (ProjectBinDir)
 objdir (ProjectIntDir)
 
---pchheader "kepch.h"
---pchsource "Source/kepch.cpp"
+pchheader "kepch.h"
+pchsource "Source/kepch.cpp"
 
 defines {
 	"_CRT_SECURE_NO_WARNINGS",
@@ -22,21 +22,22 @@ files {
 includedirs {
 	"Source",
 	"%{IncludeDir.GLFW}",
-}
-
-libdirs {
-	"%{Library.GLFW}",
+	"%{IncludeDir.Vulkan}",
+	"%{IncludeDir.ImGui}",
 }
 
 links {
+	"GLFW",
+	"%{Library.Vulkan}",
+	"ImGui",
 }
 
 filter "files:**.c"
     enablepch = "OFF"  -- Skip PCH for C files
 	compileas "C"
 	
---filter "files:vendor/ImGuizmo/**.cpp"
-	--flags { "NoPCH" }
+filter "files:Vendor/ocornut/ImGuizmo/**.cpp"
+	enablepch = "OFF"  -- Skip PCH for ImGuizmo files
 
 filter "system:windows"
 	systemversion "latest"

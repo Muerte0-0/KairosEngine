@@ -1,16 +1,35 @@
 ﻿#pragma once
+#include  "PlatformDetection.h"
+
+#include <GLFW/glfw3.h>
 
 #ifdef PLATFORM_WINDOWS
 
 inline bool g_ApplicationRunning = true;
 
-int Main(int argc, char** argv)
+inline int Main(int argc, char** argv)
 {
-	while (g_ApplicationRunning)
+	GLFWwindow* window;
+	
+	if (!glfwInit())
+		return -1;
+	
+	window = glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);
+	
+	if (!window)
 	{
-		
+		glfwTerminate();
+		return -1;
 	}
-    
+	
+	glfwMakeContextCurrent(window);
+
+	while (!glfwWindowShouldClose(window))
+	{
+		glfwPollEvents();
+	}
+	
+	glfwTerminate();
 	return 0;
 }
 
