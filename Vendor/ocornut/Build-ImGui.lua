@@ -12,8 +12,6 @@ files
 	"ImGui/*.cpp",
 	"ImGui/*.h",
 	"ImGui/backends/imgui_impl_glfw.cpp",
-	"ImGui/backends/imgui_impl_dx11.cpp",
-	"ImGui/backends/imgui_impl_dx12.cpp",
 	"ImGui/backends/imgui_impl_vulkan.cpp",
 }
 
@@ -27,6 +25,10 @@ includedirs
 filter "system:windows"
 systemversion "latest"
 defines { "_CRT_SECURE_NO_WARNINGS" }
+files {
+	"ImGui/backends/imgui_impl_dx11.cpp",
+	"ImGui/backends/imgui_impl_dx12.cpp",
+}
 
 filter "configurations:Debug"
 runtime "Debug"
