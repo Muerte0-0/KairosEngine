@@ -33,6 +33,7 @@ group "Core"
 group ""
 
 group "ThirdParty"
+	include "Vendor/GLFW/Build-GLFW.lua"
 	include "Vendor/ocornut/Build-Imgui.lua"
 group ""
 
