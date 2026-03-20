@@ -1,6 +1,7 @@
 [submodule "Vendor/GLFW"]
 	path = Vendor/GLFW
 	url = https://github.com/Muerte0-0/glfw-premake.git
+	branch = master
 [submodule "Vendor/ocornut/ImGui"]
 	path = Vendor/ocornut/ImGui
 	url = https://github.com/ocornut/imgui.git
