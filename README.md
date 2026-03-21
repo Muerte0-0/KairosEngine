@@ -22,8 +22,6 @@ Navigate to the Scripts folder in Terminal and Run:
 ### 🐧 Linux
 	chmod +x GenerateProjectFiles.sh
 	./GenerateProjectFiles.sh
-	cd .
-	gmake
 
 ## 🛠️ Building the Engine
 ### Prerequisites
@@ -39,3 +37,10 @@ Before building, make sure you have the following installed:
 - GLFW Dependencies
   - Kairos Engine includes GLFW as a submodule/source dependency and Builds it along the Engine.
   - Refer to the [GLFW Docs](https://www.glfw.org/docs/latest/compile.html) to Install any Dependencies that GLFW Requires.
+
+ ### To Build
+ 
+### 🪟 Windows -> Open The Solution file in Visual Studio or Rider and Build
+
+### 🐧 Linux -> Open the Project Directory in Terminal and Run:
+	gmake
