@@ -1,8 +1,8 @@
-#include "Engine.h"
-
 // -------- Entry Point -------- //
 #include "Engine/Core/EntryPoint.h"
 // ----------------------------- //
+
+#include "Engine.h"
 
 class Sandbox : public Engine::Application
 {

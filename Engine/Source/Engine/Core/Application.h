@@ -28,12 +28,12 @@ namespace Engine
 		void RaiseEvent(Event& event);
 		
 		template<typename TLayer>
-		requires is_base_of_v<Layer, TLayer>
+		requires std::is_base_of_v<Layer, TLayer>
 		void PushLayer()
 		{ m_LayerStack.push_back(CreateScope<Layer>()); }
 		
 		template<typename TLayer>
-		requires is_base_of_v<Layer, TLayer>
+		requires std::is_base_of_v<Layer, TLayer>
 		TLayer* GetLayer()
 		{
 			for (const auto& layer : m_LayerStack)
