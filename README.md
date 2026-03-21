@@ -22,6 +22,8 @@ Navigate to the Scripts folder in Terminal and Run:
 ### 🐧 Linux
 	chmod +x GenerateProjectFiles.sh
 	./GenerateProjectFiles.sh
+	cd .
+	gmake
 
 ## 🛠️ Building the Engine
 ### Prerequisites
