@@ -4,12 +4,14 @@
 
 #include "Engine.h"
 
+#include "EditorLayer.h"
+
 class Editor : public Engine::Application
 {
 public:
 	Editor()
 	{
-		//PushLayer<EditorLayer>();
+		PushLayer<EditorLayer>();
 	}
     
 	Engine::ApplicationSpecification GetApplicationSpecs() override

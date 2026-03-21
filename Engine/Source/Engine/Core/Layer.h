@@ -15,6 +15,7 @@ namespace Engine
 		
 		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnFixedUpdate(float deltaTime) {}
-		virtual void OnRender() {}	
-	};	
+		virtual void OnRender() {}
+		virtual void OnImGuiRender() {}
+	};
 }
