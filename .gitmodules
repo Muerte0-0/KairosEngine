@@ -11,3 +11,6 @@
 [submodule "Vendor/GLM"]
 	path = Vendor/GLM
 	url = https://github.com/g-truc/glm.git
+[submodule "Vendor/Assimp"]
+	path = Vendor/Assimp
+	url = https://github.com/Muerte0-0/assimp-premake.git

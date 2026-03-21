@@ -25,11 +25,13 @@ includedirs {
 	"%{IncludeDir.Vulkan}",
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.GLM}",
+	"%{IncludeDir.Assimp}",
 }
 
 links {
 	"GLFW",
 	"ImGui",
+	"Assimp",
 }
 
 filter "files:**.c"
