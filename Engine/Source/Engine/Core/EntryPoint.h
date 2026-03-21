@@ -1,8 +1,8 @@
 ﻿#pragma once
-#include "Base.h"
 #include "Engine/Core/Application.h"
 
 extern Engine::Application* Engine::CreateApplication(int argc, char** argv);
+
 inline bool g_ApplicationRunning = true;
 
 inline int Main(int argc, char** argv)
