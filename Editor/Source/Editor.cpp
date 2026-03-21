@@ -1,12 +1,10 @@
-#include "Engine.h"
-
 // -------- Entry Point -------- //
 #include "Engine/Core/EntryPoint.h"
 // ----------------------------- //
 
-using namespace Engine;
+#include "Engine.h"
 
-class Editor : public Application
+class Editor : public Engine::Application
 {
 public:
 	Editor()
@@ -14,12 +12,12 @@ public:
 		//PushLayer<EditorLayer>();
 	}
     
-	ApplicationSpecification GetApplicationSpecs() override
+	Engine::ApplicationSpecification GetApplicationSpecs() override
 	{
-		ApplicationSpecification appSpec;
+		Engine::ApplicationSpecification appSpec;
 		appSpec.Name = "Kairos Editor";
         
-		WindowSpecification windowSpec;
+		Engine::WindowSpecification windowSpec;
 		windowSpec.Title = "Kairos Editor";
 		windowSpec.Width = 1280;
 		windowSpec.Height = 720;
@@ -30,7 +28,7 @@ public:
 	}
 };
 
-Application* Engine::CreateApplication(int argc, char** argv)
+Engine::Application* Engine::CreateApplication(int argc, char** argv)
 {
 	return new Editor();
 }

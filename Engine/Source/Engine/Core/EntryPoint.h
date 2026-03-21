@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "Engine/Core/Base.h"
 #include "Engine/Core/Application.h"
 
 extern Engine::Application* Engine::CreateApplication(int argc, char** argv);
