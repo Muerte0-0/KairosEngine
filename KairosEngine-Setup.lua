@@ -24,7 +24,6 @@ ThirdPartyIntDir = "%{wks.location}/Intermediate/" .. OutputDir .. "/ThirdParty/
 
 group "Apps"
 	include "Editor/Build-Editor.lua"
-	include "Sandbox/Build-Sandbox.lua"
 	--include "ProjectBrowser/Build-ProjectBrowser.lua"
 group ""
 
@@ -38,4 +37,5 @@ group "ThirdParty"
 group ""
 
 group "Misc"
+	include "Sandbox/Build-Sandbox.lua"
 group ""

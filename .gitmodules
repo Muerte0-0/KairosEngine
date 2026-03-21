@@ -8,3 +8,6 @@
 [submodule "Vendor/GLFW"]
 	path = Vendor/GLFW
 	url = https://github.com/Muerte0-0/glfw-premake.git
+[submodule "Vendor/GLM"]
+	path = Vendor/GLM
+	url = https://github.com/g-truc/glm.git

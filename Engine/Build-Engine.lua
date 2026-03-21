@@ -24,6 +24,7 @@ includedirs {
 	"%{IncludeDir.GLFW}",
 	"%{IncludeDir.Vulkan}",
 	"%{IncludeDir.ImGui}",
+	"%{IncludeDir.GLM}",
 }
 
 links {

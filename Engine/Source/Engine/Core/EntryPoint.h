@@ -1,10 +1,26 @@
 ﻿#pragma once
-#include  "PlatformDetection.h"
+#include "Base.h"
+#include "Engine/Core/Application.h"
 
+extern Engine::Application* Engine::CreateApplication(int argc, char** argv);
 inline bool g_ApplicationRunning = true;
 
 inline int Main(int argc, char** argv)
 {
+	while (g_ApplicationRunning)
+	{
+		Engine::InitializeCore(); // Initialize the Core systems of the Engine
+        
+		Engine::Application* app = Engine::CreateApplication(argc, argv); // Create the Application Instance
+        
+		app->Initialize(); // Initialize Application
+		app->Run(); // Run the Application Loop
+		app->Shutdown(); // Shutdown Application
+        
+		delete app; // Clean up the Application instance
+        
+		Engine::ShutdownCore(); // Shutdown the Core systems of the Engine
+	}
 	
 	return 0;
 }

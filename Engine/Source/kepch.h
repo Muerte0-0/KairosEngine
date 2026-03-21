@@ -16,11 +16,13 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <assert.h>
 #include <limits>
 #include <algorithm>
 #include <functional>
 #include <optional>
 #include <ranges>
+#include <thread>
 
 #include <string>
 #include <array>
@@ -32,3 +34,5 @@
 #include <unordered_set>
 
 using namespace std;
+
+#include "Engine/Core/Base.h"

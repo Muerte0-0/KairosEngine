@@ -17,6 +17,7 @@ externalincludedirs {
 	"%{wks.location}/Engine/Source",
 	"%{wks.location}/ThirdParty/",
 	"%{IncludeDir.GLFW}",
+	"%{IncludeDir.GLM}",
 }
 
 links {
