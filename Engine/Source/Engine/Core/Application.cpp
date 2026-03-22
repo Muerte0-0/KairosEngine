@@ -101,7 +101,7 @@ namespace Engine
 			}
 			
 			float sleepTime = FIXED_FRAME_TIME - (GetTime() - currentTime);
-            
+			
 			if (sleepTime > 0)
 				this_thread::sleep_for(chrono::duration<float>(sleepTime));
 		}
@@ -147,12 +147,12 @@ namespace Engine
 		if (e.GetWidth() == 0 || e.GetHeight() == 0)
 		{
 			m_IsMinimized = true;
-			return false;
+			return true;
 		}
 
 		m_IsMinimized = false;
         
-		return true;
+		return false;
 	}
 
 	bool Application::OnWindowClosed(WindowClosedEvent& e)

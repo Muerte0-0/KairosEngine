@@ -18,7 +18,7 @@ namespace Engine
 	{
 	public:
 		Application();
-		~Application();
+		virtual ~Application();
 		
 		void Initialize();
 		void Shutdown();

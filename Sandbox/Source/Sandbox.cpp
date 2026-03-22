@@ -18,6 +18,7 @@ public:
 		appSpec.Name = "Sandbox";
         
 		Engine::WindowSpecification windowSpec;
+		windowSpec.Title = "Sandbox";
 		windowSpec.Width = 1280;
 		windowSpec.Height = 720;
 		windowSpec.CustomTitleBar = false;
