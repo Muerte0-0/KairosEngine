@@ -1,5 +1,6 @@
 ﻿#include "kepch.h"
 #include "Application.h"
+#include "Engine/Renderer/Renderer.h"
 
 #include <GLFW/glfw3.h>
 
@@ -39,6 +40,8 @@ namespace Engine
 		
 		m_Window = CreateRef<Window>(GetApplicationSpecs().WindowSpec);
 		m_Window->Create();
+		
+		Renderer::Init(API::Vulkan, m_Window->GetHandle());
 		
 		for (auto& layer : m_LayerStack)
 			layer->OnAttach();

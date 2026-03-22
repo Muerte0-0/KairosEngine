@@ -23,6 +23,10 @@
 #include <optional>
 #include <ranges>
 #include <thread>
+#include <chrono>
+#include <cstdlib>
+#include <cstring>
+#include <stdexcept>
 
 #include <string>
 #include <array>

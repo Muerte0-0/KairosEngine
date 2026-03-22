@@ -31,10 +31,6 @@ namespace Engine {
 			assert(false);
 		}
 
-		//glfwMakeContextCurrent(m_Handle);
-
-		//glfwSwapInterval(m_Specification.VSync ? 1 : 0);
-
 		glfwSetWindowUserPointer(m_Handle, this);
 		
 		glfwSetWindowCloseCallback(m_Handle, [](GLFWwindow* handle)
@@ -123,7 +119,7 @@ namespace Engine {
 
 	void Window::Update()
 	{
-		//glfwSwapBuffers(m_Handle);
+		
 	}
 
 	void Window::RaiseEvent(Event& event)
