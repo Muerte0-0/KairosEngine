@@ -3,6 +3,8 @@
 
 #include <vulkan/vulkan_raii.hpp>
 
+#include "VulkanDevice.h"
+
 namespace Engine
 {
 	static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
@@ -29,6 +31,8 @@ namespace Engine
 		vk::raii::Instance m_Instance = nullptr;
 		vk::raii::DebugUtilsMessengerEXT m_DebugMessenger = nullptr;
 		vk::raii::SurfaceKHR m_Surface = nullptr;
+		
+		Scope<VulkanDevice> m_VulkanDevice = nullptr;
 		
 		void CreateInstance();
 		std::vector<const char*> GetRequiredInstanceExtensions() const;

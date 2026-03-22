@@ -19,14 +19,14 @@ namespace Engine
 			break;
 #ifdef PLATFORM_WINDOWS
 		case API::DX11:
-			cerr << "API[Direct X 11]: Not Implemented" << "/n";
+			cerr << "API[Direct X 11]: Not Implemented" << "\n";
 			break;
 		case API::DX12:
-			cerr << "API[Direct X 12]: Not Implemented" << "/n";
+			cerr << "API[Direct X 12]: Not Implemented" << "\n";
 			break;
 #endif
 		default: 
-			cerr << "API: Unknown API" << "/n";
+			cerr << "API: Unknown API" << "\n";
 			break;
 		}
 
@@ -35,13 +35,16 @@ namespace Engine
 
 	void Renderer::BeginFrame()
 	{
+		s_API->BeginFrame();
 	}
 
 	void Renderer::EndFrame()
 	{
+		s_API->EndFrame();
 	}
 
 	void Renderer::Clear()
 	{
+		s_API->Clear();
 	}
 }

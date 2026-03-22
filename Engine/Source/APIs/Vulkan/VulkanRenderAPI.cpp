@@ -11,17 +11,26 @@ namespace Engine
 		"VK_LAYER_KHRONOS_validation"
 	};
 
+	const std::vector<const char *> requiredDeviceExtensions = {
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	  };
+	
 #ifdef NDEBUG
 	constexpr bool enableValidationLayers = false;
 #else
 	constexpr bool enableValidationLayers = true;
 #endif
-	
+
 	void VulkanRenderAPI::Init(void* windowHandle)
 	{
 		CreateInstance();
 		SetupDebugMessenger();
 		CreateSurface(windowHandle);
+		
+		m_VulkanDevice = CreateScope<VulkanDevice>(m_Instance, m_Surface, requiredDeviceExtensions);
+		
+		m_VulkanDevice->PickPhysicalDevice();
+		m_VulkanDevice->CreateLogicalDevice(enableValidationLayers, validationLayers);
 	}
 
 	void VulkanRenderAPI::BeginFrame()
