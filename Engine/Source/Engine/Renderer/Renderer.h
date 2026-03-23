@@ -10,6 +10,7 @@ namespace Engine
 		static void BeginFrame();
 		static void EndFrame();
 		static void Clear();
+		static void WindowResized();
 
 	private:
 		static Scope<RenderAPI> s_API;

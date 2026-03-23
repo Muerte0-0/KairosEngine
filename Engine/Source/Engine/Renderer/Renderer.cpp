@@ -47,4 +47,9 @@ namespace Engine
 	{
 		s_API->Clear();
 	}
+
+	void Renderer::WindowResized()
+	{
+		s_API->WindowResized();
+	}
 }

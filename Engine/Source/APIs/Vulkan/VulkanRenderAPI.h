@@ -26,6 +26,7 @@ namespace Engine
 		void EndFrame() override;
 		void SetClearColor(float r, float g, float b, float a) override;
 		void Clear() override;
+		void WindowResized() override;
 		
 	private:
 		vk::raii::Context m_Context;

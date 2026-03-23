@@ -36,9 +36,11 @@ namespace Engine
 		glfwSetErrorCallback(GLFWErrorCallback);
 		glfwInit();
 		
-		GetApplicationSpecs().WindowSpec.EventCallback = [this](Event& event) {RaiseEvent(event); };
+		WindowSpecification spec = GetApplicationSpecs().WindowSpec;
 		
-		m_Window = CreateRef<Window>(GetApplicationSpecs().WindowSpec);
+		spec.EventCallback = [this](Event& event) {RaiseEvent(event); };
+		
+		m_Window = CreateRef<Window>(spec);
 		m_Window->Create();
 		
 		Renderer::Init(API::Vulkan, m_Window->GetHandle());
@@ -152,7 +154,9 @@ namespace Engine
 			m_IsMinimized = true;
 			return true;
 		}
-
+		
+		Renderer::WindowResized();
+		
 		m_IsMinimized = false;
         
 		return false;

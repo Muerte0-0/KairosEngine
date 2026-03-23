@@ -54,6 +54,11 @@ namespace Engine
 	{
 	}
 
+	void VulkanRenderAPI::WindowResized()
+	{
+		m_VulkanSwapchain->Recreate();
+	}
+
 	void VulkanRenderAPI::CreateInstance()
 	{
 		constexpr vk::ApplicationInfo appInfo{
