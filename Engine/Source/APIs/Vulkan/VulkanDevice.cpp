@@ -1,5 +1,6 @@
 ﻿#include "kepch.h"
 #include "VulkanDevice.h"
+#include "VulkanUtils.h"
 
 namespace Engine
 {
@@ -57,7 +58,7 @@ namespace Engine
 				bool swapChainAdequate = false;
 	   			if (supportsAllRequiredExtensions)
 	   			{
-	   				SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device);
+	   				SwapChainSupportDetails swapChainSupport = VulkanUtils::QuerySwapChainSupport(device, m_Surface);
 	   				swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 	   				if (!swapChainAdequate) cout << "  - Inadequate swap chain support" << "\n";
 	   			}
@@ -204,35 +205,6 @@ namespace Engine
 		return indices;
 	}
 
-	SwapChainSupportDetails VulkanDevice::QuerySwapChainSupport(const vk::raii::PhysicalDevice& device) const
-	{
-		SwapChainSupportDetails details;
-
-		// Get surface capabilities
-		details.capabilities = device.getSurfaceCapabilitiesKHR(*m_Surface);
-
-		// Get surface formats
-		details.formats = device.getSurfaceFormatsKHR(*m_Surface);
-
-		// Get present modes
-		details.presentModes = device.getSurfacePresentModesKHR(*m_Surface);
-
-		return details;
-	}
-
-	uint32_t VulkanDevice::FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const
-	{
-		// Get memory properties
-		vk::PhysicalDeviceMemoryProperties memProperties = m_PhysicalDevice.getMemoryProperties();
-
-		// Find suitable memory type
-		for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++)
-			if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties)
-				return i;
-
-		throw runtime_error("Failed to find suitable memory type");
-	}
-
 	bool VulkanDevice::IsDeviceSuitable(const vk::raii::PhysicalDevice& device)
 	{
 		// Check queue families
@@ -245,7 +217,7 @@ namespace Engine
 		bool swapChainAdequate = false;
 		if (extensionsSupported)
 		{
-			SwapChainSupportDetails swapChainSupport = QuerySwapChainSupport(device);
+			SwapChainSupportDetails swapChainSupport = VulkanUtils::QuerySwapChainSupport(m_PhysicalDevice, m_Surface);
 			swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
 		}
 

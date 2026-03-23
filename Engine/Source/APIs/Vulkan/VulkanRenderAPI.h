@@ -4,6 +4,7 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include "VulkanDevice.h"
+#include "VulkanSwapchain.h"
 
 namespace Engine
 {
@@ -33,9 +34,10 @@ namespace Engine
 		vk::raii::SurfaceKHR m_Surface = nullptr;
 		
 		Scope<VulkanDevice> m_VulkanDevice = nullptr;
+		Scope<VulkanSwapchain> m_VulkanSwapchain = nullptr;
 		
 		void CreateInstance();
-		std::vector<const char*> GetRequiredInstanceExtensions() const;
+		vector<const char*> GetRequiredInstanceExtensions() const;
 		void SetupDebugMessenger();
 		void CreateSurface(void* windowHandle);
 	};

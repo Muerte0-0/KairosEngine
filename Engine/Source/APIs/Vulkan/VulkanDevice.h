@@ -15,16 +15,6 @@ namespace Engine
 
 		[[nodiscard]] bool isComplete() const { return graphicsFamily.has_value() && presentFamily.has_value() && computeFamily.has_value(); }
 	};
-
-	/**
-	 * @brief Structure for SwapChain support Details.
-	 */
-	struct SwapChainSupportDetails
-	{
-		vk::SurfaceCapabilitiesKHR capabilities;
-		vector<vk::SurfaceFormatKHR> formats;
-		vector<vk::PresentModeKHR> presentModes;
-	};
 	
 	class VulkanDevice
 	{
@@ -55,6 +45,21 @@ namespace Engine
 		*/
 		bool CreateLogicalDevice(bool enableValidationLayers, const std::vector<const char *> &validationLayers);
 
+		void WaitIdle() const { m_Device.waitIdle(); }
+		
+		/**
+		 * @brief Get the Instance.
+		 * @return The Instance.
+		*/
+		vk::raii::Instance &GetInstance() const { return m_Instance; }
+		
+		
+		/**
+		 * @brief Get the Surface.
+		 * @return The Surface KHR.
+		*/
+		vk::raii::SurfaceKHR &GetSurface() const { return m_Surface; }
+		
 		/**
 		 * @brief Get the physical device.
 		 * @return The physical device.
@@ -97,21 +102,6 @@ namespace Engine
 		 * @return The queue family indices.
 		*/
 		QueueFamilyIndices FindQueueFamilies(const vk::raii::PhysicalDevice &device) const;
-
-		/**
-		 * @brief Query swap chain support for a physical device.
-		 * @param device The physical device.
-		 * @return The swap chain support details.
-		 */
-		SwapChainSupportDetails QuerySwapChainSupport(const vk::raii::PhysicalDevice &device) const;
-
-		/**
-		 * @brief Find a memory type with the specified properties.
-		 * @param typeFilter The type filter.
-		 * @param properties The memory properties.
-		 * @return The memory type index.
-		 */
-		uint32_t FindMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) const;
 
   private:
 		vk::raii::Instance &m_Instance;

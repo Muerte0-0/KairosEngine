@@ -31,6 +31,11 @@ namespace Engine
 		
 		m_VulkanDevice->PickPhysicalDevice();
 		m_VulkanDevice->CreateLogicalDevice(enableValidationLayers, validationLayers);
+		
+		m_VulkanSwapchain = CreateScope<VulkanSwapchain>(*m_VulkanDevice, static_cast<GLFWwindow*>(windowHandle));
+		
+		m_VulkanSwapchain->Create();
+		m_VulkanSwapchain->CreateImageViews();
 	}
 
 	void VulkanRenderAPI::BeginFrame()
@@ -104,7 +109,7 @@ namespace Engine
 		m_Instance = vk::raii::Instance(m_Context, createInfo);
 	}
 	
-	std::vector<const char*> VulkanRenderAPI::GetRequiredInstanceExtensions() const
+	vector<const char*> VulkanRenderAPI::GetRequiredInstanceExtensions() const
 	{
 		uint32_t glfwExtensionCount = 0;
 		auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -141,7 +146,7 @@ namespace Engine
 		}
 		catch (vk::SystemError& err)
 		{
-			cout << "Debug messenger not available. Validation layers may not be enabled." << err.what() << endl;
+			cout << "Debug messenger not available. Validation layers may not be enabled." << err.what() << "\n";
 		}
 	}
 
