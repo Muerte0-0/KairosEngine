@@ -33,5 +33,27 @@ namespace Engine
 		 * @return The swap chain support details.
 		*/
 		static SwapChainSupportDetails QuerySwapChainSupport(const vk::raii::PhysicalDevice &device, const vk::raii::SurfaceKHR& surface);
+
+		static vk::Format FindSupportedFormat(const vk::raii::PhysicalDevice& physicalDevice,
+			const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
+		
+		/**
+		 * @brief Helper Function to Create an Image View
+		 * @param device The Logical Device
+		 * @param image The Image used to Create the Image View
+		 * @param format The Format
+		 * @param aspectFlags The Aspect Flags
+		 * @param mipLevels Mip Map Levels 
+		 * @return The Image View
+		*/
+		static vk::raii::ImageView CreateImageView(const vk::raii::Device& device, vk::raii::Image& image, vk::Format format,
+			vk::ImageAspectFlags aspectFlags, uint32_t mipLevels);
+		
+		static void CreateImage(const vk::raii::Device& device, const vk::raii::PhysicalDevice& physicalDevice, uint32_t width, uint32_t height, uint32_t mipLevels, 
+			vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling, 
+			vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Image& image, vk::raii::DeviceMemory& imageMemory);
+		
+		static Scope<vk::raii::CommandBuffer> BeginSingleTimeCommands(const vk::raii::Device& device, const vk::raii::CommandPool& commandPool);
+		static void EndSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer, const vk::raii::Queue& queue);
 	};
 }

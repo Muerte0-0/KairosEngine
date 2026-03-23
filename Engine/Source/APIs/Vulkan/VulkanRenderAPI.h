@@ -24,7 +24,6 @@ namespace Engine
 		void Init(void* windowHandle) override;
 		void BeginFrame() override;
 		void EndFrame() override;
-		void SetClearColor(float r, float g, float b, float a) override;
 		void Clear() override;
 		void WindowResized() override;
 		

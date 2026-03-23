@@ -42,6 +42,16 @@ namespace Engine
 		bool Recreate();
 
 		/**
+		 * @brief Create the Color Resources
+		*/
+		void CreateColorResources();
+		
+		/**
+		 * @brief Create the Depth Resources
+		*/
+		void CreateDepthResources();
+		
+		/**
 		 * @brief Get the swap chain.
 		 * @return The swap chain.
 		*/
@@ -86,9 +96,19 @@ namespace Engine
 		// Initialized at swapchain creation and updated as we transition.
 		std::vector<vk::ImageLayout> m_SwapChainImageLayouts;
 		
+		vk::raii::Image m_ColorImage = nullptr;
+		vk::raii::DeviceMemory m_ColorImageMemory = nullptr;
+		vk::raii::ImageView m_ColorImageView = nullptr;
+
+		vk::raii::Image m_DepthImage = nullptr;
+		vk::raii::DeviceMemory m_DepthImageMemory = nullptr;
+		vk::raii::ImageView m_DepthImageView = nullptr;
+		
 		// Helper functions
-		vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const vector<vk::SurfaceFormatKHR> &availableFormats);
-		vk::PresentModeKHR ChooseSwapPresentMode(const vector<vk::PresentModeKHR> &availablePresentModes);
-		vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR &capabilities);
+		vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const vector<vk::SurfaceFormatKHR> &availableFormats) const;
+		vk::PresentModeKHR ChooseSwapPresentMode(const vector<vk::PresentModeKHR> &availablePresentModes) const;
+		vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR &capabilities) const;
+		
+		vk::Format FindDepthFormat() const;
 	};
 }

@@ -139,7 +139,32 @@ namespace Engine
 		return true;
 	}
 
-	vk::SurfaceFormatKHR VulkanSwapchain::ChooseSwapSurfaceFormat(const vector<vk::SurfaceFormatKHR>& availableFormats)
+	void VulkanSwapchain::CreateColorResources()
+	{
+		vk::Format colorFormat = m_SwapChainImageFormat;
+
+		VulkanUtils::CreateImage(m_VulkanDevice.GetDevice(), m_VulkanDevice.GetPhysicalDevice(),
+			m_SwapChainExtent.width, m_SwapChainExtent.height, 1, vk::SampleCountFlagBits::e1, 
+			colorFormat, vk::ImageTiling::eOptimal,
+			vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal,
+			m_ColorImage, m_ColorImageMemory);
+
+		m_ColorImageView = VulkanUtils::CreateImageView(m_VulkanDevice.GetDevice(), m_ColorImage, colorFormat, vk::ImageAspectFlagBits::eColor, 1);
+	}
+
+	void VulkanSwapchain::CreateDepthResources()
+	{
+		vk::Format depthFormat = FindDepthFormat();
+
+		VulkanUtils::CreateImage(m_VulkanDevice.GetDevice(), m_VulkanDevice.GetPhysicalDevice(), 
+			m_SwapChainExtent.width, m_SwapChainExtent.height, 1, vk::SampleCountFlagBits::e1,
+			depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal,
+			m_DepthImage, m_DepthImageMemory);
+
+		m_DepthImageView = VulkanUtils::CreateImageView(m_VulkanDevice.GetDevice(), m_DepthImage, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
+	}
+
+	vk::SurfaceFormatKHR VulkanSwapchain::ChooseSwapSurfaceFormat(const vector<vk::SurfaceFormatKHR>& availableFormats) const
 	{
 		// Look for SRGB format
 		for (const auto& availableFormat : availableFormats) {
@@ -152,7 +177,7 @@ namespace Engine
 		return availableFormats[0];
 	}
 
-	vk::PresentModeKHR VulkanSwapchain::ChooseSwapPresentMode(const vector<vk::PresentModeKHR>& availablePresentModes)
+	vk::PresentModeKHR VulkanSwapchain::ChooseSwapPresentMode(const vector<vk::PresentModeKHR>& availablePresentModes) const
 	{
 		// Look for mailbox mode (triple buffering)
 		for (const auto& availablePresentMode : availablePresentModes) {
@@ -165,7 +190,7 @@ namespace Engine
 		return vk::PresentModeKHR::eFifo;
 	}
 
-	vk::Extent2D VulkanSwapchain::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities)
+	vk::Extent2D VulkanSwapchain::ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities) const
 	{
 		if (capabilities.currentExtent.width != (std::numeric_limits<uint32_t>::max)())
 			return capabilities.currentExtent;
@@ -176,5 +201,13 @@ namespace Engine
 		return {
 			std::clamp<uint32_t>(width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
 			std::clamp<uint32_t>(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height) };
+	}
+
+	vk::Format VulkanSwapchain::FindDepthFormat() const
+	{
+		return VulkanUtils::FindSupportedFormat(m_VulkanDevice.GetPhysicalDevice(),
+			{ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
+			vk::ImageTiling::eOptimal,
+			vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 	}
 }

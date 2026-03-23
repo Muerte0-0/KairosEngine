@@ -36,6 +36,9 @@ namespace Engine
 		
 		m_VulkanSwapchain->Create();
 		m_VulkanSwapchain->CreateImageViews();
+		
+		m_VulkanSwapchain->CreateColorResources();
+		m_VulkanSwapchain->CreateDepthResources();
 	}
 
 	void VulkanRenderAPI::BeginFrame()
@@ -43,10 +46,6 @@ namespace Engine
 	}
 
 	void VulkanRenderAPI::EndFrame()
-	{
-	}
-
-	void VulkanRenderAPI::SetClearColor(float r, float g, float b, float a)
 	{
 	}
 
