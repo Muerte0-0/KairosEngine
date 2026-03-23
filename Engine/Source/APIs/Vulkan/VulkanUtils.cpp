@@ -104,4 +104,37 @@ namespace Engine
 		queue.submit(submitInfo, nullptr);
 		queue.waitIdle();
 	}
+
+	void VulkanUtils::TransitionImageLayout(vk::CommandBuffer commandBuffer, vk::Image image, vk::ImageLayout old_layout, vk::ImageLayout new_layout,
+		vk::AccessFlags2 src_access_mask, vk::AccessFlags2 dst_access_mask, vk::PipelineStageFlags2 src_stage_mask,
+		vk::PipelineStageFlags2 dst_stage_mask, vk::ImageAspectFlags image_aspect_flags)
+	{
+		vk::ImageMemoryBarrier2 barrier;
+
+		barrier.srcStageMask = src_stage_mask;
+		barrier.srcAccessMask = src_access_mask;
+		barrier.dstStageMask = dst_stage_mask;
+		barrier.dstAccessMask = dst_access_mask;
+		barrier.oldLayout = old_layout;
+		barrier.newLayout = new_layout;
+		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		barrier.image = image;
+		
+		vk::ImageSubresourceRange subresRange;
+		subresRange.aspectMask = image_aspect_flags;
+		subresRange.baseMipLevel = 0;
+		subresRange.levelCount = 1;
+		subresRange.baseArrayLayer = 0;
+		subresRange.layerCount = 1;
+
+		barrier.subresourceRange = subresRange;
+
+		vk::DependencyInfo dependency_info;
+		dependency_info.dependencyFlags = {};
+		dependency_info.imageMemoryBarrierCount = 1;
+		dependency_info.pImageMemoryBarriers = &barrier;
+
+		commandBuffer.pipelineBarrier2(dependency_info);
+	}
 }

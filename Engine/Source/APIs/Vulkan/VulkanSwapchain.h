@@ -10,6 +10,7 @@ namespace Engine
 	public:
 		/**
 		  * @param device The Vulkan device.
+		  * @param windowHandle The Window Handle
 		*/
 		VulkanSwapchain(VulkanDevice &device, GLFWwindow* windowHandle);
 
@@ -52,6 +53,11 @@ namespace Engine
 		void CreateDepthResources();
 		
 		/**
+		 * @brief Setup Dynamic Rendering
+		*/
+		bool SetupDynamicRendering();
+		
+		/**
 		 * @brief Get the swap chain.
 		 * @return The swap chain.
 		*/
@@ -81,6 +87,17 @@ namespace Engine
 		*/
 		const std::vector<vk::raii::ImageView> &GetSwapChainImageViews() const { return m_SwapChainImageViews; }
 		
+		const vk::raii::Image &GetColorImage() const { return m_ColorImage; }
+		const vk::raii::ImageView &GetColorImageView() const { return m_ColorImageView; }
+		const vk::raii::Image &GetDepthImage() const { return m_DepthImage; }
+		const vk::raii::ImageView &GetDepthImageView() const { return m_DepthImageView; }
+		
+		/**
+		 * @brief Get the Rendering Info.
+		 * @return The Rendering Info.
+		*/
+		const vk::RenderingInfo &GetRenderingInfo(uint32_t imageIndex);
+		
 	private:
 		// Vulkan device
 		VulkanDevice &m_VulkanDevice;
@@ -96,6 +113,8 @@ namespace Engine
 		// Initialized at swapchain creation and updated as we transition.
 		std::vector<vk::ImageLayout> m_SwapChainImageLayouts;
 		
+		vk::SampleCountFlagBits m_MSAA_Samples = vk::SampleCountFlagBits::e1;
+		
 		vk::raii::Image m_ColorImage = nullptr;
 		vk::raii::DeviceMemory m_ColorImageMemory = nullptr;
 		vk::raii::ImageView m_ColorImageView = nullptr;
@@ -103,6 +122,11 @@ namespace Engine
 		vk::raii::Image m_DepthImage = nullptr;
 		vk::raii::DeviceMemory m_DepthImageMemory = nullptr;
 		vk::raii::ImageView m_DepthImageView = nullptr;
+		
+		// Dynamic rendering info
+		vk::RenderingInfo m_RenderingInfo;
+		vector<vk::RenderingAttachmentInfo> m_ColorAttachments;
+		vk::RenderingAttachmentInfo m_DepthAttachment;
 		
 		// Helper functions
 		vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(const vector<vk::SurfaceFormatKHR> &availableFormats) const;

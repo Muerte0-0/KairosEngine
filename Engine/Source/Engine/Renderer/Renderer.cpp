@@ -38,16 +38,16 @@ namespace Engine
 		s_API->BeginFrame();
 	}
 
+	void Renderer::DrawFrame()
+	{
+		s_API->DrawFrame();
+	}
+	
 	void Renderer::EndFrame()
 	{
 		s_API->EndFrame();
 	}
-
-	void Renderer::Clear()
-	{
-		s_API->Clear();
-	}
-
+	
 	void Renderer::WindowResized()
 	{
 		s_API->WindowResized();

@@ -5,6 +5,7 @@
 
 #include "VulkanDevice.h"
 #include "VulkanSwapchain.h"
+#include "VulkanCommand.h"
 
 namespace Engine
 {
@@ -23,8 +24,8 @@ namespace Engine
 	public:
 		void Init(void* windowHandle) override;
 		void BeginFrame() override;
+		void DrawFrame() override;
 		void EndFrame() override;
-		void Clear() override;
 		void WindowResized() override;
 		
 	private:
@@ -35,6 +36,13 @@ namespace Engine
 		
 		Scope<VulkanDevice> m_VulkanDevice = nullptr;
 		Scope<VulkanSwapchain> m_VulkanSwapchain = nullptr;
+		Scope<VulkanCommand> m_VulkanCommand = nullptr;
+		
+		uint32_t m_CurrentImageIndex = 0;
+		uint32_t m_CurrentFrameIndex = 0;
+		
+		bool m_FrameValid = true;
+		bool m_FramebufferResized = false;
 		
 		void CreateInstance();
 		vector<const char*> GetRequiredInstanceExtensions() const;

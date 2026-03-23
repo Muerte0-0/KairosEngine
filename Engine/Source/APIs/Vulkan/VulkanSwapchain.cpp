@@ -5,7 +5,18 @@
 namespace Engine
 {
 	VulkanSwapchain::VulkanSwapchain(VulkanDevice& device, GLFWwindow* windowHandle) : m_VulkanDevice(device), m_Window(windowHandle)
-	{}
+	{
+		vk::PhysicalDeviceProperties physicalDeviceProperties = device.GetPhysicalDevice().getProperties();
+		vk::SampleCountFlags counts = physicalDeviceProperties.limits.framebufferColorSampleCounts & physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+
+		if (counts & vk::SampleCountFlagBits::e64) { m_MSAA_Samples = vk::SampleCountFlagBits::e64; }
+		else if (counts & vk::SampleCountFlagBits::e32) { m_MSAA_Samples = vk::SampleCountFlagBits::e32; }
+		else if (counts & vk::SampleCountFlagBits::e16) { m_MSAA_Samples = vk::SampleCountFlagBits::e16; }
+		else if (counts & vk::SampleCountFlagBits::e8) { m_MSAA_Samples = vk::SampleCountFlagBits::e8; }
+		else if (counts & vk::SampleCountFlagBits::e4) { m_MSAA_Samples = vk::SampleCountFlagBits::e4; }
+		else if (counts & vk::SampleCountFlagBits::e2) { m_MSAA_Samples = vk::SampleCountFlagBits::e2; }
+		else { m_MSAA_Samples = vk::SampleCountFlagBits::e1; }
+	}
 
 	VulkanSwapchain::~VulkanSwapchain()
 	{
@@ -78,7 +89,7 @@ namespace Engine
 			
 		} catch (const exception& e)
 		{
-			cerr << "Failed to create swap chain: " << e.what() << "\n";
+			cerr << "Failed to create Swapchain: " << e.what() << "\n";
 			return false;
 		}
 	}
@@ -116,7 +127,7 @@ namespace Engine
 			
 		} catch (const exception& e)
 		{
-			cerr << "Failed to create image views: " << e.what() << "\n";
+			cerr << "Failed to create Image views: " << e.what() << "\n";
 			return false;
 		}
 	}
@@ -125,16 +136,30 @@ namespace Engine
 	{
 		m_SwapChainImageViews.clear();
 		m_SwapChain = vk::raii::SwapchainKHR(nullptr);
+		
+		m_ColorAttachments.clear();
 	}
 
 	bool VulkanSwapchain::Recreate()
 	{
+		int width = 0, height = 0;
+		glfwGetFramebufferSize(m_Window, &width, &height);
+
+		while (width == 0 || height == 0)
+		{
+			glfwGetFramebufferSize(m_Window, &width, &height);
+			glfwWaitEvents();
+		}
+		
 		m_VulkanDevice.WaitIdle();
 		
 		Cleanup();
 		
 		Create();
 		CreateImageViews();
+		CreateColorResources();
+		CreateDepthResources();
+		SetupDynamicRendering();
 		
 		return true;
 	}
@@ -144,7 +169,7 @@ namespace Engine
 		vk::Format colorFormat = m_SwapChainImageFormat;
 
 		VulkanUtils::CreateImage(m_VulkanDevice.GetDevice(), m_VulkanDevice.GetPhysicalDevice(),
-			m_SwapChainExtent.width, m_SwapChainExtent.height, 1, vk::SampleCountFlagBits::e1, 
+			m_SwapChainExtent.width, m_SwapChainExtent.height, 1, m_MSAA_Samples, 
 			colorFormat, vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eTransientAttachment | vk::ImageUsageFlagBits::eColorAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal,
 			m_ColorImage, m_ColorImageMemory);
@@ -157,11 +182,60 @@ namespace Engine
 		vk::Format depthFormat = FindDepthFormat();
 
 		VulkanUtils::CreateImage(m_VulkanDevice.GetDevice(), m_VulkanDevice.GetPhysicalDevice(), 
-			m_SwapChainExtent.width, m_SwapChainExtent.height, 1, vk::SampleCountFlagBits::e1,
+			m_SwapChainExtent.width, m_SwapChainExtent.height, 1, m_MSAA_Samples,
 			depthFormat, vk::ImageTiling::eOptimal, vk::ImageUsageFlagBits::eDepthStencilAttachment, vk::MemoryPropertyFlagBits::eDeviceLocal,
 			m_DepthImage, m_DepthImageMemory);
 
 		m_DepthImageView = VulkanUtils::CreateImageView(m_VulkanDevice.GetDevice(), m_DepthImage, depthFormat, vk::ImageAspectFlagBits::eDepth, 1);
+	}
+
+	bool VulkanSwapchain::SetupDynamicRendering()
+	{
+		try
+		{
+			vk::ClearValue clearColor = vk::ClearColorValue(0.01f, 0.01f, 0.01f, 1.0f);
+			vk::ClearValue clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
+			
+			// Create color attachment
+			vk::RenderingAttachmentInfo colorAttachment;
+			colorAttachment.imageView = m_ColorImageView;
+			colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+			colorAttachment.resolveMode = vk::ResolveModeFlagBits::eAverage;
+			colorAttachment.resolveImageView = m_SwapChainImageViews[0];
+			colorAttachment.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+			colorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
+			colorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
+			colorAttachment.clearValue = clearColor;
+			m_ColorAttachments.push_back(colorAttachment);
+
+			// Create depth attachment
+			m_DepthAttachment.imageView = m_DepthImageView;
+			m_DepthAttachment.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+			m_DepthAttachment.loadOp = vk::AttachmentLoadOp::eClear;
+			m_DepthAttachment.storeOp = vk::AttachmentStoreOp::eDontCare;
+			m_DepthAttachment.clearValue = clearDepth;
+
+			// Create rendering info
+			m_RenderingInfo.renderArea = vk::Rect2D(vk::Offset2D(0, 0), m_SwapChainExtent);
+			m_RenderingInfo.layerCount = 1;
+			m_RenderingInfo.colorAttachmentCount = static_cast<uint32_t>(m_ColorAttachments.size());
+			m_RenderingInfo.pColorAttachments = m_ColorAttachments.data();
+			m_RenderingInfo.pDepthAttachment = &m_DepthAttachment;
+			
+			return true;
+			
+		}
+		catch (const exception& e)
+		{
+			cerr << "Failed to setup dynamic rendering: " << e.what() << "\n";
+			return false;
+		}
+	}
+
+	const vk::RenderingInfo& VulkanSwapchain::GetRenderingInfo(uint32_t imageIndex)
+	{
+		m_ColorAttachments[0].resolveImageView = m_SwapChainImageViews[imageIndex];
+		return m_RenderingInfo;
 	}
 
 	vk::SurfaceFormatKHR VulkanSwapchain::ChooseSwapSurfaceFormat(const vector<vk::SurfaceFormatKHR>& availableFormats) const

@@ -103,6 +103,10 @@ namespace Engine
 					layer->OnRender();
 			
 				m_Window->Update();
+				
+				Renderer::BeginFrame();
+				Renderer::DrawFrame();
+				Renderer::EndFrame();
 			}
 			
 			float sleepTime = FIXED_FRAME_TIME - (GetTime() - currentTime);

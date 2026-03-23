@@ -8,8 +8,8 @@ namespace Engine
 	public:
 		static void Init(API api, void* windowHandle);
 		static void BeginFrame();
+		static void DrawFrame();
 		static void EndFrame();
-		static void Clear();
 		static void WindowResized();
 
 	private:

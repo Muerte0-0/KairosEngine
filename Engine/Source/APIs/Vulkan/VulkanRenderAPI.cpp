@@ -4,6 +4,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include "VulkanUtils.h"
+
 namespace Engine
 {
 	const std::vector<char const*> validationLayers =
@@ -12,7 +14,9 @@ namespace Engine
 	};
 
 	const std::vector<const char *> requiredDeviceExtensions = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		vk::KHRSwapchainExtensionName,
+		vk::KHRSpirv14ExtensionName,
+		vk::KHRSynchronization2ExtensionName
 	  };
 	
 #ifdef NDEBUG
@@ -20,6 +24,8 @@ namespace Engine
 #else
 	constexpr bool enableValidationLayers = true;
 #endif
+	
+	constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 
 	void VulkanRenderAPI::Init(void* windowHandle)
 	{
@@ -39,23 +45,171 @@ namespace Engine
 		
 		m_VulkanSwapchain->CreateColorResources();
 		m_VulkanSwapchain->CreateDepthResources();
+		m_VulkanSwapchain->SetupDynamicRendering();
+		
+		m_VulkanCommand = CreateScope<VulkanCommand>(*m_VulkanDevice);
+		
+		m_VulkanCommand->CreateCommandPool();
+		m_VulkanCommand->CreateCommandBuffers(MAX_FRAMES_IN_FLIGHT);
+		m_VulkanCommand->CreateSyncObjects(static_cast<uint32_t>(m_VulkanSwapchain->GetSwapChainImages().size()), MAX_FRAMES_IN_FLIGHT);
 	}
 
 	void VulkanRenderAPI::BeginFrame()
 	{
+		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
+
+		auto fenceResult = m_VulkanDevice->GetDevice().waitForFences(*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex], vk::True, UINT64_MAX);
+
+		if (fenceResult != vk::Result::eSuccess)
+			throw std::runtime_error("failed to wait for fence!");
+
+		auto [result, imageIndex] = m_VulkanSwapchain->GetSwapChain().acquireNextImage(UINT64_MAX,
+			*m_VulkanCommand->GetPresentCompleteSemaphores()[m_CurrentFrameIndex], nullptr);
+		
+		if (result == vk::Result::eErrorOutOfDateKHR)
+		{
+			m_VulkanSwapchain->Recreate();
+			m_FrameValid = false;
+			return;
+		}
+
+		if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
+		{
+			assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady);
+			throw runtime_error("Failed to acquire Swapchain Image!");
+		}
+		
+		if (result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR)
+			m_CurrentImageIndex = imageIndex;
+
+		//UpdateUniformBuffer(m_CurrentFrameIndex);
+
+		m_VulkanDevice->GetDevice().resetFences(*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex]);
+
+		commandBuffer.reset();
+		
+		commandBuffer.begin({});
+		
+		// Before starting rendering, transition the swapchain image to COLOR_ATTACHMENT_OPTIMAL
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			m_VulkanSwapchain->GetSwapChainImages()[m_CurrentImageIndex],
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eColorAttachmentOptimal,
+			{},															// srcAccessMask (no need to wait for previous operations)
+			vk::AccessFlagBits2::eColorAttachmentWrite,					// dstAccessMask
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// srcStage
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// dstStage
+			vk::ImageAspectFlagBits::eColor
+		);
+		
+		// Transition the multisampled color image to COLOR_ATTACHMENT_OPTIMAL
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			*m_VulkanSwapchain->GetColorImage(),
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eColorAttachmentOptimal,
+			vk::AccessFlagBits2::eColorAttachmentWrite,					// srcAccessMask
+			vk::AccessFlagBits2::eColorAttachmentWrite,					// dstAccessMask
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// srcStage
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// dstStage
+			vk::ImageAspectFlagBits::eColor
+		);
+
+		// Transition the depth image to DEPTH_ATTACHMENT_OPTIMAL
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			*m_VulkanSwapchain->GetDepthImage(),
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eDepthAttachmentOptimal,
+			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+			vk::ImageAspectFlagBits::eDepth);
+		
+		commandBuffer.beginRendering(m_VulkanSwapchain->GetRenderingInfo(m_CurrentImageIndex));
+		
+		m_FrameValid = true;
 	}
 
+	void VulkanRenderAPI::DrawFrame()
+	{
+		if (!m_FrameValid) return;
+		
+		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
+		
+		//commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, GetGraphicsPipeline());
+		//commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f,
+		//	static_cast<float>(m_VulkanSwapchain->GetSwapChainExtent().width),
+		//	static_cast<float>(m_VulkanSwapchain->GetSwapChainExtent().height), 0.0f, 1.0f));
+		//commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_VulkanSwapchain->GetSwapChainExtent()));
+		//commandBuffer.bindVertexBuffers(0, *vertexBuffer, { 0 });
+		//commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
+		//commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIndex], nullptr);
+		//commandBuffer.draw(1, 0, 0, 0);
+	}
+	
 	void VulkanRenderAPI::EndFrame()
 	{
-	}
+		if (!m_FrameValid) return;
+		
+		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
+		
+		commandBuffer.endRendering();
+		
+		// After rendering, transition the swapchain image to PRESENT_SRC
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			m_VulkanSwapchain->GetSwapChainImages()[m_CurrentImageIndex],
+			vk::ImageLayout::eColorAttachmentOptimal,
+			vk::ImageLayout::ePresentSrcKHR,
+			vk::AccessFlagBits2::eColorAttachmentWrite,					// srcAccessMask
+			{},															// dstAccessMask
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// srcStage
+			vk::PipelineStageFlagBits2::eBottomOfPipe,					// dstStage
+			vk::ImageAspectFlagBits::eColor
+		);
+		commandBuffer.end();
+		
+		vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
 
-	void VulkanRenderAPI::Clear()
-	{
+		vk::SubmitInfo submitInfo;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &*m_VulkanCommand->GetPresentCompleteSemaphores()[m_CurrentFrameIndex];
+		submitInfo.pWaitDstStageMask = &waitDestinationStageMask;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &*commandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &*m_VulkanCommand->GetRenderFinishedSemaphores()[m_CurrentFrameIndex];
+
+		m_VulkanDevice->GetGraphicsQueue().submit(submitInfo, *m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex]);
+
+		vk::PresentInfoKHR presentInfoKHR;
+		presentInfoKHR.waitSemaphoreCount = 1;
+		presentInfoKHR.pWaitSemaphores = &*m_VulkanCommand->GetRenderFinishedSemaphores()[m_CurrentFrameIndex];
+		presentInfoKHR.swapchainCount = 1;
+		presentInfoKHR.pSwapchains = &*m_VulkanSwapchain->GetSwapChain();
+		presentInfoKHR.pImageIndices = &m_CurrentImageIndex;
+
+		auto result = m_VulkanDevice->GetGraphicsQueue().presentKHR(presentInfoKHR);
+
+		if ((result == vk::Result::eSuboptimalKHR) || (result == vk::Result::eErrorOutOfDateKHR) || m_FramebufferResized)
+		{
+			m_FramebufferResized = false;
+			m_VulkanSwapchain->Recreate();
+		}
+		else
+			// There are no other success codes than eSuccess; on any error code, presentKHR already threw an exception.
+			assert(result == vk::Result::eSuccess);
+		
+		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
 
 	void VulkanRenderAPI::WindowResized()
 	{
 		m_VulkanSwapchain->Recreate();
+		m_VulkanCommand->RecreatePresentSemaphores(m_VulkanSwapchain->GetSwapChainImages().size());
 	}
 
 	void VulkanRenderAPI::CreateInstance()

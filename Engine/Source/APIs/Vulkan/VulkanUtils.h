@@ -55,5 +55,16 @@ namespace Engine
 		
 		static Scope<vk::raii::CommandBuffer> BeginSingleTimeCommands(const vk::raii::Device& device, const vk::raii::CommandPool& commandPool);
 		static void EndSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer, const vk::raii::Queue& queue);
+		
+		static void TransitionImageLayout(
+			vk::CommandBuffer			commandBuffer, 
+			vk::Image					image,
+			vk::ImageLayout				old_layout,
+			vk::ImageLayout				new_layout,
+			vk::AccessFlags2			src_access_mask,
+			vk::AccessFlags2			dst_access_mask,
+			vk::PipelineStageFlags2		src_stage_mask,
+			vk::PipelineStageFlags2		dst_stage_mask,
+			vk::ImageAspectFlags		image_aspect_flags);
 	};
 }
