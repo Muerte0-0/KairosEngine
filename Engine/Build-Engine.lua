@@ -12,6 +12,7 @@ pchsource "Source/kepch.cpp"
 
 defines {
 	"_CRT_SECURE_NO_WARNINGS",
+	"VK_NO_PROTOTYPES",
 }
 
 files {
@@ -59,7 +60,7 @@ filter "system:linux"
 
 links {
 	"X11",
-	"vulkan",
+	"%{VulkanSDK}/lib/vulkan"
 }
 
 filter "configurations:Debug"

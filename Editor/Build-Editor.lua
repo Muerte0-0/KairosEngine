@@ -3,6 +3,7 @@ project "Editor"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "off"
+	linkgroups "On"
 
 targetdir (ProjectBinDir)
 objdir (ProjectIntDir)
@@ -31,6 +32,9 @@ filter "system:windows"
 links {
 	"Ws2_32.lib",
 }
+
+filter "system:linux"
+systemversion "latest"
 
 filter "configurations:Debug"
         defines { "DEBUG", "_DEBUG", "KE_DEBUG" }
