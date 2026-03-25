@@ -151,6 +151,8 @@ namespace Engine
 			// Create the logical device
 			m_Device = vk::raii::Device(m_PhysicalDevice, createInfo);
 			
+			VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_Device);
+			
 			// Get queue handles
 			m_GraphicsQueue = vk::raii::Queue(m_Device, m_QueueFamilyIndices.graphicsFamily.value(), 0);
 			m_PresentQueue = vk::raii::Queue(m_Device, m_QueueFamilyIndices.presentFamily.value(), 0);

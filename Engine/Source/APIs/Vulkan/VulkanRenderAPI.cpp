@@ -4,6 +4,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
+
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_raii.hpp>
+
 #include "VulkanUtils.h"
 
 namespace Engine
@@ -17,7 +23,7 @@ namespace Engine
 		vk::KHRSwapchainExtensionName,
 		vk::KHRSpirv14ExtensionName,
 		vk::KHRSynchronization2ExtensionName
-	  };
+	};
 	
 #ifdef NDEBUG
 	constexpr bool enableValidationLayers = false;
@@ -29,6 +35,17 @@ namespace Engine
 
 	void VulkanRenderAPI::Init(void* windowHandle)
 	{
+		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddrPtr = 
+		reinterpret_cast<PFN_vkGetInstanceProcAddr>(
+			glfwGetInstanceProcAddress(nullptr, "vkGetInstanceProcAddr")
+		);
+    
+		if (!vkGetInstanceProcAddrPtr)
+			throw runtime_error("Failed to get vkGetInstanceProcAddr");
+    
+		// Initialize the global dispatcher
+		VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddrPtr);
+		
 		CreateInstance();
 		SetupDebugMessenger();
 		CreateSurface(windowHandle);
@@ -214,13 +231,14 @@ namespace Engine
 
 	void VulkanRenderAPI::CreateInstance()
 	{
-		constexpr vk::ApplicationInfo appInfo{
+		vk::ApplicationInfo appInfo{
 			"Engine",
 			VK_MAKE_VERSION(1, 0, 0),
 			"No Engine",
-			VK_MAKE_VERSION(1, 0, 0),
-			vk::ApiVersion14
-			};
+			VK_MAKE_VERSION(1, 0, 0)
+		};
+		
+		appInfo.apiVersion = VK_API_VERSION_1_3;
 		
 		// Get the required layers
 		std::vector<char const*> requiredLayers;
@@ -265,6 +283,7 @@ namespace Engine
 		createInfo.ppEnabledExtensionNames = requiredExtensions.data();
 
 		m_Instance = vk::raii::Instance(m_Context, createInfo);
+		VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_Instance);
 	}
 	
 	vector<const char*> VulkanRenderAPI::GetRequiredInstanceExtensions() const
