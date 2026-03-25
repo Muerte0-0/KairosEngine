@@ -27,6 +27,8 @@ includedirs {
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.GLM}",
 	"%{IncludeDir.Assimp}",
+	"%{IncludeDir.JSON}",
+	"%{IncludeDir.mINI}",
 }
 
 links {
