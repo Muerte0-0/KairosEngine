@@ -18,6 +18,10 @@ OutputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 ProjectBinDir = "%{wks.location}/Binaries/" .. OutputDir .. "/%{prj.name}"
 ProjectIntDir = "%{wks.location}/Intermediate/" .. OutputDir .. "/%{prj.name}"
 
+--Project Build Directories
+ToolsBinDir = "%{wks.location}/Binaries/" .. OutputDir .. "/Tools/%{prj.name}"
+ToolsIntDir = "%{wks.location}/Intermediate/" .. OutputDir .. "/Tools/%{prj.name}"
+
 --Third Party Libraries Build Directories
 ThirdPartyBinDir = "%{wks.location}/Binaries/" .. OutputDir .. "/ThirdParty/%{prj.name}"
 ThirdPartyIntDir = "%{wks.location}/Intermediate/" .. OutputDir .. "/ThirdParty/%{prj.name}"
@@ -31,6 +35,10 @@ group "Core"
 	include "Engine/Build-Engine.lua"
 group ""
 
+group "Tools"
+	include "Tools/ShaderCompiler/Build-ShaderCompiler.lua"
+group ""
+
 group "ThirdParty"
 	include "Vendor/GLFW/Build-GLFW.lua"
 	include "Vendor/ocornut/Build-ImGui.lua"
@@ -38,5 +46,5 @@ group "ThirdParty"
 group ""
 
 group "Misc"
-	include "Sandbox/Build-Sandbox.lua"
+	
 group ""
