@@ -14,3 +14,6 @@
 [submodule "Vendor/Assimp"]
 	path = Vendor/Assimp
 	url = https://github.com/Muerte0-0/assimp-premake.git
+[submodule "Vendor/spdlog"]
+	path = Vendor/spdlog
+	url = https://github.com/gabime/spdlog.git

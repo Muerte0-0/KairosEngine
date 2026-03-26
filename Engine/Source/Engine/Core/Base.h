@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include "Engine/Debug/Assert.h"
+
 #ifdef KE_DEBUG
 #if defined(PLATFORM_WINDOWS)
 #define KE_DEBUGBREAK() __debugbreak()
@@ -40,15 +42,5 @@ namespace Engine
 	constexpr Ref<T> CreateRef(Args&& ... args)
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
-	}
-	
-	inline void InitializeCore()
-	{
-		
-	}
-	
-	inline void ShutdownCore()
-	{
-		
 	}
 }

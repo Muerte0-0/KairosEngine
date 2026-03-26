@@ -15,6 +15,7 @@ files {
 }
 
 externalincludedirs {
+	"%{IncludeDir.spdlog}",
 	"%{wks.location}/Engine/Source",
 	"%{wks.location}/ThirdParty/",
 	"%{IncludeDir.GLFW}",

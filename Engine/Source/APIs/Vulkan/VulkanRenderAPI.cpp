@@ -77,8 +77,7 @@ namespace Engine
 
 		auto fenceResult = m_VulkanDevice->GetDevice().waitForFences(*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex], vk::True, UINT64_MAX);
 
-		if (fenceResult != vk::Result::eSuccess)
-			throw std::runtime_error("failed to wait for fence!");
+		KE_CORE_ASSERT(fenceResult != vk::Result::eSuccess, "Failed to wait for Fence!")
 
 		auto [result, imageIndex] = m_VulkanSwapchain->GetSwapChain().acquireNextImage(UINT64_MAX,
 			*m_VulkanCommand->GetPresentCompleteSemaphores()[m_CurrentFrameIndex], nullptr);
@@ -92,8 +91,7 @@ namespace Engine
 
 		if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
 		{
-			assert(result == vk::Result::eTimeout || result == vk::Result::eNotReady);
-			throw runtime_error("Failed to acquire Swapchain Image!");
+			KE_CORE_ASSERT((vk::Result::eTimeout || result == vk::Result::eNotReady), "Failed to acquire Swapchain Image!")
 		}
 		
 		if (result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR)
@@ -157,10 +155,10 @@ namespace Engine
 		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
 		
 		//commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, GetGraphicsPipeline());
-		//commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f,
-		//	static_cast<float>(m_VulkanSwapchain->GetSwapChainExtent().width),
-		//	static_cast<float>(m_VulkanSwapchain->GetSwapChainExtent().height), 0.0f, 1.0f));
-		//commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_VulkanSwapchain->GetSwapChainExtent()));
+		commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f,
+			static_cast<float>(m_VulkanSwapchain->GetSwapChainExtent().width),
+			static_cast<float>(m_VulkanSwapchain->GetSwapChainExtent().height), 0.0f, 1.0f));
+		commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_VulkanSwapchain->GetSwapChainExtent()));
 		//commandBuffer.bindVertexBuffers(0, *vertexBuffer, { 0 });
 		//commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
 		//commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIndex], nullptr);
@@ -226,7 +224,7 @@ namespace Engine
 	void VulkanRenderAPI::WindowResized()
 	{
 		m_VulkanSwapchain->Recreate();
-		m_VulkanCommand->RecreatePresentSemaphores(m_VulkanSwapchain->GetSwapChainImages().size());
+		m_VulkanCommand->RecreatePresentSemaphores(static_cast<uint32_t>(m_VulkanSwapchain->GetSwapChainImages().size()));
 	}
 
 	void VulkanRenderAPI::CreateInstance()
@@ -254,10 +252,8 @@ namespace Engine
 				return std::ranges::none_of(layerProperties,
 					[requiredLayer](auto const& layerProperty) { return strcmp(layerProperty.layerName, requiredLayer) == 0; });
 			});
-		if (unsupportedLayerIt != requiredLayers.end())
-		{
-			throw std::runtime_error("Required layer not supported: " + std::string(*unsupportedLayerIt));
-		}
+		
+		KE_CORE_ASSERT(unsupportedLayerIt != requiredLayers.end(), "Required layer not supported: {}", std::string(*unsupportedLayerIt))
 
 		// Get the required extensions.
 		auto requiredExtensions = GetRequiredInstanceExtensions();
@@ -270,9 +266,10 @@ namespace Engine
 					return std::ranges::none_of(extensionProperties,
 						[requiredExtension](auto const& extensionProperty) { return strcmp(extensionProperty.extensionName, requiredExtension) == 0; });
 				});
+		
 		if (unsupportedPropertyIt != requiredExtensions.end())
 		{
-			throw std::runtime_error("Required extension not supported: " + std::string(*unsupportedPropertyIt));
+			KE_CORE_ASSERT(false, "Required extension not supported: {}", std::string(*unsupportedPropertyIt))
 		}
 
 		vk::InstanceCreateInfo createInfo;
@@ -323,7 +320,7 @@ namespace Engine
 		}
 		catch (vk::SystemError& err)
 		{
-			cout << "Debug messenger not available. Validation layers may not be enabled." << err.what() << "\n";
+			LOG(LogLevel::Error, "Debug messenger not available. Validation layers may not be enabled. {}", err.what());
 		}
 	}
 
@@ -331,9 +328,9 @@ namespace Engine
 	{
 		VkSurfaceKHR surface;
 		
-		if (glfwCreateWindowSurface(*m_Instance, static_cast<GLFWwindow*>(windowHandle), nullptr, &surface) != 0) {
-			throw std::runtime_error("failed to create window surface!");
-		}
+		if (glfwCreateWindowSurface(*m_Instance, static_cast<GLFWwindow*>(windowHandle), nullptr, &surface) != 0)
+			KE_CORE_ASSERT(false, "Failed to Create Window Surface!")
+		
 		m_Surface = vk::raii::SurfaceKHR(m_Instance, surface);
 	}
 }

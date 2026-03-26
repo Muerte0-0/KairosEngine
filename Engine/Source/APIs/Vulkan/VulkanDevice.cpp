@@ -30,7 +30,7 @@ namespace Engine
 
 			if (devices.empty()) 
 			{
-				cerr << "Failed to find GPUs with Vulkan support" << "\n";
+				LOG(LogLevel::Error, "Failed to find GPUs with Vulkan support");
 				return false;
 			}
 			
@@ -39,20 +39,20 @@ namespace Engine
 			{
 				// Print device properties for debugging
 				vk::PhysicalDeviceProperties deviceProperties = device.getProperties();
-				cout << "Checking device: " << deviceProperties.deviceName << "\n";
+				LOG(LogLevel::Info, "Checking Device: {}", deviceProperties.deviceName.data());
 
 				// Check if device supports Vulkan 1.3
 				bool supportsVulkan1_3 = deviceProperties.apiVersion >= vk::ApiVersion13;
-				if (!supportsVulkan1_3) cout << "  - Does not support Vulkan 1.3" << "\n";
+				if (!supportsVulkan1_3) LOG(LogLevel::Warning, "  - Does not support Vulkan 1.3");
 
 				// Check queue families
 				QueueFamilyIndices indices = FindQueueFamilies(device);
 				bool supportsGraphics = indices.isComplete();
-				if (!supportsGraphics) std::cout << "  - Missing required queue families" << "\n";
+				if (!supportsGraphics) LOG(LogLevel::Warning, "  - Missing required queue families");
 
 				// Check device extensions
 				bool supportsAllRequiredExtensions = CheckDeviceExtensionSupport(device);
-				if (!supportsAllRequiredExtensions) cout << "  - Missing required extensions" << "\n";
+				if (!supportsAllRequiredExtensions) LOG(LogLevel::Warning, "  - Missing required extensions");
 			  	
 				// Check swap chain support
 				bool swapChainAdequate = false;
@@ -60,13 +60,13 @@ namespace Engine
 	   			{
 	   				SwapChainSupportDetails swapChainSupport = VulkanUtils::QuerySwapChainSupport(device, m_Surface);
 	   				swapChainAdequate = !swapChainSupport.formats.empty() && !swapChainSupport.presentModes.empty();
-	   				if (!swapChainAdequate) cout << "  - Inadequate swap chain support" << "\n";
+	   				if (!swapChainAdequate) LOG(LogLevel::Warning, "  - Inadequate swap chain support");
 	   			}
 
 				// Check for required features
 				auto features = device.template getFeatures2<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan13Features>();
 				bool supportsRequiredFeatures = (features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering == VK_TRUE);
-				if (!supportsRequiredFeatures) std::cout << "  - Does not support required features (dynamicRendering)" << "\n";
+				if (!supportsRequiredFeatures) LOG(LogLevel::Warning, "  - Does not support required features (dynamicRendering)");
 
 				return supportsVulkan1_3 && supportsGraphics && supportsAllRequiredExtensions && swapChainAdequate && supportsRequiredFeatures;
 			});
@@ -75,20 +75,20 @@ namespace Engine
 			{
 				m_PhysicalDevice = *devIter;
 				vk::PhysicalDeviceProperties deviceProperties = m_PhysicalDevice.getProperties();
-				cout << "Selected device: " << deviceProperties.deviceName << "\n";
+				LOG(LogLevel::Info, "Selected device: {}", deviceProperties.deviceName.data());
 
 				// Store queue family indices for the selected device
 				m_QueueFamilyIndices = FindQueueFamilies(m_PhysicalDevice);
 				return true;
 			} else
 			{
-				cerr << "Failed to find a suitable GPU. Make sure your GPU supports Vulkan and has the required extensions." << "\n";
+				LOG(LogLevel::Error, "Failed to find a suitable GPU. Make sure your GPU supports Vulkan and has the required extensions.");
 				return false;
 			}
 			
 		} catch (const exception& e)
 		{
-			cerr << "Failed to pick physical device: " << e.what() << "\n";
+			LOG(LogLevel::Error, "Failed to pick physical device: {}", e.what());
 			return false;
 		}
 	}
@@ -162,7 +162,7 @@ namespace Engine
 			
 		} catch(const std::exception& e)
 		{
-			cerr << "Failed to create logical device: " << e.what() << "\n";
+			LOG(LogLevel::Critical, "Failed to Create Logical Device: {}", e.what());
 			return false;
 		}
 	}
@@ -244,10 +244,10 @@ namespace Engine
 		// Print missing required extensions
 		if (!requiredExtensionsSet.empty())
 		{
-			cout << "Missing required extensions:" << "\n";
+			LOG(LogLevel::Warning, "Missing required extensions:");
 			
 			for (const auto& extension : requiredExtensionsSet)
-				cout << "  " << extension << "\n";
+				LOG(LogLevel::Warning, "{}", extension.c_str());
 			
 			return false;
 		}

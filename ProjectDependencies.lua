@@ -59,6 +59,7 @@ IncludeDir["ImGui"] = "%{ThirdParty}/ocornut/ImGui"
 IncludeDir["Assimp"] = "%{ThirdParty}/Assimp/include"
 IncludeDir["JSON"] = "%{ThirdParty}/json/single_include"
 IncludeDir["mINI"] = "%{ThirdParty}/mINI/src"
+IncludeDir["spdlog"] = "%{ThirdParty}/spdlog/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"

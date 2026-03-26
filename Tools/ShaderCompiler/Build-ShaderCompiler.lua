@@ -13,6 +13,10 @@ files {
 }
 
 externalincludedirs {
+	"%{IncludeDir.mINI}",
+}
+
+links {
 	
 }
 

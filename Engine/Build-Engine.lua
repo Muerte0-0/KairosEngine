@@ -13,6 +13,7 @@ pchsource "Source/kepch.cpp"
 defines {
 	"_CRT_SECURE_NO_WARNINGS",
 	"VK_NO_PROTOTYPES",
+	"SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE",
 }
 
 files {
@@ -21,6 +22,7 @@ files {
 }
 
 includedirs {
+	"%{IncludeDir.spdlog}",
 	"Source",
 	"%{IncludeDir.GLFW}",
 	"%{IncludeDir.Vulkan}",

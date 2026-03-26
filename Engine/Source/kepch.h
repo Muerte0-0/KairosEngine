@@ -40,3 +40,4 @@
 using namespace std;
 
 #include "Engine/Core/Base.h"
+#include "Engine/Debug/Log.h"
