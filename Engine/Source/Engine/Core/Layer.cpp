@@ -1,9 +1,9 @@
 ﻿#include "kepch.h"
 #include "Layer.h"
 
-#include "Application.h"
-
 namespace Engine
 {
-	
+	Layer::Layer(const std::string& name ) : m_DebugName(name)
+	{
+	}
 }

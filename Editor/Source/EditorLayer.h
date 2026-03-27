@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Engine/Core/Layer.h"
+#include "Engine.h"
 
 class EditorLayer : public Engine::Layer
 {
@@ -17,4 +17,19 @@ public:
     void OnImGuiRender() override;
     
     void OnEvent(Engine::Event& event) override;
+private:
+    bool m_ViewportFocused = false, m_ViewportHovered = false, m_ViewportRightClicked = false;
+    glm::vec2 m_ViewportSize = { 1280, 720 };
+    glm::vec2 m_ViewportBounds[2];
+    
+    // ----------- ImGui ----------- //
+    void DrawMenuBar();
+    void DrawViewport();
+
+    // Debug
+    void DrawImGuiDebug();
+
+    bool m_ShowConsole = true;
+    void DrawConsole();
+    // ----------------------------- //
 };

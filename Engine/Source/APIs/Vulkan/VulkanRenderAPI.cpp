@@ -185,6 +185,7 @@ namespace Engine
 			vk::PipelineStageFlagBits2::eBottomOfPipe,					// dstStage
 			vk::ImageAspectFlagBits::eColor
 		);
+		
 		commandBuffer.end();
 		
 		vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);

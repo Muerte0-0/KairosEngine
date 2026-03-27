@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
+#include <type_traits>
 
 #include <string>
 #include <array>

@@ -28,6 +28,39 @@ namespace Engine
 		void EndFrame() override;
 		void WindowResized() override;
 		
+		/**
+		 * @brief Get the Instance.
+		 * @return The Instance.
+		*/
+		const vk::raii::Instance& GetInstance() const { return m_Instance; }
+		
+		
+		/**
+		 * @brief Get the Surface.
+		 * @return The Surface KHR.
+		*/
+		const vk::raii::SurfaceKHR& GetSurface() const { return m_Surface; }
+		
+		/**
+		 * @brief Get the Surface.
+		 * @return The Surface KHR.
+		*/
+		VulkanDevice* GetVulkanDevice() { return m_VulkanDevice.get(); }
+		
+		/**
+		 * @brief Get the Surface.
+		 * @return The Surface KHR.
+		*/
+		VulkanSwapchain* GetVulkanSwapchain() { return m_VulkanSwapchain.get(); }
+		
+		/**
+		 * @brief Get the Surface.
+		 * @return The Surface KHR.
+		*/
+		VulkanCommand* GetVulkanCommand() { return m_VulkanCommand.get(); }
+		
+		const vk::raii::CommandBuffer& GetActiveCommandBuffer() const {return m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex]; }
+		
 	private:
 		vk::raii::Context m_Context;
 		vk::raii::Instance m_Instance = nullptr;

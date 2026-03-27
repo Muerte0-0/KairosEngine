@@ -1,10 +1,14 @@
 ﻿#pragma once
+#include "Base.h"
+
 #include "Layer.h"
 #include "Window.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Events/WindowEvents.h"
 
 #include <glm/glm.hpp>
+
+#include "Engine/ImGui/ImGuiLayer.h"
 
 namespace Engine
 {
@@ -28,12 +32,14 @@ namespace Engine
 		void RaiseEvent(Event& event);
 		
 		template<typename TLayer>
-		requires std::is_base_of_v<Layer, TLayer>
+		requires(std::is_base_of_v<Layer, TLayer>)
 		void PushLayer()
-		{ m_LayerStack.push_back(CreateScope<Layer>()); }
-		
+		{
+			m_LayerStack.push_back(CreateScope<TLayer>());
+		}
+
 		template<typename TLayer>
-		requires std::is_base_of_v<Layer, TLayer>
+		requires(std::is_base_of_v<Layer, TLayer>)
 		TLayer* GetLayer()
 		{
 			for (const auto& layer : m_LayerStack)
@@ -41,7 +47,6 @@ namespace Engine
 				if (auto casted = dynamic_cast<TLayer*>(layer.get()))
 					return casted;
 			}
-			
 			return nullptr;
 		}
 		
@@ -61,6 +66,7 @@ namespace Engine
 		Ref<Window> m_Window;
 
 		std::vector<Scope<Layer>> m_LayerStack;
+		Scope<ImGuiLayer> m_ImGuiLayer;
 		
 		bool m_IsMinimized = false;
 		

@@ -1,4 +1,6 @@
 ﻿#pragma once
+#include <backends/imgui_impl_vulkan.h>
+
 #include "VulkanDevice.h"
 
 #include <GLFW/glfw3.h>
@@ -73,13 +75,13 @@ namespace Engine
 		 * @brief Get the swap chain image format.
 		 * @return The swap chain image format.
 		*/
-		vk::Format GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
+		const vk::Format& GetSwapChainImageFormat() const { return m_SwapChainImageFormat; }
 
 		/**
 		 * @brief Get the swap chain extent.
 		 * @return The swap chain extent.
 		*/
-		vk::Extent2D GetSwapChainExtent() const { return m_SwapChainExtent; }
+		const vk::Extent2D& GetSwapChainExtent() const { return m_SwapChainExtent; }
 
 		/**
 		 * @brief Get the swap chain image views.
@@ -91,6 +93,8 @@ namespace Engine
 		const vk::raii::ImageView &GetColorImageView() const { return m_ColorImageView; }
 		const vk::raii::Image &GetDepthImage() const { return m_DepthImage; }
 		const vk::raii::ImageView &GetDepthImageView() const { return m_DepthImageView; }
+		
+		const vk::SampleCountFlagBits &GetMSAASamples() const { return m_MSAA_Samples; }
 		
 		/**
 		 * @brief Get the Rendering Info.

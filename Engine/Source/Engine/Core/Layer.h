@@ -6,6 +6,7 @@ namespace Engine
 	class Layer
 	{
 	public:
+		Layer(const std::string& name = "Layer");
 		virtual ~Layer() = default;
 		
 		virtual void OnAttach() {}
@@ -17,5 +18,8 @@ namespace Engine
 		virtual void OnFixedUpdate(float deltaTime) {}
 		virtual void OnRender() {}
 		virtual void OnImGuiRender() {}
+		
+	private:
+		std::string m_DebugName;
 	};
 }

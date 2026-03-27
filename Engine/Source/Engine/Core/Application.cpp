@@ -47,10 +47,15 @@ namespace Engine
 		
 		for (auto& layer : m_LayerStack)
 			layer->OnAttach();
+		
+		m_ImGuiLayer = ImGuiLayer::Create();
+		m_ImGuiLayer->OnAttach();
 	}
 
 	void Application::Shutdown()
 	{
+		m_ImGuiLayer->OnDetach();
+		
 		for (auto& layer : views::reverse(m_LayerStack))
 			layer->OnDetach();
 		
@@ -86,6 +91,8 @@ namespace Engine
 			{
 				if (!m_IsMinimized)
 				{
+					m_ImGuiLayer->OnFixedUpdate(FIXED_FRAME_TIME);
+					
 					for (const auto& layer : m_LayerStack)
 						layer->OnFixedUpdate(FIXED_FRAME_TIME);
 				}
@@ -95,18 +102,31 @@ namespace Engine
 			// Tick Update
 			if (!m_IsMinimized)
 			{
+				m_ImGuiLayer->OnUpdate(deltaTime);
+				
 				for (const unique_ptr<Layer>& layer : m_LayerStack)
 					layer->OnUpdate(deltaTime);
 			
 				// To-Do: Do This on the Render Thread
 				for (const unique_ptr<Layer>& layer : m_LayerStack)
 					layer->OnRender();
-			
-				m_Window->Update();
+				
+				m_ImGuiLayer->OnRender();
 				
 				Renderer::BeginFrame();
+				m_ImGuiLayer->Begin();
+				
 				Renderer::DrawFrame();
+				
+				m_ImGuiLayer->OnImGuiRender();
+				
+				for (const auto& layer : m_LayerStack)
+					layer->OnImGuiRender();
+				
+				m_ImGuiLayer->End();
 				Renderer::EndFrame();
+				
+				m_Window->Update();
 			}
 			
 			float sleepTime = FIXED_FRAME_TIME - (GetTime() - currentTime);
@@ -126,6 +146,9 @@ namespace Engine
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(&Application::OnWindowResize));
 		dispatcher.Dispatch<WindowClosedEvent>(BIND_EVENT_FN(&Application::OnWindowClosed));
+		
+		m_ImGuiLayer->OnEvent(event);
+		if (event.Handled) return;
 		
 		for (auto& layer : views::reverse(m_LayerStack))
 		{

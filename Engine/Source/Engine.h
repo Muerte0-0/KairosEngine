@@ -3,6 +3,8 @@
 // -------- Application ---------- //
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Layer.h"
+
+#include "Engine/Debug/Log.h"
 // ------------------------------- //
 
 // ------------ Input ------------ //
@@ -10,7 +12,9 @@
 // ------------------------------- //
 
 // -------------- GUI ------------ //
-
+#include "imgui.h"
+#include "Engine/ImGui/ImGuiLayer.h"
+#include "Engine/ImGui/ImGuiLogSink.h"
 // ------------------------------- //
 
 // ------------- ECS ------------- //
@@ -22,5 +26,7 @@
 // ------------------------------- //
 
 // ------------ Utils ------------ //
-#include "Engine/Debug/Log.h"
+
 // ------------------------------- //
+
+using namespace std;

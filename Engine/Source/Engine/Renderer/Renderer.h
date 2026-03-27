@@ -11,6 +11,8 @@ namespace Engine
 		static void DrawFrame();
 		static void EndFrame();
 		static void WindowResized();
+		
+		static RenderAPI* GetAPI() { return s_API.get(); }
 
 	private:
 		static Scope<RenderAPI> s_API;
