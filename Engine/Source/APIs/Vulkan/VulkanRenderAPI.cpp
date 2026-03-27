@@ -326,11 +326,12 @@ namespace Engine
 
 	void VulkanRenderAPI::CreateSurface(void* windowHandle)
 	{
-		VkSurfaceKHR surface;
-		
-		if (glfwCreateWindowSurface(*m_Instance, static_cast<GLFWwindow*>(windowHandle), nullptr, &surface) != 0)
-			KE_CORE_ASSERT(false, "Failed to Create Window Surface!")
-		
+		VkSurfaceKHR surface = VK_NULL_HANDLE;
+
+		VkResult result = glfwCreateWindowSurface(*m_Instance, static_cast<GLFWwindow*>(windowHandle), nullptr, &surface);
+
+		KE_CORE_ASSERT(result == VK_SUCCESS, "Failed to create window surface: {}", glfwGetErrorName(result));
+
 		m_Surface = vk::raii::SurfaceKHR(m_Instance, surface);
 	}
 }
