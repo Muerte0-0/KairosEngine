@@ -11,7 +11,8 @@ objdir (ProjectIntDir)
 files {
 	"Source/**.h",
 	"Source/**.cpp",
-	"Resources/Shaders/**.slang",
+	"Assets/Shaders/**.slang",
+	"Assets/Shaders/**.spv",
 }
 
 externalincludedirs {
@@ -26,6 +27,10 @@ externalincludedirs {
 links {
 	"Engine",
 	"GLFW",
+}
+
+prebuildcommands {
+	"%{ToolsBinDir}/../ShaderCompiler/ShaderCompiler.exe --source %{wks.location}/Editor/Assets/Shaders"
 }
 
 filter "system:windows"

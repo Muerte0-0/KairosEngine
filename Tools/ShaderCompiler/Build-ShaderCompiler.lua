@@ -12,13 +12,16 @@ files {
 	"Source/**.cpp",
 }
 
+includedirs {
+	"%{IncludeDir.JSON}",
+}
+
 externalincludedirs {
 	"%{IncludeDir.mINI}",
 }
 
-links {
-	
-}
+filter "system:windows"
+	systemversion "latest"
 
 filter "configurations:Debug"
         defines { "DEBUG", "_DEBUG", "KE_DEBUG" }
