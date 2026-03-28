@@ -29,10 +29,6 @@ links {
 	"GLFW",
 }
 
-prebuildcommands {
-	"%{ToolsBinDir}/../ShaderCompiler/ShaderCompiler.exe --source %{wks.location}/Editor/Assets/Shaders"
-}
-
 filter "system:windows"
 	systemversion "latest"
 

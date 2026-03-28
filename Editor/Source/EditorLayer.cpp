@@ -187,7 +187,7 @@ void EditorLayer::DrawViewport()
 		//}
 		//else
 		{
-			ImGui::TextColored(ImVec4(1, 0, 0, 1), "Not Implement Yet! :)");
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), "Not Implemented Yet! :)");
 		}
 
 		m_ViewportFocused = ImGui::IsWindowFocused();

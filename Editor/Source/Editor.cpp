@@ -14,10 +14,12 @@ public:
 		PushLayer<EditorLayer>();
 	}
     
-	Engine::ApplicationSpecification GetApplicationSpecs() override
+	Engine::ApplicationSpecification GetApplicationSpecs() const override
 	{
 		Engine::ApplicationSpecification appSpec;
 		appSpec.Name = "KairosEditor";
+		appSpec.ShaderSourcePath = "Editor/Assets/Shaders";
+		appSpec.CompileShadersOnStartup = true;
         
 		Engine::WindowSpecification windowSpec;
 		windowSpec.Title = "Kairos Editor";

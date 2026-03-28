@@ -6,6 +6,7 @@
 #include "Engine/Events/Event.h"
 #include "Engine/Events/WindowEvents.h"
 
+#include <filesystem>
 #include <glm/glm.hpp>
 
 #include "Engine/ImGui/ImGuiLayer.h"
@@ -16,6 +17,8 @@ namespace Engine
 	{
 		std::string Name = "Application";
 		WindowSpecification WindowSpec;
+		std::filesystem::path ShaderSourcePath;
+		bool CompileShadersOnStartup = false;
 	};
 	
 	class Application
@@ -57,12 +60,14 @@ namespace Engine
 		static Application& Get();
 		static float GetTime();
 		
-		virtual ApplicationSpecification GetApplicationSpecs() = 0;
+		virtual ApplicationSpecification GetApplicationSpecs() const = 0;
 		
 		bool OnWindowResize(WindowResizeEvent& e);
 		bool OnWindowClosed(WindowClosedEvent& e);
-		
+
 	private:
+		void EnsureApplicationShadersCompiled() const;
+		
 		Ref<Window> m_Window;
 
 		std::vector<Scope<Layer>> m_LayerStack;

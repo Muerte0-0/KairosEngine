@@ -1,25 +1,25 @@
 {
     "records": {
         "D:/Dev/Projects/KairosEngine/Editor/Assets/Shaders/Shader.slang::fragMain": {
-            "compiledAtUtc": "2026-03-28T05:20:07Z",
+            "compiledAtUtc": "2026-03-28T05:53:10Z",
             "entryPoint": "fragMain",
             "outputPath": "D:/Dev/Projects/KairosEngine/Editor/Assets/Shaders/Compiled/Shader.fragMain.frag.spv",
             "profile": "spirv_1_4",
             "recordKey": "D:/Dev/Projects/KairosEngine/Editor/Assets/Shaders/Shader.slang::fragMain",
             "sourceHash": "95d8835de88b044b",
             "sourcePath": "D:/Dev/Projects/KairosEngine/Editor/Assets/Shaders/Shader.slang",
-            "sourceWriteTimeUtc": "2026-03-11T10:49:11Z",
+            "sourceWriteTimeUtc": "2026-03-28T05:46:30Z",
             "stage": "fragment"
         },
         "D:/Dev/Projects/KairosEngine/Editor/Assets/Shaders/Shader.slang::vertMain": {
-            "compiledAtUtc": "2026-03-28T05:20:06Z",
+            "compiledAtUtc": "2026-03-28T05:53:10Z",
             "entryPoint": "vertMain",
             "outputPath": "D:/Dev/Projects/KairosEngine/Editor/Assets/Shaders/Compiled/Shader.vertMain.vert.spv",
             "profile": "spirv_1_4",
             "recordKey": "D:/Dev/Projects/KairosEngine/Editor/Assets/Shaders/Shader.slang::vertMain",
             "sourceHash": "95d8835de88b044b",
             "sourcePath": "D:/Dev/Projects/KairosEngine/Editor/Assets/Shaders/Shader.slang",
-            "sourceWriteTimeUtc": "2026-03-11T10:49:11Z",
+            "sourceWriteTimeUtc": "2026-03-28T05:46:30Z",
             "stage": "vertex"
         }
     },
