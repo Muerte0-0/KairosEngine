@@ -18,7 +18,7 @@ namespace Engine
 		const vk::raii::DescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
 
 	private:
-		VulkanDevice& m_Device;
+		VulkanDevice& m_VulkanDevice;
 
 		Scope<VulkanShader> m_VertexShader = nullptr;
 		Scope<VulkanShader> m_FragmentShader = nullptr;

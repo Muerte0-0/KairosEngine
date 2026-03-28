@@ -87,7 +87,6 @@ namespace Engine
 		{
 			m_VulkanSwapchain->Recreate();
 			CreateViewportFramebuffer();
-			CreateGraphicsPipeline();
 			m_FrameValid = false;
 			return;
 		}
@@ -125,7 +124,7 @@ namespace Engine
 		m_ViewportFramebuffer->SetCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
 		vk::ClearValue viewportClearColor;
-		viewportClearColor.color = vk::ClearColorValue(std::array<float, 4>{ 0.08f, 0.08f, 0.10f, 1.0f });
+		viewportClearColor.color = vk::ClearColorValue(std::array<float, 4>{ 0.025f, 0.025f, 0.025f, 1.0f });
 
 		vk::RenderingAttachmentInfo viewportColorAttachment;
 		viewportColorAttachment.imageView = m_ViewportFramebuffer->GetImageView();
@@ -230,7 +229,6 @@ namespace Engine
 		m_VulkanSwapchain->Recreate();
 		m_VulkanCommand->RecreatePresentSemaphores(static_cast<uint32_t>(m_VulkanSwapchain->GetSwapChainImages().size()));
 		CreateViewportFramebuffer();
-		CreateGraphicsPipeline();
 	}
 
 	void VulkanRenderAPI::ResizeFramebuffer(uint32_t width, uint32_t height)
@@ -266,8 +264,6 @@ namespace Engine
 		m_ViewportFramebuffer->Resize(
 			m_PendingViewportFramebufferSpecification.Width,
 			m_PendingViewportFramebufferSpecification.Height);
-		m_ViewportPipeline = nullptr;
-		CreateGraphicsPipeline();
 		m_ViewportFramebufferResizePending = false;
 	}
 
@@ -277,7 +273,6 @@ namespace Engine
 		createInfo.ShaderDirectory = m_ShaderDirectory;
 		createInfo.VertexShader = { "Shader.vertMain.vert.spv", "vertMain", ShaderStage::Vertex };
 		createInfo.FragmentShader = { "Shader.fragMain.frag.spv", "fragMain", ShaderStage::Fragment };
-		createInfo.Config.DepthTest = false;
 		createInfo.ColorFormat = m_ViewportFramebuffer->GetColorFormat();
 		createInfo.SampleCount = vk::SampleCountFlagBits::e1;
 
