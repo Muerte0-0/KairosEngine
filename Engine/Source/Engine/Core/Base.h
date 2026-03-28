@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "Engine/Debug/Assert.h"
+#include "Engine/Debugging/Assert.h"
 
 #ifdef KE_DEBUG
 #if defined(PLATFORM_WINDOWS)
