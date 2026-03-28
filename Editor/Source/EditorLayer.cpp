@@ -179,13 +179,19 @@ void EditorLayer::DrawViewport()
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
 
-		//ITextureView* textureID = Renderer::GetFramebuffer()->GetImGuiTextureID();
-		//if (textureID != nullptr)
-		//{
-		//	ImTextureID imguiTextureID = reinterpret_cast<ImTextureID>(textureID);
-		//	ImGui::Image(imguiTextureID, viewportPanelSize, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
-		//}
-		//else
+		Engine::Framebuffer* framebuffer = Engine::Renderer::GetFramebuffer();
+		if (framebuffer != nullptr && viewportPanelSize.x > 0.0f && viewportPanelSize.y > 0.0f)
+		{
+			Engine::Renderer::ResizeFramebuffer(
+				static_cast<uint32_t>(viewportPanelSize.x),
+				static_cast<uint32_t>(viewportPanelSize.y));
+
+			if (void* textureID = framebuffer->GetImGuiTextureID())
+			{
+				ImGui::Image(textureID, viewportPanelSize, ImVec2(0, 1), ImVec2(1, 0));
+			}
+		}
+		else
 		{
 			ImGui::TextColored(ImVec4(1, 0, 0, 1), "Not Implemented Yet! :)");
 		}

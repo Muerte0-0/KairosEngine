@@ -33,17 +33,18 @@ namespace Engine
 	
 	constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 
-	void VulkanRenderAPI::Init(void* windowHandle)
+	void VulkanRenderAPI::Init(void* windowHandle, const std::filesystem::path& shaderDirectory)
 	{
-		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddrPtr = 
-		reinterpret_cast<PFN_vkGetInstanceProcAddr>(
-			glfwGetInstanceProcAddress(nullptr, "vkGetInstanceProcAddr")
-		);
+		m_ShaderDirectory = shaderDirectory;
+
+		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddrPtr =
+			reinterpret_cast<PFN_vkGetInstanceProcAddr>(glfwGetInstanceProcAddress(nullptr, "vkGetInstanceProcAddr"));
     
 		if (!vkGetInstanceProcAddrPtr)
+		{
 			throw runtime_error("Failed to get vkGetInstanceProcAddr");
+		}
     
-		// Initialize the global dispatcher
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddrPtr);
 		
 		CreateInstance();
@@ -51,24 +52,23 @@ namespace Engine
 		CreateSurface(windowHandle);
 		
 		m_VulkanDevice = CreateScope<VulkanDevice>(m_Instance, m_Surface, requiredDeviceExtensions);
-		
 		m_VulkanDevice->PickPhysicalDevice();
 		m_VulkanDevice->CreateLogicalDevice(enableValidationLayers, validationLayers);
 		
 		m_VulkanSwapchain = CreateScope<VulkanSwapchain>(*m_VulkanDevice, static_cast<GLFWwindow*>(windowHandle));
-		
 		m_VulkanSwapchain->Create();
 		m_VulkanSwapchain->CreateImageViews();
-		
 		m_VulkanSwapchain->CreateColorResources();
 		m_VulkanSwapchain->CreateDepthResources();
 		m_VulkanSwapchain->SetupDynamicRendering();
 		
 		m_VulkanCommand = CreateScope<VulkanCommand>(*m_VulkanDevice);
-		
 		m_VulkanCommand->CreateCommandPool();
 		m_VulkanCommand->CreateCommandBuffers(MAX_FRAMES_IN_FLIGHT);
 		m_VulkanCommand->CreateSyncObjects(static_cast<uint32_t>(m_VulkanSwapchain->GetSwapChainImages().size()), MAX_FRAMES_IN_FLIGHT);
+
+		CreateViewportFramebuffer();
+		CreateGraphicsPipeline();
 	}
 
 	void VulkanRenderAPI::BeginFrame()
@@ -76,8 +76,9 @@ namespace Engine
 		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
 
 		auto fenceResult = m_VulkanDevice->GetDevice().waitForFences(*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex], vk::True, UINT64_MAX);
+		KE_CORE_ASSERT(fenceResult == vk::Result::eSuccess, "Failed to wait for Fence!");
 
-		KE_CORE_ASSERT(fenceResult != vk::Result::eSuccess, "Failed to wait for Fence!")
+		ApplyPendingFramebufferResize();
 
 		auto [result, imageIndex] = m_VulkanSwapchain->GetSwapChain().acquireNextImage(UINT64_MAX,
 			*m_VulkanCommand->GetPresentCompleteSemaphores()[m_CurrentFrameIndex], nullptr);
@@ -85,106 +86,105 @@ namespace Engine
 		if (result == vk::Result::eErrorOutOfDateKHR)
 		{
 			m_VulkanSwapchain->Recreate();
+			CreateViewportFramebuffer();
+			CreateGraphicsPipeline();
 			m_FrameValid = false;
 			return;
 		}
 
-		if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR)
-		{
-			KE_CORE_ASSERT((vk::Result::eTimeout || result == vk::Result::eNotReady), "Failed to acquire Swapchain Image!")
-		}
-		
-		if (result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR)
-			m_CurrentImageIndex = imageIndex;
-
-		//UpdateUniformBuffer(m_CurrentFrameIndex);
+		KE_CORE_ASSERT(result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR, "Failed to acquire Swapchain Image!");
+		m_CurrentImageIndex = imageIndex;
 
 		m_VulkanDevice->GetDevice().resetFences(*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex]);
 
 		commandBuffer.reset();
-		
 		commandBuffer.begin({});
-		
-		// Before starting rendering, transition the swapchain image to COLOR_ATTACHMENT_OPTIMAL
-		VulkanUtils::TransitionImageLayout(
-			commandBuffer,
-			m_VulkanSwapchain->GetSwapChainImages()[m_CurrentImageIndex],
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eColorAttachmentOptimal,
-			{},															// srcAccessMask (no need to wait for previous operations)
-			vk::AccessFlagBits2::eColorAttachmentWrite,					// dstAccessMask
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// srcStage
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// dstStage
-			vk::ImageAspectFlagBits::eColor
-		);
-		
-		// Transition the multisampled color image to COLOR_ATTACHMENT_OPTIMAL
-		VulkanUtils::TransitionImageLayout(
-			commandBuffer,
-			*m_VulkanSwapchain->GetColorImage(),
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eColorAttachmentOptimal,
-			vk::AccessFlagBits2::eColorAttachmentWrite,					// srcAccessMask
-			vk::AccessFlagBits2::eColorAttachmentWrite,					// dstAccessMask
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// srcStage
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// dstStage
-			vk::ImageAspectFlagBits::eColor
-		);
-
-		// Transition the depth image to DEPTH_ATTACHMENT_OPTIMAL
-		VulkanUtils::TransitionImageLayout(
-			commandBuffer,
-			*m_VulkanSwapchain->GetDepthImage(),
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eDepthAttachmentOptimal,
-			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-			vk::ImageAspectFlagBits::eDepth);
-		
-		commandBuffer.beginRendering(m_VulkanSwapchain->GetRenderingInfo(m_CurrentImageIndex));
-		
 		m_FrameValid = true;
 	}
 
 	void VulkanRenderAPI::DrawFrame()
 	{
-		if (!m_FrameValid) return;
+		if (!m_FrameValid)
+		{
+			return;
+		}
 		
 		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
-		
-		//commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, GetGraphicsPipeline());
+
+		// Render the scene into the editor viewport image first.
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			m_ViewportFramebuffer->GetImage(),
+			m_ViewportFramebuffer->GetCurrentLayout(),
+			vk::ImageLayout::eColorAttachmentOptimal,
+			{},
+			vk::AccessFlagBits2::eColorAttachmentWrite,
+			vk::PipelineStageFlagBits2::eTopOfPipe,
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+			vk::ImageAspectFlagBits::eColor);
+		m_ViewportFramebuffer->SetCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+		vk::ClearValue viewportClearColor;
+		viewportClearColor.color = vk::ClearColorValue(std::array<float, 4>{ 0.08f, 0.08f, 0.10f, 1.0f });
+
+		vk::RenderingAttachmentInfo viewportColorAttachment;
+		viewportColorAttachment.imageView = m_ViewportFramebuffer->GetImageView();
+		viewportColorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		viewportColorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
+		viewportColorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
+		viewportColorAttachment.clearValue = viewportClearColor;
+
+		vk::RenderingInfo viewportRenderingInfo;
+		viewportRenderingInfo.renderArea = vk::Rect2D(vk::Offset2D(0, 0), m_ViewportFramebuffer->GetExtent());
+		viewportRenderingInfo.layerCount = 1;
+		viewportRenderingInfo.colorAttachmentCount = 1;
+		viewportRenderingInfo.pColorAttachments = &viewportColorAttachment;
+
+		commandBuffer.beginRendering(viewportRenderingInfo);
+		commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_ViewportPipeline->GetPipeline());
 		commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f,
-			static_cast<float>(m_VulkanSwapchain->GetSwapChainExtent().width),
-			static_cast<float>(m_VulkanSwapchain->GetSwapChainExtent().height), 0.0f, 1.0f));
-		commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_VulkanSwapchain->GetSwapChainExtent()));
-		//commandBuffer.bindVertexBuffers(0, *vertexBuffer, { 0 });
-		//commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
-		//commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIndex], nullptr);
-		//commandBuffer.draw(1, 0, 0, 0);
+			static_cast<float>(m_ViewportFramebuffer->GetWidth()),
+			static_cast<float>(m_ViewportFramebuffer->GetHeight()), 0.0f, 1.0f));
+		commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_ViewportFramebuffer->GetExtent()));
+		commandBuffer.draw(3, 1, 0, 0);
+		commandBuffer.endRendering();
+
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			m_ViewportFramebuffer->GetImage(),
+			vk::ImageLayout::eColorAttachmentOptimal,
+			vk::ImageLayout::eShaderReadOnlyOptimal,
+			vk::AccessFlagBits2::eColorAttachmentWrite,
+			vk::AccessFlagBits2::eShaderRead,
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+			vk::PipelineStageFlagBits2::eFragmentShader,
+			vk::ImageAspectFlagBits::eColor);
+		m_ViewportFramebuffer->SetCurrentLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+		BeginSwapchainRendering(commandBuffer);
 	}
 	
 	void VulkanRenderAPI::EndFrame()
 	{
-		if (!m_FrameValid) return;
+		if (!m_FrameValid)
+		{
+			return;
+		}
 		
 		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
 		
 		commandBuffer.endRendering();
 		
-		// After rendering, transition the swapchain image to PRESENT_SRC
 		VulkanUtils::TransitionImageLayout(
 			commandBuffer,
 			m_VulkanSwapchain->GetSwapChainImages()[m_CurrentImageIndex],
 			vk::ImageLayout::eColorAttachmentOptimal,
 			vk::ImageLayout::ePresentSrcKHR,
-			vk::AccessFlagBits2::eColorAttachmentWrite,					// srcAccessMask
-			{},															// dstAccessMask
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,			// srcStage
-			vk::PipelineStageFlagBits2::eBottomOfPipe,					// dstStage
-			vk::ImageAspectFlagBits::eColor
-		);
+			vk::AccessFlagBits2::eColorAttachmentWrite,
+			{},
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+			vk::PipelineStageFlagBits2::eBottomOfPipe,
+			vk::ImageAspectFlagBits::eColor);
 		
 		commandBuffer.end();
 		
@@ -214,10 +214,13 @@ namespace Engine
 		{
 			m_FramebufferResized = false;
 			m_VulkanSwapchain->Recreate();
+			CreateViewportFramebuffer();
+			CreateGraphicsPipeline();
 		}
 		else
-			// There are no other success codes than eSuccess; on any error code, presentKHR already threw an exception.
+		{
 			assert(result == vk::Result::eSuccess);
+		}
 		
 		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % MAX_FRAMES_IN_FLIGHT;
 	}
@@ -226,6 +229,114 @@ namespace Engine
 	{
 		m_VulkanSwapchain->Recreate();
 		m_VulkanCommand->RecreatePresentSemaphores(static_cast<uint32_t>(m_VulkanSwapchain->GetSwapChainImages().size()));
+		CreateViewportFramebuffer();
+		CreateGraphicsPipeline();
+	}
+
+	void VulkanRenderAPI::ResizeFramebuffer(uint32_t width, uint32_t height)
+	{
+		if (m_ViewportFramebuffer == nullptr)
+		{
+			return;
+		}
+
+		width = (std::max)(width, 1u);
+		height = (std::max)(height, 1u);
+
+		if (m_ViewportFramebuffer->GetWidth() == width && m_ViewportFramebuffer->GetHeight() == height)
+		{
+			return;
+		}
+
+		m_PendingViewportFramebufferSpecification.Width = width;
+		m_PendingViewportFramebufferSpecification.Height = height;
+		m_ViewportFramebufferResizePending = true;
+	}
+
+	void VulkanRenderAPI::ApplyPendingFramebufferResize()
+	{
+		if (!m_ViewportFramebufferResizePending || m_ViewportFramebuffer == nullptr)
+		{
+			return;
+		}
+
+		// The viewport image may still be referenced by older in-flight frames and ImGui draw data,
+		// so resize only after the device is fully idle.
+		m_VulkanDevice->WaitIdle();
+		m_ViewportFramebuffer->Resize(
+			m_PendingViewportFramebufferSpecification.Width,
+			m_PendingViewportFramebufferSpecification.Height);
+		m_ViewportPipeline = nullptr;
+		CreateGraphicsPipeline();
+		m_ViewportFramebufferResizePending = false;
+	}
+
+	void VulkanRenderAPI::CreateGraphicsPipeline()
+	{
+		GraphicsPipelineCreateInfo createInfo;
+		createInfo.ShaderDirectory = m_ShaderDirectory;
+		createInfo.VertexShader = { "Shader.vertMain.vert.spv", "vertMain", ShaderStage::Vertex };
+		createInfo.FragmentShader = { "Shader.fragMain.frag.spv", "fragMain", ShaderStage::Fragment };
+		createInfo.Config.DepthTest = false;
+		createInfo.ColorFormat = m_ViewportFramebuffer->GetColorFormat();
+		createInfo.SampleCount = vk::SampleCountFlagBits::e1;
+
+		m_ViewportPipeline = CreateScope<VulkanGraphicsPipeline>(*m_VulkanDevice, std::move(createInfo));
+	}
+
+	void VulkanRenderAPI::CreateViewportFramebuffer()
+	{
+		FramebufferSpecification specification;
+		if (m_ViewportFramebuffer != nullptr)
+		{
+			specification = m_ViewportFramebuffer->GetSpecification();
+		}
+		else
+		{
+			specification.Width = (std::max)(m_VulkanSwapchain->GetSwapChainExtent().width, 1u);
+			specification.Height = (std::max)(m_VulkanSwapchain->GetSwapChainExtent().height, 1u);
+		}
+
+		m_ViewportFramebuffer = CreateScope<VulkanFramebuffer>(*m_VulkanDevice, specification, m_VulkanSwapchain->GetSwapChainImageFormat());
+	}
+
+	void VulkanRenderAPI::BeginSwapchainRendering(vk::CommandBuffer commandBuffer)
+	{
+		// Transition swapchain targets into renderable layouts for the ImGui pass.
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			m_VulkanSwapchain->GetSwapChainImages()[m_CurrentImageIndex],
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eColorAttachmentOptimal,
+			{},
+			vk::AccessFlagBits2::eColorAttachmentWrite,
+			vk::PipelineStageFlagBits2::eTopOfPipe,
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+			vk::ImageAspectFlagBits::eColor);
+
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			*m_VulkanSwapchain->GetColorImage(),
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eColorAttachmentOptimal,
+			{},
+			vk::AccessFlagBits2::eColorAttachmentWrite,
+			vk::PipelineStageFlagBits2::eTopOfPipe,
+			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+			vk::ImageAspectFlagBits::eColor);
+
+		VulkanUtils::TransitionImageLayout(
+			commandBuffer,
+			*m_VulkanSwapchain->GetDepthImage(),
+			vk::ImageLayout::eUndefined,
+			vk::ImageLayout::eDepthAttachmentOptimal,
+			{},
+			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+			vk::PipelineStageFlagBits2::eTopOfPipe,
+			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+			vk::ImageAspectFlagBits::eDepth);
+
+		commandBuffer.beginRendering(m_VulkanSwapchain->GetRenderingInfo(m_CurrentImageIndex));
 	}
 
 	void VulkanRenderAPI::CreateInstance()
@@ -239,39 +350,32 @@ namespace Engine
 		
 		appInfo.apiVersion = VK_API_VERSION_1_3;
 		
-		// Get the required layers
 		std::vector<char const*> requiredLayers;
 		if (enableValidationLayers)
 		{
 			requiredLayers.assign(validationLayers.begin(), validationLayers.end());
 		}
 		
-		// Check if the required layers are supported by the Vulkan implementation.
 		auto layerProperties = m_Context.enumerateInstanceLayerProperties();
 		auto unsupportedLayerIt = std::ranges::find_if(requiredLayers,
-			[&layerProperties](auto const& requiredLayer) {
+			[&layerProperties](auto const& requiredLayer)
+			{
 				return std::ranges::none_of(layerProperties,
 					[requiredLayer](auto const& layerProperty) { return strcmp(layerProperty.layerName, requiredLayer) == 0; });
 			});
 		
-		KE_CORE_ASSERT(unsupportedLayerIt != requiredLayers.end(), "Required layer not supported: {}", std::string(*unsupportedLayerIt))
+		KE_CORE_ASSERT(unsupportedLayerIt == requiredLayers.end(), "Required layer not supported: {}", std::string(*unsupportedLayerIt));
 
-		// Get the required extensions.
 		auto requiredExtensions = GetRequiredInstanceExtensions();
-
-		// Check if the required extensions are supported by the Vulkan implementation.
 		auto extensionProperties = m_Context.enumerateInstanceExtensionProperties();
-		auto unsupportedPropertyIt =
-			std::ranges::find_if(requiredExtensions,
-				[&extensionProperties](auto const& requiredExtension) {
-					return std::ranges::none_of(extensionProperties,
-						[requiredExtension](auto const& extensionProperty) { return strcmp(extensionProperty.extensionName, requiredExtension) == 0; });
-				});
+		auto unsupportedPropertyIt = std::ranges::find_if(requiredExtensions,
+			[&extensionProperties](auto const& requiredExtension)
+			{
+				return std::ranges::none_of(extensionProperties,
+					[requiredExtension](auto const& extensionProperty) { return strcmp(extensionProperty.extensionName, requiredExtension) == 0; });
+			});
 		
-		if (unsupportedPropertyIt != requiredExtensions.end())
-		{
-			KE_CORE_ASSERT(false, "Required extension not supported: {}", std::string(*unsupportedPropertyIt))
-		}
+		KE_CORE_ASSERT(unsupportedPropertyIt == requiredExtensions.end(), "Required extension not supported: {}", std::string(*unsupportedPropertyIt));
 
 		vk::InstanceCreateInfo createInfo;
 		createInfo.pApplicationInfo = &appInfo;
@@ -292,14 +396,19 @@ namespace Engine
 		std::vector extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
 		if (enableValidationLayers)
+		{
 			extensions.push_back(vk::EXTDebugUtilsExtensionName);
+		}
 
 		return extensions;
 	}
 
 	void VulkanRenderAPI::SetupDebugMessenger()
 	{
-		if (!enableValidationLayers) return;
+		if (!enableValidationLayers)
+		{
+			return;
+		}
 
 		vk::DebugUtilsMessageSeverityFlagsEXT severityFlags(vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
 			vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
@@ -330,7 +439,6 @@ namespace Engine
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 		VkResult result = glfwCreateWindowSurface(*m_Instance, static_cast<GLFWwindow*>(windowHandle), nullptr, &surface);
-
 		KE_CORE_ASSERT(result == VK_SUCCESS, "Failed to create window surface: {}", glfwGetErrorName(result));
 
 		m_Surface = vk::raii::SurfaceKHR(m_Instance, surface);

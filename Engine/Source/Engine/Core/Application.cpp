@@ -271,8 +271,18 @@ namespace Engine
 		
 		m_Window = CreateRef<Window>(spec);
 		m_Window->Create();
+
+		fs::path shaderDirectory = GetApplicationSpecs().ShaderSourcePath;
+		if (const optional<fs::path> workspaceRoot = ResolveWorkspaceRoot())
+		{
+			if (shaderDirectory.is_relative())
+			{
+				shaderDirectory = *workspaceRoot / shaderDirectory;
+			}
+		}
+		shaderDirectory /= "Compiled";
 		
-		Renderer::Init(API::Vulkan, m_Window->GetHandle());
+		Renderer::Init(API::Vulkan, m_Window->GetHandle(), shaderDirectory);
 		
 		for (auto& layer : m_LayerStack)
 			layer->OnAttach();

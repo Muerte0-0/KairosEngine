@@ -1,16 +1,19 @@
-﻿#pragma once
+#pragma once
 #include "RHI/RenderAPI.h"
+#include "RHI/Framebuffer.h"
 
 namespace Engine
 {
 	class Renderer
 	{
 	public:
-		static void Init(API api, void* windowHandle);
+		static void Init(API api, void* windowHandle, const std::filesystem::path& shaderDirectory);
 		static void BeginFrame();
 		static void DrawFrame();
 		static void EndFrame();
 		static void WindowResized();
+		static Framebuffer* GetFramebuffer();
+		static void ResizeFramebuffer(uint32_t width, uint32_t height);
 		
 		static RenderAPI* GetAPI() { return s_API.get(); }
 

@@ -1,4 +1,6 @@
-﻿#pragma once
+#pragma once
+
+#include <filesystem>
 
 enum class API
 {
@@ -10,16 +12,20 @@ enum class API
 
 namespace Engine
 {
+	class Framebuffer;
+
 	class RenderAPI
 	{
 	public:
 		virtual ~RenderAPI() = default;
 
-		virtual void Init(void* windowHandle) = 0;
+		virtual void Init(void* windowHandle, const std::filesystem::path& shaderDirectory) = 0;
 		virtual void BeginFrame() = 0;
 		virtual void DrawFrame() = 0;
 		virtual void EndFrame() = 0;
 		
 		virtual void WindowResized() = 0;
+		virtual Framebuffer* GetFramebuffer() = 0;
+		virtual void ResizeFramebuffer(uint32_t width, uint32_t height) = 0;
 	};
 }

@@ -1,4 +1,4 @@
-﻿#include "kepch.h"
+#include "kepch.h"
 #include "Renderer.h"
 
 #include "APIs/Vulkan/VulkanRenderAPI.h"
@@ -10,7 +10,7 @@ namespace Engine
 {
 	Scope<Engine::RenderAPI> Engine::Renderer::s_API = nullptr;
 	
-	void Renderer::Init(API api, void* windowHandle)
+	void Renderer::Init(API api, void* windowHandle, const std::filesystem::path& shaderDirectory)
 	{
 		switch (api)
 		{
@@ -25,12 +25,12 @@ namespace Engine
 			cerr << "API[Direct X 12]: Not Implemented" << "\n";
 			break;
 #endif
-		default: 
+		default:
 			cerr << "API: Unknown API" << "\n";
 			break;
 		}
 
-		s_API->Init(windowHandle);
+		s_API->Init(windowHandle, shaderDirectory);
 	}
 
 	void Renderer::BeginFrame()
@@ -51,5 +51,15 @@ namespace Engine
 	void Renderer::WindowResized()
 	{
 		s_API->WindowResized();
+	}
+
+	Framebuffer* Renderer::GetFramebuffer()
+	{
+		return s_API->GetFramebuffer();
+	}
+
+	void Renderer::ResizeFramebuffer(uint32_t width, uint32_t height)
+	{
+		s_API->ResizeFramebuffer(width, height);
 	}
 }
