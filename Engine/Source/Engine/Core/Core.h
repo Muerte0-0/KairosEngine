@@ -1,15 +1,17 @@
-﻿#pragma once
+#pragma once
+#include "Engine/Core/Application.h"
 #include "Engine/Debug/Log.h"
 
 namespace Engine
 {
-	inline void InitializeCore()
+	inline void InitializeCore(const ApplicationSpecification& applicationSpec)
 	{
-		Log::Init();
+		Log::Init(applicationSpec.Name);
+		
 	}
 	
 	inline void ShutdownCore()
 	{
-		
+		Log::Shutdown();
 	}
 }

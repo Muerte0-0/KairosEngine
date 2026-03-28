@@ -25,13 +25,13 @@ namespace Engine
         ImGuiStyle& style = ImGui::GetStyle();
         style.FramePadding = ImVec2(10.0f, 6.0f);
         style.ItemSpacing = ImVec2(6.0f, 6.0f);
-        style.WindowRounding = 8.0f;
-        style.ChildRounding = 8.0f;
-        style.FrameRounding = 6.0f;
-        style.PopupRounding = 6.0f;
-        style.ScrollbarRounding = 6.0f;
-        style.GrabRounding = 6.0f;
-        style.TabRounding = 6.0f;
+        style.WindowRounding = 2.0f;
+        style.ChildRounding = 2.0f;
+        style.FrameRounding = 2.0f;
+        style.PopupRounding = 2.0f;
+        style.ScrollbarRounding = 2.0f;
+        style.GrabRounding = 2.0f;
+        style.TabRounding = 2.0f;
         style.WindowTitleAlign = ImVec2(0.5f, 0.5f);
         style.ButtonTextAlign = ImVec2(0.5f, 0.5f);
     }

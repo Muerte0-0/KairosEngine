@@ -17,7 +17,7 @@ public:
 	Engine::ApplicationSpecification GetApplicationSpecs() override
 	{
 		Engine::ApplicationSpecification appSpec;
-		appSpec.Name = "Kairos Editor";
+		appSpec.Name = "KairosEditor";
         
 		Engine::WindowSpecification windowSpec;
 		windowSpec.Title = "Kairos Editor";

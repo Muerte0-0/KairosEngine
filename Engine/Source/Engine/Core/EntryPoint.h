@@ -10,9 +10,9 @@ inline int Main(int argc, char** argv)
 {
 	while (g_ApplicationRunning)
 	{
-		Engine::InitializeCore(); // Initialize the Core systems of the Engine
-        
 		Engine::Application* app = Engine::CreateApplication(argc, argv); // Create the Application Instance
+		
+		Engine::InitializeCore(app->GetApplicationSpecs()); // Initialize the Core systems of the Engine
         
 		app->Initialize(); // Initialize Application
 		app->Run(); // Run the Application Loop
