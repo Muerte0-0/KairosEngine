@@ -59,8 +59,8 @@ void EditorLayer::OnImGuiRender()
     ImGuiIO& io = ImGui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
-        ImGuiID dockspace_id = ImGui::GetID("Editor Dockspace");
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspaceFlags);
+        ImGuiID dockspaceID = ImGui::GetID("Editor Dockspace");
+        ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
     }
 
     DrawMenuBar();
