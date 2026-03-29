@@ -95,7 +95,7 @@ namespace Engine
 	{
 		VulkanRenderAPI* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
 		
-		// this initializes imgui for Vulkan
+		// This initializes ImGui for Vulkan
 		ImGui_ImplVulkan_InitInfo iniInfo = {};
 		iniInfo.Instance = *api->GetInstance();
 		iniInfo.PhysicalDevice = *api->GetVulkanDevice()->GetPhysicalDevice();

@@ -5,23 +5,24 @@
 
 namespace Engine
 {
-	ImVec4 RGBAtoIV4(int r, int g, int b, int a)
-	{
-		float newr = r / 255;
-		float newg = g / 255;
-		float newb = b / 255;
-		float newa = a;
-		return ImVec4(newr, newg, newb, newa);
-	}
-	
 	static float SRGBToLinear(float c)
 	{
 		if (c <= 0.04045f)
 			return c / 12.92f;
 		return powf((c + 0.055f) / 1.055f, 2.4f);
 	}
-    
-	ImVec4 HexToImVec4(const std::string& hex)
+	
+	ImVec4 RGBAtoIV4(int r, int g, int b, int a = 255)
+	{
+		float newr = r / 255;
+		float newg = g / 255;
+		float newb = b / 255;
+		float newa = a / 255;
+		
+		return ImVec4(SRGBToLinear(newr), SRGBToLinear(newg), SRGBToLinear(newb), SRGBToLinear(newa));
+	}
+
+	static ImVec4 HexToImVec4(const std::string& hex)
 	{
 		std::string clean = hex;
 		if (clean[0] == '#')
@@ -73,10 +74,41 @@ namespace Engine
         //io.FontDefault = io.Fonts->AddFontFromFileTTF("D:/Dev/Projects/KairosEngine/Editor/Assets/Fonts/OpenSans/OpenSans-Regular.ttf", fontSize);
         //io.Fonts->AddFontFromFileTTF("D:/Dev/Projects/KairosEngine/Editor/Assets/Fonts/OpenSans/OpenSans-Bold.ttf", fontSize);
         
+		ImGuiStyle& style = ImGui::GetStyle();
+		
+		// =========================================================
+		// Layout
+		// =========================================================
+		style.WindowRounding    = 6.0f;
+		style.ChildRounding     = 6.0f;
+		style.FrameRounding     = 4.0f;
+		style.PopupRounding     = 4.0f;
+		style.ScrollbarRounding = 9.0f;
+		style.GrabRounding      = 4.0f;
+		style.TabRounding       = 4.0f;
+    
+		style.WindowPadding     = ImVec2(8.0f, 8.0f);
+		style.FramePadding      = ImVec2(5.0f, 3.0f);
+		style.ItemSpacing       = ImVec2(8.0f, 4.0f);
+		style.ItemInnerSpacing  = ImVec2(4.0f, 4.0f);
+    
+		style.IndentSpacing     = 21.0f;
+		style.ScrollbarSize     = 14.0f;
+		style.GrabMinSize       = 10.0f;
+    
+		// Borders
+		style.WindowBorderSize  = 1.0f;
+		style.ChildBorderSize   = 1.0f;
+		style.PopupBorderSize   = 1.0f;
+		style.FrameBorderSize   = 0.0f;
+		style.TabBorderSize     = 0.0f;
+		
         switch (theme)
         {
             case Theme::Dark:       SetTheme_Dark(); break;
             case Theme::Light:      SetTheme_Light(); break;
+            case Theme::Latte:		SetTheme_CatppuccinLatte(); break; 
+            case Theme::Frappé:		SetTheme_CatppuccinFrappé(); break; 
             case Theme::Macchiato:  SetTheme_CatppuccinMacchiato(); break; 
             case Theme::Mocha:      SetTheme_CatppuccinMocha(); break; 
             default:                break;
@@ -326,163 +358,416 @@ namespace Engine
         colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.96f, 0.96f, 0.94f, 1.00f);
 #endif
     }
+
+	void ImGuiUtils::SetTheme_CatppuccinLatte()
+	{
+        ImVec4* colors = ImGui::GetStyle().Colors;
     
+        // =========================================================
+        // Catppuccin Latte Palette
+        // =========================================================
+    
+		// --- Base layers ---
+		const ImVec4 base      = HexToImVec4("#eff1f5");
+		const ImVec4 mantle    = HexToImVec4("#e6e9ef");
+		const ImVec4 crust     = HexToImVec4("#dce0e8");
+		const ImVec4 surface0  = HexToImVec4("#ccd0da");
+		const ImVec4 surface1  = HexToImVec4("#bcc0cc");
+		const ImVec4 surface2  = HexToImVec4("#acb0be");
+
+		// --- Overlay / UI chrome ---
+		const ImVec4 overlay0  = HexToImVec4("#9ca0b0");
+		const ImVec4 overlay1  = HexToImVec4("#8c8fa1");
+		const ImVec4 overlay2  = HexToImVec4("#7c7f93");
+
+		// --- Text hierarchy ---
+		const ImVec4 text      = HexToImVec4("#4c4f69");
+		const ImVec4 subtext0  = HexToImVec4("#6c6f85");
+		const ImVec4 subtext1  = HexToImVec4("#5c5f77");
+
+		// --- Accent colors ---
+		const ImVec4 rosewater = HexToImVec4("#dc8a78");
+		const ImVec4 flamingo  = HexToImVec4("#dd7878");
+		const ImVec4 pink      = HexToImVec4("#ea76cb");
+		const ImVec4 mauve     = HexToImVec4("#8839ef");
+		const ImVec4 red       = HexToImVec4("#d20f39");
+		const ImVec4 maroon    = HexToImVec4("#e64553");
+		const ImVec4 peach     = HexToImVec4("#fe640b");
+		const ImVec4 yellow    = HexToImVec4("#df8e1d");
+		const ImVec4 green     = HexToImVec4("#40a02b");
+		const ImVec4 teal      = HexToImVec4("#179299");
+		const ImVec4 sky       = HexToImVec4("#04a5e5");
+		const ImVec4 sapphire  = HexToImVec4("#209fb5");
+		const ImVec4 blue      = HexToImVec4("#1e66f5");
+		const ImVec4 lavender  = HexToImVec4("#7287fd");
+		
+        // =========================================================
+        // Core UI
+        // =========================================================
+        colors[ImGuiCol_WindowBg]  = base;
+        colors[ImGuiCol_ChildBg]   = mantle;
+        colors[ImGuiCol_PopupBg]   = crust;
+    
+        colors[ImGuiCol_Border]        = surface1;
+        colors[ImGuiCol_BorderShadow]  = ImVec4(0,0,0,0);
+    
+        // =========================================================
+        // Text
+        // =========================================================
+        colors[ImGuiCol_Text]         = text;
+        colors[ImGuiCol_TextDisabled] = subtext0;
+    
+        // =========================================================
+        // Interactive Elements (Frame-based widgets)
+        // =========================================================
+        colors[ImGuiCol_FrameBg]         = surface0;
+        colors[ImGuiCol_FrameBgHovered]  = surface1;
+        colors[ImGuiCol_FrameBgActive]   = surface2;
+    	
+    	colors[ImGuiCol_Button]        = ImVec4(blue.x, blue.y, blue.z, 0.10f);
+    	colors[ImGuiCol_ButtonHovered] = ImVec4(blue.x, blue.y, blue.z, 0.22f);
+    	colors[ImGuiCol_ButtonActive]  = ImVec4(blue.x, blue.y, blue.z, 0.35f);
+    
+        colors[ImGuiCol_Header]          = surface0;
+        colors[ImGuiCol_HeaderHovered]   = surface1;
+        colors[ImGuiCol_HeaderActive]    = surface2;
+    
+        // =========================================================
+        // Titles & Menu
+        // =========================================================
+        colors[ImGuiCol_TitleBg]          = mantle;
+        colors[ImGuiCol_TitleBgActive]    = surface0;
+        colors[ImGuiCol_TitleBgCollapsed] = mantle;
+        colors[ImGuiCol_MenuBarBg]        = mantle;
+    
+        // =========================================================
+        // Scrollbars
+        // =========================================================
+        colors[ImGuiCol_ScrollbarBg]          = surface0;
+        colors[ImGuiCol_ScrollbarGrab]        = surface2;
+        colors[ImGuiCol_ScrollbarGrabHovered] = overlay0;
+        colors[ImGuiCol_ScrollbarGrabActive]  = overlay2;
+    
+        // =========================================================
+        // Tabs
+        // =========================================================
+        colors[ImGuiCol_Tab]                = surface0;
+        colors[ImGuiCol_TabHovered]         = surface2;
+        colors[ImGuiCol_TabActive]          = surface1;
+        colors[ImGuiCol_TabUnfocused]       = surface0;
+        colors[ImGuiCol_TabUnfocusedActive] = surface1;
+    
+        // =========================================================
+        // Accents / Feedback
+        // =========================================================
+        colors[ImGuiCol_CheckMark]        = green;
+        colors[ImGuiCol_SliderGrab]       = sapphire;
+        colors[ImGuiCol_SliderGrabActive] = blue;
+    
+        colors[ImGuiCol_Separator]        = surface1;
+        colors[ImGuiCol_SeparatorHovered] = mauve;
+        colors[ImGuiCol_SeparatorActive]  = mauve;
+    
+        colors[ImGuiCol_ResizeGrip]       = surface2;
+        colors[ImGuiCol_ResizeGripHovered]= mauve;
+        colors[ImGuiCol_ResizeGripActive] = mauve;
+    
+        // =========================================================
+        // Tables & Misc
+        // =========================================================
+        colors[ImGuiCol_TableHeaderBg]    = surface0;
+        colors[ImGuiCol_TableBorderStrong]= surface1;
+        colors[ImGuiCol_TableBorderLight] = surface0;
+    
+        colors[ImGuiCol_TableRowBg]       = ImVec4(0,0,0,0);
+        colors[ImGuiCol_TableRowBgAlt]    = ImVec4(1,1,1,0.06f);
+    
+        colors[ImGuiCol_TextSelectedBg]   = surface2;
+        colors[ImGuiCol_DragDropTarget]   = yellow;
+    
+        colors[ImGuiCol_NavHighlight]         = blue;
+        colors[ImGuiCol_NavWindowingHighlight]= ImVec4(1,1,1,0.7f);
+        colors[ImGuiCol_NavWindowingDimBg]    = ImVec4(0.8f,0.8f,0.8f,0.2f);
+        colors[ImGuiCol_ModalWindowDimBg]     = ImVec4(0,0,0,0.35f);
+        
+#ifdef IMGUI_HAS_DOCK
+        colors[ImGuiCol_DockingPreview] = ImVec4(0.71f, 0.75f, 1.00f, 0.50f);
+        colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.12f, 0.12f, 0.18f, 1.00f);
+#endif
+	}
+
+	void ImGuiUtils::SetTheme_CatppuccinFrappé()
+	{
+		ImVec4* colors = ImGui::GetStyle().Colors;
+    
+        // =========================================================
+        // Catppuccin Frappé Palette
+        // =========================================================
+    
+		// --- Base layers ---
+		const ImVec4 base      = HexToImVec4("#303446");
+		const ImVec4 mantle    = HexToImVec4("#292c3c");
+		const ImVec4 crust     = HexToImVec4("#232634");
+		const ImVec4 surface0  = HexToImVec4("#414559");
+		const ImVec4 surface1  = HexToImVec4("#51576d");
+		const ImVec4 surface2  = HexToImVec4("#626880");
+
+		// --- Overlay ---
+		const ImVec4 overlay0  = HexToImVec4("#737994");
+		const ImVec4 overlay1  = HexToImVec4("#838ba7");
+		const ImVec4 overlay2  = HexToImVec4("#949cbb");
+
+		// --- Text ---
+		const ImVec4 text      = HexToImVec4("#c6d0f5");
+		const ImVec4 subtext0  = HexToImVec4("#a5adce");
+		const ImVec4 subtext1  = HexToImVec4("#b5bfe2");
+
+		// --- Accents ---
+		const ImVec4 rosewater = HexToImVec4("#f2d5cf");
+		const ImVec4 flamingo  = HexToImVec4("#eebebe");
+		const ImVec4 pink      = HexToImVec4("#f4b8e4");
+		const ImVec4 mauve     = HexToImVec4("#ca9ee6");
+		const ImVec4 red       = HexToImVec4("#e78284");
+		const ImVec4 maroon    = HexToImVec4("#ea999c");
+		const ImVec4 peach     = HexToImVec4("#ef9f76");
+		const ImVec4 yellow    = HexToImVec4("#e5c890");
+		const ImVec4 green     = HexToImVec4("#a6d189");
+		const ImVec4 teal      = HexToImVec4("#81c8be");
+		const ImVec4 sky       = HexToImVec4("#99d1db");
+		const ImVec4 sapphire  = HexToImVec4("#85c1dc");
+		const ImVec4 blue      = HexToImVec4("#8caaee");
+		const ImVec4 lavender  = HexToImVec4("#babbf1");
+		
+        // =========================================================
+        // Core UI
+        // =========================================================
+        colors[ImGuiCol_WindowBg]  = base;
+        colors[ImGuiCol_ChildBg]   = mantle;
+        colors[ImGuiCol_PopupBg]   = crust;
+    
+        colors[ImGuiCol_Border]        = surface1;
+        colors[ImGuiCol_BorderShadow]  = ImVec4(0,0,0,0);
+    
+        // =========================================================
+        // Text
+        // =========================================================
+        colors[ImGuiCol_Text]         = text;
+        colors[ImGuiCol_TextDisabled] = subtext0;
+    
+        // =========================================================
+        // Interactive Elements (Frame-based widgets)
+        // =========================================================
+        colors[ImGuiCol_FrameBg]         = surface0;
+        colors[ImGuiCol_FrameBgHovered]  = surface1;
+        colors[ImGuiCol_FrameBgActive]   = surface2;
+    	
+    	colors[ImGuiCol_Button]        = ImVec4(blue.x, blue.y, blue.z, 0.10f);
+    	colors[ImGuiCol_ButtonHovered] = ImVec4(blue.x, blue.y, blue.z, 0.22f);
+    	colors[ImGuiCol_ButtonActive]  = ImVec4(blue.x, blue.y, blue.z, 0.35f);
+    
+        colors[ImGuiCol_Header]          = surface0;
+        colors[ImGuiCol_HeaderHovered]   = surface1;
+        colors[ImGuiCol_HeaderActive]    = surface2;
+    
+        // =========================================================
+        // Titles & Menu
+        // =========================================================
+        colors[ImGuiCol_TitleBg]          = mantle;
+        colors[ImGuiCol_TitleBgActive]    = surface0;
+        colors[ImGuiCol_TitleBgCollapsed] = mantle;
+        colors[ImGuiCol_MenuBarBg]        = mantle;
+    
+        // =========================================================
+        // Scrollbars
+        // =========================================================
+        colors[ImGuiCol_ScrollbarBg]          = surface0;
+        colors[ImGuiCol_ScrollbarGrab]        = surface2;
+        colors[ImGuiCol_ScrollbarGrabHovered] = overlay0;
+        colors[ImGuiCol_ScrollbarGrabActive]  = overlay2;
+    
+        // =========================================================
+        // Tabs
+        // =========================================================
+        colors[ImGuiCol_Tab]                = surface0;
+        colors[ImGuiCol_TabHovered]         = surface2;
+        colors[ImGuiCol_TabActive]          = surface1;
+        colors[ImGuiCol_TabUnfocused]       = surface0;
+        colors[ImGuiCol_TabUnfocusedActive] = surface1;
+    
+        // =========================================================
+        // Accents / Feedback
+        // =========================================================
+        colors[ImGuiCol_CheckMark]        = green;
+        colors[ImGuiCol_SliderGrab]       = sapphire;
+        colors[ImGuiCol_SliderGrabActive] = blue;
+    
+        colors[ImGuiCol_Separator]        = surface1;
+        colors[ImGuiCol_SeparatorHovered] = mauve;
+        colors[ImGuiCol_SeparatorActive]  = mauve;
+    
+        colors[ImGuiCol_ResizeGrip]       = surface2;
+        colors[ImGuiCol_ResizeGripHovered]= mauve;
+        colors[ImGuiCol_ResizeGripActive] = mauve;
+    
+        // =========================================================
+        // Tables & Misc
+        // =========================================================
+        colors[ImGuiCol_TableHeaderBg]    = surface0;
+        colors[ImGuiCol_TableBorderStrong]= surface1;
+        colors[ImGuiCol_TableBorderLight] = surface0;
+    
+        colors[ImGuiCol_TableRowBg]       = ImVec4(0,0,0,0);
+        colors[ImGuiCol_TableRowBgAlt]    = ImVec4(1,1,1,0.06f);
+    
+        colors[ImGuiCol_TextSelectedBg]   = surface2;
+        colors[ImGuiCol_DragDropTarget]   = yellow;
+    
+        colors[ImGuiCol_NavHighlight]         = blue;
+        colors[ImGuiCol_NavWindowingHighlight]= ImVec4(1,1,1,0.7f);
+        colors[ImGuiCol_NavWindowingDimBg]    = ImVec4(0.8f,0.8f,0.8f,0.2f);
+        colors[ImGuiCol_ModalWindowDimBg]     = ImVec4(0,0,0,0.35f);
+        
+#ifdef IMGUI_HAS_DOCK
+        colors[ImGuiCol_DockingPreview] = ImVec4(0.71f, 0.75f, 1.00f, 0.50f);
+        colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.12f, 0.12f, 0.18f, 1.00f);
+#endif
+	}
+
 	void ImGuiUtils::SetTheme_CatppuccinMacchiato()
 	{
-	    ImGuiStyle& style = ImGui::GetStyle();
-	    ImVec4* colors = style.Colors;
-	
-	    // =========================================================
-	    // Layout
-	    // =========================================================
-		style.WindowRounding    = 6.0f;
-		style.ChildRounding     = 6.0f;
-		style.FrameRounding     = 4.0f;
-		style.PopupRounding     = 4.0f;
-		style.ScrollbarRounding = 9.0f;
-		style.GrabRounding      = 4.0f;
-		style.TabRounding       = 4.0f;
-    
-		style.WindowPadding     = ImVec2(8.0f, 8.0f);
-		style.FramePadding      = ImVec2(5.0f, 3.0f);
-		style.ItemSpacing       = ImVec2(8.0f, 4.0f);
-		style.ItemInnerSpacing  = ImVec2(4.0f, 4.0f);
-    
-		style.IndentSpacing     = 21.0f;
-		style.ScrollbarSize     = 14.0f;
-		style.GrabMinSize       = 10.0f;
-    
-		// Borders
-		style.WindowBorderSize  = 1.0f;
-		style.ChildBorderSize   = 1.0f;
-		style.PopupBorderSize   = 1.0f;
-		style.FrameBorderSize   = 0.0f;
-		style.TabBorderSize     = 0.0f;
-	
+		ImVec4* colors = ImGui::GetStyle().Colors;
+		
 	    // =========================================================
 	    // Catppuccin Macchiato Palette
 	    // =========================================================
 	
-	    // --- Base layers ---
-	    const ImVec4 base		= HexToImVec4("#24273a");
-	    const ImVec4 mantle		= HexToImVec4("#1e2030");
-	    const ImVec4 crust		= HexToImVec4("#181926");
-	    const ImVec4 surface0	= HexToImVec4("#363a4f");
-	    const ImVec4 surface1	= HexToImVec4("#494d64");
-	    const ImVec4 surface2	= HexToImVec4("#5b6078");
-	
-	    // --- Overlays ---
-	    const ImVec4 overlay0	= HexToImVec4("#6e738d");
-	    const ImVec4 overlay2	= HexToImVec4("#939ab7");
-	
-	    // --- Text ---
-	    const ImVec4 text		= HexToImVec4("#cad3f5");
-	    const ImVec4 subtext	= HexToImVec4("#a5adcb");
-	
-	    // --- Accents ---
-	    const ImVec4 blue     	= HexToImVec4("#8aadf4");
-	    const ImVec4 green    	= HexToImVec4("#a6da95");
-	    const ImVec4 yellow   	= HexToImVec4("#eed49f");
-	    const ImVec4 mauve    	= HexToImVec4("#c6a0f6");
-	    const ImVec4 peach    	= HexToImVec4("#f5a97f");
-	    const ImVec4 sapphire 	= HexToImVec4("#7dc4e4");
-	
-	    // =========================================================
-	    // Core UI
-	    // =========================================================
-	    colors[ImGuiCol_WindowBg]  = base;
-	    colors[ImGuiCol_ChildBg]   = mantle;
-	    colors[ImGuiCol_PopupBg]   = crust;
-	
-	    colors[ImGuiCol_Border]        = surface1;
-	    colors[ImGuiCol_BorderShadow]  = ImVec4(0,0,0,0);
-	
-	    // =========================================================
-	    // Text
-	    // =========================================================
-	    colors[ImGuiCol_Text]         = text;
-	    colors[ImGuiCol_TextDisabled] = subtext;
+		// --- Base layers ---
+		const ImVec4 base      = HexToImVec4("#24273a");
+		const ImVec4 mantle    = HexToImVec4("#1e2030");
+		const ImVec4 crust     = HexToImVec4("#181926");
+		const ImVec4 surface0  = HexToImVec4("#363a4f");
+		const ImVec4 surface1  = HexToImVec4("#494d64");
+		const ImVec4 surface2  = HexToImVec4("#5b6078");
+
+		// --- Overlay ---
+		const ImVec4 overlay0  = HexToImVec4("#6e738d");
+		const ImVec4 overlay1  = HexToImVec4("#8087a2");
+		const ImVec4 overlay2  = HexToImVec4("#939ab7");
+
+		// --- Text ---
+		const ImVec4 text      = HexToImVec4("#cad3f5");
+		const ImVec4 subtext0  = HexToImVec4("#a5adcb");
+		const ImVec4 subtext1  = HexToImVec4("#b8c0e0");
+
+		// --- Accents ---
+		const ImVec4 rosewater = HexToImVec4("#f4dbd6");
+		const ImVec4 flamingo  = HexToImVec4("#f0c6c6");
+		const ImVec4 pink      = HexToImVec4("#f5bde6");
+		const ImVec4 mauve     = HexToImVec4("#c6a0f6");
+		const ImVec4 red       = HexToImVec4("#ed8796");
+		const ImVec4 maroon    = HexToImVec4("#ee99a0");
+		const ImVec4 peach     = HexToImVec4("#f5a97f");
+		const ImVec4 yellow    = HexToImVec4("#eed49f");
+		const ImVec4 green     = HexToImVec4("#a6da95");
+		const ImVec4 teal      = HexToImVec4("#8bd5ca");
+		const ImVec4 sky       = HexToImVec4("#91d7e3");
+		const ImVec4 sapphire  = HexToImVec4("#7dc4e4");
+		const ImVec4 blue      = HexToImVec4("#8aadf4");
+		const ImVec4 lavender  = HexToImVec4("#b7bdf8");
 	
 	    // =========================================================
-	    // Frames & Inputs
-	    // =========================================================
-	    colors[ImGuiCol_FrameBg]         = surface0;
-	    colors[ImGuiCol_FrameBgHovered]  = surface1;
-	    colors[ImGuiCol_FrameBgActive]   = surface2;
-	
-	    // =========================================================
-	    // Buttons
-	    // =========================================================
-	    colors[ImGuiCol_Button]        = ImVec4(blue.x, blue.y, blue.z, 0.12f);
-	    colors[ImGuiCol_ButtonHovered] = ImVec4(blue.x, blue.y, blue.z, 0.28f);
-	    colors[ImGuiCol_ButtonActive]  = ImVec4(blue.x, blue.y, blue.z, 0.45f);
-	
-	    colors[ImGuiCol_Header]        = surface0;
-	    colors[ImGuiCol_HeaderHovered] = surface1;
-	    colors[ImGuiCol_HeaderActive]  = surface2;
-	
-	    // =========================================================
-	    // Title & Menu
-	    // =========================================================
-	    colors[ImGuiCol_TitleBg]          = mantle;
-	    colors[ImGuiCol_TitleBgActive]    = surface0;
-	    colors[ImGuiCol_TitleBgCollapsed] = mantle;
-	    colors[ImGuiCol_MenuBarBg]        = mantle;
-	
-	    // =========================================================
-	    // Scrollbars
-	    // =========================================================
-	    colors[ImGuiCol_ScrollbarBg]          = surface0;
-	    colors[ImGuiCol_ScrollbarGrab]        = surface2;
-	    colors[ImGuiCol_ScrollbarGrabHovered] = overlay0;
-	    colors[ImGuiCol_ScrollbarGrabActive]  = overlay2;
-	
-	    // =========================================================
-	    // Tabs
-	    // =========================================================
-	    colors[ImGuiCol_Tab]                = surface0;
-	    colors[ImGuiCol_TabHovered]         = surface2;
-	    colors[ImGuiCol_TabActive]          = surface1;
-	    colors[ImGuiCol_TabUnfocused]       = surface0;
-	    colors[ImGuiCol_TabUnfocusedActive] = surface1;
-	
-	    // =========================================================
-	    // Accents
-	    // =========================================================
-	    colors[ImGuiCol_CheckMark]        = green;
-	    colors[ImGuiCol_SliderGrab]       = sapphire;
-	    colors[ImGuiCol_SliderGrabActive] = blue;
-	
-	    colors[ImGuiCol_Separator]        = surface1;
-	    colors[ImGuiCol_SeparatorHovered] = mauve;
-	    colors[ImGuiCol_SeparatorActive]  = mauve;
-	
-	    colors[ImGuiCol_ResizeGrip]       = surface2;
-	    colors[ImGuiCol_ResizeGripHovered]= mauve;
-	    colors[ImGuiCol_ResizeGripActive] = mauve;
-	
-	    // =========================================================
-	    // Tables & Misc
-	    // =========================================================
-	    colors[ImGuiCol_TableHeaderBg]    = surface0;
-	    colors[ImGuiCol_TableBorderStrong]= surface1;
-	    colors[ImGuiCol_TableBorderLight] = surface0;
-	
-	    colors[ImGuiCol_TableRowBg]       = ImVec4(0,0,0,0);
-	    colors[ImGuiCol_TableRowBgAlt]    = ImVec4(1,1,1,0.05f);
-	
-	    colors[ImGuiCol_TextSelectedBg]   = surface2;
-	    colors[ImGuiCol_DragDropTarget]   = yellow;
-	
-	    colors[ImGuiCol_NavHighlight]         = blue;
-	    colors[ImGuiCol_NavWindowingHighlight]= ImVec4(1,1,1,0.7f);
-	    colors[ImGuiCol_NavWindowingDimBg]    = ImVec4(0.8f,0.8f,0.8f,0.2f);
-	    colors[ImGuiCol_ModalWindowDimBg]     = ImVec4(0,0,0,0.35f);
-	
-	#ifdef IMGUI_HAS_DOCK
-	    colors[ImGuiCol_DockingPreview] = ImVec4(blue.x, blue.y, blue.z, 0.45f);
-	    colors[ImGuiCol_DockingEmptyBg] = base;
-	#endif
+        // Core UI
+        // =========================================================
+        colors[ImGuiCol_WindowBg]  = base;
+        colors[ImGuiCol_ChildBg]   = mantle;
+        colors[ImGuiCol_PopupBg]   = crust;
+    
+        colors[ImGuiCol_Border]        = surface1;
+        colors[ImGuiCol_BorderShadow]  = ImVec4(0,0,0,0);
+    
+        // =========================================================
+        // Text
+        // =========================================================
+        colors[ImGuiCol_Text]         = text;
+        colors[ImGuiCol_TextDisabled] = subtext0;
+    
+        // =========================================================
+        // Interactive Elements (Frame-based widgets)
+        // =========================================================
+        colors[ImGuiCol_FrameBg]         = surface0;
+        colors[ImGuiCol_FrameBgHovered]  = surface1;
+        colors[ImGuiCol_FrameBgActive]   = surface2;
+    	
+    	colors[ImGuiCol_Button]        = ImVec4(blue.x, blue.y, blue.z, 0.10f);
+    	colors[ImGuiCol_ButtonHovered] = ImVec4(blue.x, blue.y, blue.z, 0.22f);
+    	colors[ImGuiCol_ButtonActive]  = ImVec4(blue.x, blue.y, blue.z, 0.35f);
+    
+        colors[ImGuiCol_Header]          = surface0;
+        colors[ImGuiCol_HeaderHovered]   = surface1;
+        colors[ImGuiCol_HeaderActive]    = surface2;
+    
+        // =========================================================
+        // Titles & Menu
+        // =========================================================
+        colors[ImGuiCol_TitleBg]          = mantle;
+        colors[ImGuiCol_TitleBgActive]    = surface0;
+        colors[ImGuiCol_TitleBgCollapsed] = mantle;
+        colors[ImGuiCol_MenuBarBg]        = mantle;
+    
+        // =========================================================
+        // Scrollbars
+        // =========================================================
+        colors[ImGuiCol_ScrollbarBg]          = surface0;
+        colors[ImGuiCol_ScrollbarGrab]        = surface2;
+        colors[ImGuiCol_ScrollbarGrabHovered] = overlay0;
+        colors[ImGuiCol_ScrollbarGrabActive]  = overlay2;
+    
+        // =========================================================
+        // Tabs
+        // =========================================================
+        colors[ImGuiCol_Tab]                = surface0;
+        colors[ImGuiCol_TabHovered]         = surface2;
+        colors[ImGuiCol_TabActive]          = surface1;
+        colors[ImGuiCol_TabUnfocused]       = surface0;
+        colors[ImGuiCol_TabUnfocusedActive] = surface1;
+    
+        // =========================================================
+        // Accents / Feedback
+        // =========================================================
+        colors[ImGuiCol_CheckMark]        = green;
+        colors[ImGuiCol_SliderGrab]       = sapphire;
+        colors[ImGuiCol_SliderGrabActive] = blue;
+    
+        colors[ImGuiCol_Separator]        = surface1;
+        colors[ImGuiCol_SeparatorHovered] = mauve;
+        colors[ImGuiCol_SeparatorActive]  = mauve;
+    
+        colors[ImGuiCol_ResizeGrip]       = surface2;
+        colors[ImGuiCol_ResizeGripHovered]= mauve;
+        colors[ImGuiCol_ResizeGripActive] = mauve;
+    
+        // =========================================================
+        // Tables & Misc
+        // =========================================================
+        colors[ImGuiCol_TableHeaderBg]    = surface0;
+        colors[ImGuiCol_TableBorderStrong]= surface1;
+        colors[ImGuiCol_TableBorderLight] = surface0;
+    
+        colors[ImGuiCol_TableRowBg]       = ImVec4(0,0,0,0);
+        colors[ImGuiCol_TableRowBgAlt]    = ImVec4(1,1,1,0.06f);
+    
+        colors[ImGuiCol_TextSelectedBg]   = surface2;
+        colors[ImGuiCol_DragDropTarget]   = yellow;
+    
+        colors[ImGuiCol_NavHighlight]         = blue;
+        colors[ImGuiCol_NavWindowingHighlight]= ImVec4(1,1,1,0.7f);
+        colors[ImGuiCol_NavWindowingDimBg]    = ImVec4(0.8f,0.8f,0.8f,0.2f);
+        colors[ImGuiCol_ModalWindowDimBg]     = ImVec4(0,0,0,0.35f);
+        
+#ifdef IMGUI_HAS_DOCK
+        colors[ImGuiCol_DockingPreview] = ImVec4(0.71f, 0.75f, 1.00f, 0.50f);
+        colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.12f, 0.12f, 0.18f, 1.00f);
+#endif
 	}
 	
     void ImGuiUtils::SetTheme_CatppuccinMocha()
@@ -521,7 +806,7 @@ namespace Engine
         // Catppuccin Mocha Palette
         // =========================================================
     
-        // --- Base layers (depth stack) ---
+        // --- Base layers ---
         const ImVec4 base		= HexToImVec4("#1e1e2e");
         const ImVec4 mantle		= HexToImVec4("#181825");
         const ImVec4 crust		= HexToImVec4("#11111b");
