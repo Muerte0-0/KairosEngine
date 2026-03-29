@@ -4,18 +4,20 @@
 
 #include <filesystem>
 
-#include <vulkan/vulkan_raii.hpp>
+#include "Engine/Renderer/RendererUtils.h"
 
 namespace Engine
-{
+{	
 	struct GraphicsPipelineCreateInfo
 	{
 		std::filesystem::path ShaderDirectory;
+		
 		ShaderCreateInfo VertexShader;
 		ShaderCreateInfo FragmentShader;
-		vk::Format ColorFormat = vk::Format::eUndefined;
-		vk::Format DepthFormat = vk::Format::eUndefined;
-		vk::SampleCountFlagBits SampleCount = vk::SampleCountFlagBits::e1;
+		
+		TextureFormat ColorFormat = TextureFormat::Undefined;
+		TextureFormat DepthFormat = TextureFormat::Undefined;
+		SampleCountBits SampleCount = SampleCountBits::s1;
 	};
 
 	class GraphicsPipeline

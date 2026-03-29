@@ -137,4 +137,76 @@ namespace Engine
 
 		commandBuffer.pipelineBarrier2(dependency_info);
 	}
+	
+	vk::Format VulkanUtils::ToVulkanFormat(TextureFormat format)
+	{
+		switch (format)
+		{
+			case TextureFormat::RGBA8_UNorm:        return vk::Format::eR8G8B8A8Unorm;
+			case TextureFormat::BGRA8_UNorm:        return vk::Format::eB8G8R8A8Unorm;
+
+			case TextureFormat::BGRA8_SRGB:         return vk::Format::eB8G8R8A8Srgb;
+
+			case TextureFormat::RGBA32_Float:       return vk::Format::eR32G32B32A32Sfloat;
+
+			case TextureFormat::Depth24Stencil8:    return vk::Format::eD24UnormS8Uint;
+			case TextureFormat::Depth32_Float:      return vk::Format::eD32Sfloat;
+
+			case TextureFormat::R8_UNorm:           return vk::Format::eR8Unorm;
+			case TextureFormat::RG8_UNorm:          return vk::Format::eR8G8Unorm;
+
+			case TextureFormat::Undefined:          
+			default:                                return vk::Format::eUndefined;
+		}
+	}
+	
+	vk::SampleCountFlagBits VulkanUtils::ToVulkanSampleCount(SampleCountBits samples)
+	{
+		switch (samples)
+		{
+			case SampleCountBits::s1:	return vk::SampleCountFlagBits::e1;
+			case SampleCountBits::s2:	return vk::SampleCountFlagBits::e2;
+			case SampleCountBits::s4:	return vk::SampleCountFlagBits::e4;
+			case SampleCountBits::s8:	return vk::SampleCountFlagBits::e8;
+			case SampleCountBits::s16:	return vk::SampleCountFlagBits::e16;
+			default:					return vk::SampleCountFlagBits::e1;
+		}
+	}
+	
+	TextureFormat VulkanUtils::ToTextureFormat(vk::Format format)
+	{
+		switch (format)
+		{
+			case vk::Format::eR8G8B8A8Unorm:        return TextureFormat::RGBA8_UNorm;
+			case vk::Format::eB8G8R8A8Unorm:        return TextureFormat::BGRA8_UNorm;
+
+			case vk::Format::eR8G8B8A8Srgb:         return TextureFormat::RGBA8_SRGB;
+			case vk::Format::eB8G8R8A8Srgb:         return TextureFormat::BGRA8_SRGB;
+
+			case vk::Format::eR16G16B16A16Sfloat:   return TextureFormat::RGBA16_Float;
+			case vk::Format::eR32G32B32A32Sfloat:   return TextureFormat::RGBA32_Float;
+
+			case vk::Format::eD24UnormS8Uint:       return TextureFormat::Depth24Stencil8;
+			case vk::Format::eD32Sfloat:            return TextureFormat::Depth32_Float;
+
+			case vk::Format::eR8Unorm:              return TextureFormat::R8_UNorm;
+			case vk::Format::eR8G8Unorm:            return TextureFormat::RG8_UNorm;
+
+			case vk::Format::eUndefined:
+			default:                                return TextureFormat::Undefined;
+		}
+	}
+	
+	SampleCountBits VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits samples)
+	{
+		switch (samples)
+		{
+			case vk::SampleCountFlagBits::e1:	return SampleCountBits::s1;
+			case vk::SampleCountFlagBits::e2:	return SampleCountBits::s2;
+			case vk::SampleCountFlagBits::e4:	return SampleCountBits::s4;
+			case vk::SampleCountFlagBits::e8:	return SampleCountBits::s8;
+			case vk::SampleCountFlagBits::e16:	return SampleCountBits::s16;
+			default:					return SampleCountBits::s1;
+		}
+	}
 }

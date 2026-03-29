@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include <vulkan/vulkan_raii.hpp>
 
+#include "Engine/Renderer/RendererUtils.h"
+
 namespace Engine
 {	
 	/**
@@ -66,5 +68,10 @@ namespace Engine
 			vk::PipelineStageFlags2		src_stage_mask,
 			vk::PipelineStageFlags2		dst_stage_mask,
 			vk::ImageAspectFlags		image_aspect_flags);
+		
+		static vk::Format ToVulkanFormat(TextureFormat format);
+		static vk::SampleCountFlagBits ToVulkanSampleCount(SampleCountBits samples);
+		static TextureFormat ToTextureFormat(vk::Format format);
+		static SampleCountBits ToSampleCountBits(vk::SampleCountFlagBits samples);
 	};
 }

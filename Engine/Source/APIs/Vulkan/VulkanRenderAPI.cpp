@@ -273,8 +273,8 @@ namespace Engine
 		createInfo.ShaderDirectory = m_ShaderDirectory;
 		createInfo.VertexShader = { "Shader.vertMain.vert.spv", "vertMain", ShaderStage::Vertex };
 		createInfo.FragmentShader = { "Shader.fragMain.frag.spv", "fragMain", ShaderStage::Fragment };
-		createInfo.ColorFormat = m_ViewportFramebuffer->GetColorFormat();
-		createInfo.SampleCount = vk::SampleCountFlagBits::e1;
+		createInfo.ColorFormat = VulkanUtils::ToTextureFormat(m_ViewportFramebuffer->GetColorFormat());
+		createInfo.SampleCount = VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits::e1);
 
 		m_ViewportPipeline = CreateScope<VulkanGraphicsPipeline>(*m_VulkanDevice, std::move(createInfo));
 	}

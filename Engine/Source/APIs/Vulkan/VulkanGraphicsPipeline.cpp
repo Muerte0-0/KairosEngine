@@ -2,6 +2,7 @@
 #include "VulkanGraphicsPipeline.h"
 
 #include "VulkanDevice.h"
+#include "VulkanUtils.h"
 
 namespace Engine
 {
@@ -41,7 +42,7 @@ namespace Engine
 		m_VertexShader = CreateScope<VulkanShader>(m_VulkanDevice, m_CreateInfo.VertexShader, LoadShaderBinary(vertexPath));
 		m_FragmentShader = CreateScope<VulkanShader>(m_VulkanDevice, m_CreateInfo.FragmentShader, LoadShaderBinary(fragmentPath));
 
-		LOG(LogLevel::Info, "Loaded graphics shaders: {}, {}", vertexPath.string(), fragmentPath.string());
+		LOG(LogLevel::Info, "Loaded Shaders: {}, {}", vertexPath.string(), fragmentPath.string());
 	}
 
 	void VulkanGraphicsPipeline::CreatePipelineCache()
@@ -80,8 +81,8 @@ namespace Engine
 		inputAssemblyState.topology = vk::PrimitiveTopology::eTriangleList;
 		inputAssemblyState.primitiveRestartEnable = vk::False;
 
-		const vk::Viewport viewport(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
-		const vk::Rect2D scissor(vk::Offset2D(0, 0), vk::Extent2D(1, 1));
+		constexpr vk::Viewport viewport(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
+		constexpr vk::Rect2D scissor(vk::Offset2D(0, 0), vk::Extent2D(1, 1));
 
 		vk::PipelineViewportStateCreateInfo viewportState;
 		viewportState.viewportCount = 1;
@@ -98,7 +99,7 @@ namespace Engine
 		rasterizationState.lineWidth = 1.0f;
 
 		vk::PipelineMultisampleStateCreateInfo multisampleState;
-		multisampleState.rasterizationSamples = m_CreateInfo.SampleCount;
+		multisampleState.rasterizationSamples = VulkanUtils::ToVulkanSampleCount(m_CreateInfo.SampleCount);
 		multisampleState.sampleShadingEnable = vk::False;
 
 		vk::PipelineDepthStencilStateCreateInfo depthStencilState;
@@ -108,7 +109,7 @@ namespace Engine
 		depthStencilState.depthBoundsTestEnable = vk::False;
 		depthStencilState.stencilTestEnable = vk::False;
 
-		const vk::PipelineColorBlendAttachmentState colorBlendAttachment(
+		constexpr vk::PipelineColorBlendAttachmentState colorBlendAttachment(
 			vk::False,
 			vk::BlendFactor::eOne,
 			vk::BlendFactor::eZero,
@@ -126,7 +127,7 @@ namespace Engine
 		colorBlendState.attachmentCount = 1;
 		colorBlendState.pAttachments = &colorBlendAttachment;
 
-		const std::array dynamicStates = {
+		constexpr std::array dynamicStates = {
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor
 		};
@@ -137,8 +138,10 @@ namespace Engine
 
 		vk::PipelineRenderingCreateInfo renderingInfo;
 		renderingInfo.colorAttachmentCount = 1;
-		renderingInfo.pColorAttachmentFormats = &m_CreateInfo.ColorFormat;
-		renderingInfo.depthAttachmentFormat = m_CreateInfo.DepthFormat;
+		vk::Format colorFormat = VulkanUtils::ToVulkanFormat(m_CreateInfo.ColorFormat);
+		vk::Format depthFormat = VulkanUtils::ToVulkanFormat(TextureFormat::Undefined);
+		renderingInfo.pColorAttachmentFormats = &colorFormat;
+		renderingInfo.depthAttachmentFormat = depthFormat;
 
 		vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
 		pipelineCreateInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
