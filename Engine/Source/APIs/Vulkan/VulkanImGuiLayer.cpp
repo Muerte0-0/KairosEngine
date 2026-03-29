@@ -45,7 +45,7 @@ namespace Engine
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 
-		ImGuiUtils::SetImGuiStyle(Theme::Dark);
+		ImGuiUtils::SetImGuiStyle(Theme::Mocha);
         
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow()->GetHandle());
 		ImGui_ImplGlfw_InitForVulkan(window, true);

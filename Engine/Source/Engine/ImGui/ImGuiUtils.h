@@ -16,6 +16,7 @@ namespace Engine
         Macchiato,
         Mocha
     };
+    
     class ImGuiUtils
     {
     public:
@@ -24,6 +25,9 @@ namespace Engine
     private:
         static void SetTheme_Dark();
         static void SetTheme_Light();
+        
+        // Catppuccin Themes
+        static void SetTheme_CatppuccinMacchiato();
         static void SetTheme_CatppuccinMocha();
     };
 }
