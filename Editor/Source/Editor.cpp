@@ -26,6 +26,7 @@ public:
 		windowSpec.Width = 1280;
 		windowSpec.Height = 720;
 		windowSpec.CustomTitleBar = false;
+		windowSpec.LaunchMaximized = true;
 		appSpec.WindowSpec = windowSpec;
         
 		return appSpec;

@@ -19,6 +19,7 @@ namespace Engine
 		uint32_t Height = 720;
 		bool CustomTitleBar = false;
 		bool IsResizeable = true;
+		bool LaunchMaximized = false;
 		bool VSync = true;
 
 		using EventCallbackFn = std::function<void(Event&)>;

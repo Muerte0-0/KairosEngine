@@ -20,9 +20,10 @@ namespace Engine {
 	void Window::Create()
 	{
 		glfwWindowHint(GLFW_RESIZABLE, m_Specification.IsResizeable ? GLFW_TRUE : GLFW_FALSE);
+		glfwWindowHint(GLFW_MAXIMIZED, m_Specification.LaunchMaximized ? GLFW_TRUE : GLFW_FALSE);
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		
-		m_Handle = glfwCreateWindow(m_Specification.Width, m_Specification.Height,
+		m_Handle = glfwCreateWindow(static_cast<int>(m_Specification.Width), static_cast<int>(m_Specification.Height),
 			m_Specification.Title.c_str(), nullptr, nullptr);
 
 		if (!m_Handle)
@@ -68,6 +69,7 @@ namespace Engine {
 					window.RaiseEvent(event);
 					break;
 				}
+			default: break;
 			}
 		});
 
@@ -89,6 +91,7 @@ namespace Engine {
 					window.RaiseEvent(event);
 					break;
 				}
+			default: break;
 			}
 		});
 
