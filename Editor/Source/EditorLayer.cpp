@@ -118,6 +118,11 @@ void EditorLayer::DrawMenuBar()
 				{
 					// Handle save project as
 				}
+				
+				if (ImGui::MenuItem("Exit"))
+				{
+					Engine::Application::Get().Stop();
+				}
 				ImGui::EndMenu();
 			}
 
