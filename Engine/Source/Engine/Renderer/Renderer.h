@@ -4,15 +4,20 @@
 
 namespace Engine
 {
+	class ShaderLibrary;
+
 	class Renderer
 	{
 	public:
 		static void Init(API api, void* windowHandle, const std::filesystem::path& shaderDirectory);
+		
 		static void BeginFrame();
 		static void DrawFrame();
 		static void EndFrame();
-		static void WindowResized();
+		
 		static Framebuffer* GetFramebuffer();
+		
+		static void WindowResized();
 		static void ResizeFramebuffer(uint32_t width, uint32_t height);
 		
 		static RenderAPI* GetAPI() { return s_API.get(); }

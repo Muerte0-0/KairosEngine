@@ -1,18 +1,9 @@
 #pragma once
 
-#include <filesystem>
-#include <string>
-#include <vector>
+#include "Engine/Renderer/RendererUtils.h"
 
 namespace Engine
 {
-	enum class ShaderStage
-	{
-		Vertex = 0,
-		Fragment,
-		Compute
-	};
-
 	struct ShaderBinary
 	{
 		std::vector<uint32_t> Bytecode;
@@ -20,6 +11,7 @@ namespace Engine
 
 	struct ShaderCreateInfo
 	{
+		std::string Name;
 		std::filesystem::path Filepath;
 		std::string EntryPoint = "main";
 		ShaderStage Stage = ShaderStage::Vertex;
@@ -32,6 +24,7 @@ namespace Engine
 		virtual ~Shader() = default;
 
 		const ShaderCreateInfo& GetCreateInfo() const { return m_CreateInfo; }
+		const std::string& GetName() const { return m_CreateInfo.Name; }
 		const std::filesystem::path& GetFilepath() const { return m_CreateInfo.Filepath; }
 		const std::string& GetEntryPoint() const { return m_CreateInfo.EntryPoint; }
 		ShaderStage GetStage() const { return m_CreateInfo.Stage; }

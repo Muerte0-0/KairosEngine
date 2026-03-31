@@ -1,7 +1,7 @@
 #include "kepch.h"
 #include "VulkanFramebuffer.h"
 
-#include "VulkanDevice.h"
+#include "Components/VulkanDevice.h"
 #include "VulkanUtils.h"
 
 #include "imgui.h"

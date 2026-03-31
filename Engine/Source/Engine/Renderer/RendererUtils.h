@@ -34,5 +34,11 @@ namespace Engine
 		s8 = 8,
 		s16 = 16
 	};
+	
+	enum class ShaderStage
+	{
+		Vertex = 0,
+		Fragment,
+		Compute
+	};
 }
-

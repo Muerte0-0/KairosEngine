@@ -3,11 +3,11 @@
 
 #include <vulkan/vulkan_raii.hpp>
 
-#include "VulkanCommand.h"
-#include "VulkanDevice.h"
+#include "Components/VulkanDevice.h"
+#include "Components/VulkanCommand.h"
+#include "Components/VulkanSwapchain.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanGraphicsPipeline.h"
-#include "VulkanSwapchain.h"
 
 namespace Engine
 {
@@ -29,14 +29,16 @@ namespace Engine
 		void DrawFrame() override;
 		void EndFrame() override;
 		void WindowResized() override;
-		Framebuffer* GetFramebuffer() override { return m_ViewportFramebuffer.get(); }
 		void ResizeFramebuffer(uint32_t width, uint32_t height) override;
 		
 		const vk::raii::Instance& GetInstance() const { return m_Instance; }
 		const vk::raii::SurfaceKHR& GetSurface() const { return m_Surface; }
-		VulkanDevice* GetVulkanDevice() { return m_VulkanDevice.get(); }
-		VulkanSwapchain* GetVulkanSwapchain() { return m_VulkanSwapchain.get(); }
-		VulkanCommand* GetVulkanCommand() { return m_VulkanCommand.get(); }
+		
+		Framebuffer* GetFramebuffer() override { return m_ViewportFramebuffer.get(); }
+		VulkanDevice* GetVulkanDevice() const { return m_VulkanDevice.get(); }
+		VulkanSwapchain* GetVulkanSwapchain() const { return m_VulkanSwapchain.get(); }
+		VulkanCommand* GetVulkanCommand() const { return m_VulkanCommand.get(); }
+		
 		const vk::raii::CommandBuffer& GetActiveCommandBuffer() const { return m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex]; }
 		
 	private:

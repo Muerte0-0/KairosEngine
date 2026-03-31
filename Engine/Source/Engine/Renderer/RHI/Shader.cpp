@@ -3,10 +3,8 @@
 
 namespace Engine
 {
-	Shader::Shader(ShaderCreateInfo createInfo)
-		: m_CreateInfo(std::move(createInfo))
-	{
-	}
+	Shader::Shader(ShaderCreateInfo createInfo) : m_CreateInfo(std::move(createInfo))
+	{}
 
 	const char* Shader::ShaderStageToString(ShaderStage stage)
 	{

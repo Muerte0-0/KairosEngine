@@ -271,8 +271,22 @@ namespace Engine
 	{
 		GraphicsPipelineCreateInfo createInfo;
 		createInfo.ShaderDirectory = m_ShaderDirectory;
-		createInfo.VertexShader = { "Shader.vertMain.vert.spv", "vertMain", ShaderStage::Vertex };
-		createInfo.FragmentShader = { "Shader.fragMain.frag.spv", "fragMain", ShaderStage::Fragment };
+		createInfo.VertexShader = 
+			{
+				.Name = "Shader",
+				.Filepath = "Shader.vertMain.vert.spv",
+				.EntryPoint = "vertMain",
+				.Stage = ShaderStage::Vertex 
+			};
+		
+		createInfo.FragmentShader = 
+			{
+				.Name = "Shader",
+				.Filepath = "Shader.fragMain.frag.spv",
+				.EntryPoint = "fragMain",
+				.Stage = ShaderStage::Fragment
+			};
+		
 		createInfo.ColorFormat = VulkanUtils::ToTextureFormat(m_ViewportFramebuffer->GetColorFormat());
 		createInfo.SampleCount = VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits::e1);
 

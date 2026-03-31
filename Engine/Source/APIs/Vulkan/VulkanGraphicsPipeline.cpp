@@ -1,7 +1,7 @@
 #include "kepch.h"
 #include "VulkanGraphicsPipeline.h"
 
-#include "VulkanDevice.h"
+#include "Components/VulkanDevice.h"
 #include "VulkanUtils.h"
 
 namespace Engine
