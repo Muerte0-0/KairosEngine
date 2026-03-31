@@ -5,6 +5,16 @@
 
 namespace Engine
 {	
+	static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
+		vk::DebugUtilsMessageTypeFlagsEXT type,
+		const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+		void* pUserData)
+	{
+		std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage << std::endl;
+
+		return vk::False;
+	}
+	
 	/**
 	 * @brief Structure for SwapChain support Details.
 	*/

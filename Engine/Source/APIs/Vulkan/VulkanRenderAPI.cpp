@@ -309,9 +309,9 @@ namespace Engine
 		m_ViewportFramebuffer = CreateScope<VulkanFramebuffer>(*m_VulkanDevice, specification, m_VulkanSwapchain->GetSwapChainImageFormat());
 	}
 
-	void VulkanRenderAPI::BeginSwapchainRendering(vk::CommandBuffer commandBuffer)
+	void VulkanRenderAPI::BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const
 	{
-		// Transition swapchain targets into renderable layouts for the ImGui pass.
+		// Transition Swapchain targets into Renderable layouts for the ImGui pass.
 		VulkanUtils::TransitionImageLayout(
 			commandBuffer,
 			m_VulkanSwapchain->GetSwapChainImages()[m_CurrentImageIndex],

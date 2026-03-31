@@ -6,21 +6,12 @@
 #include "Components/VulkanDevice.h"
 #include "Components/VulkanCommand.h"
 #include "Components/VulkanSwapchain.h"
+
 #include "VulkanFramebuffer.h"
 #include "VulkanGraphicsPipeline.h"
 
 namespace Engine
-{
-	static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
-		vk::DebugUtilsMessageTypeFlagsEXT type,
-		const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
-		void* pUserData)
-	{
-		std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage << std::endl;
-
-		return vk::False;
-	}
-	
+{	
 	class VulkanRenderAPI : public RenderAPI
 	{
 	public:
@@ -34,10 +25,11 @@ namespace Engine
 		const vk::raii::Instance& GetInstance() const { return m_Instance; }
 		const vk::raii::SurfaceKHR& GetSurface() const { return m_Surface; }
 		
-		Framebuffer* GetFramebuffer() override { return m_ViewportFramebuffer.get(); }
 		VulkanDevice* GetVulkanDevice() const { return m_VulkanDevice.get(); }
-		VulkanSwapchain* GetVulkanSwapchain() const { return m_VulkanSwapchain.get(); }
 		VulkanCommand* GetVulkanCommand() const { return m_VulkanCommand.get(); }
+		VulkanSwapchain* GetVulkanSwapchain() const { return m_VulkanSwapchain.get(); }
+		
+		Framebuffer* GetFramebuffer() override { return m_ViewportFramebuffer.get(); }
 		
 		const vk::raii::CommandBuffer& GetActiveCommandBuffer() const { return m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex]; }
 		
@@ -48,8 +40,9 @@ namespace Engine
 		vk::raii::SurfaceKHR m_Surface = nullptr;
 		
 		Scope<VulkanDevice> m_VulkanDevice = nullptr;
-		Scope<VulkanSwapchain> m_VulkanSwapchain = nullptr;
 		Scope<VulkanCommand> m_VulkanCommand = nullptr;
+		Scope<VulkanSwapchain> m_VulkanSwapchain = nullptr;
+		
 		Scope<VulkanFramebuffer> m_ViewportFramebuffer = nullptr;
 		Scope<VulkanGraphicsPipeline> m_ViewportPipeline = nullptr;
 		
@@ -60,6 +53,7 @@ namespace Engine
 		bool m_FramebufferResized = false;
 		bool m_ViewportFramebufferResizePending = false;
 		FramebufferSpecification m_PendingViewportFramebufferSpecification{};
+		
 		std::filesystem::path m_ShaderDirectory;
 		
 		void CreateInstance();
@@ -69,6 +63,6 @@ namespace Engine
 		void ApplyPendingFramebufferResize();
 		void CreateViewportFramebuffer();
 		void CreateGraphicsPipeline();
-		void BeginSwapchainRendering(vk::CommandBuffer commandBuffer);
+		void BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const;
 	};
 }
