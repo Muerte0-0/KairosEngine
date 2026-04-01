@@ -1,5 +1,6 @@
 #include "kepch.h"
 #include "VulkanRenderAPI.h"
+#include "Engine/Renderer/RHI/Shader.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -140,7 +141,8 @@ namespace Engine
 		viewportRenderingInfo.pColorAttachments = &viewportColorAttachment;
 
 		commandBuffer.beginRendering(viewportRenderingInfo);
-		commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *m_ViewportPipeline->GetPipeline());
+		commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics,
+			*static_cast<VulkanGraphicsPipeline*>(m_ViewportPipeline.get())->GetPipeline());
 		commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f,
 			static_cast<float>(m_ViewportFramebuffer->GetWidth()),
 			static_cast<float>(m_ViewportFramebuffer->GetHeight()), 0.0f, 1.0f));
@@ -269,28 +271,23 @@ namespace Engine
 
 	void VulkanRenderAPI::CreateGraphicsPipeline()
 	{
+		// Load (or retrieve from cache) the viewport shader via the library.
+		Ref<Shader> meshShader = m_ShaderLibrary.Load(ShaderDescriptor{
+			.Name            = "Mesh",
+			.ShaderDirectory = m_ShaderDirectory,
+			.Stages = {
+				{ ShaderStage::Vertex,   "Mesh.vertMain.vert.spv", "vertMain" },
+				{ ShaderStage::Fragment, "Mesh.fragMain.frag.spv", "fragMain" },
+			}
+		});
+
 		GraphicsPipelineCreateInfo createInfo;
-		createInfo.ShaderDirectory = m_ShaderDirectory;
-		createInfo.VertexShader = 
-			{
-				.Name = "Shader",
-				.Filepath = "Mesh.vertMain.vert.spv",
-				.EntryPoint = "vertMain",
-				.Stage = ShaderStage::Vertex 
-			};
-		
-		createInfo.FragmentShader = 
-			{
-				.Name = "Shader",
-				.Filepath = "Mesh.fragMain.frag.spv",
-				.EntryPoint = "fragMain",
-				.Stage = ShaderStage::Fragment
-			};
-		
+		createInfo.Shader      = meshShader;
 		createInfo.ColorFormat = VulkanUtils::ToTextureFormat(m_ViewportFramebuffer->GetColorFormat());
 		createInfo.SampleCount = VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits::e1);
 
-		m_ViewportPipeline = CreateScope<VulkanGraphicsPipeline>(std::move(createInfo));
+		// GraphicsPipeline::Create calls Init() internally.
+		m_ViewportPipeline = GraphicsPipeline::Create(std::move(createInfo));
 	}
 
 	void VulkanRenderAPI::CreateViewportFramebuffer()

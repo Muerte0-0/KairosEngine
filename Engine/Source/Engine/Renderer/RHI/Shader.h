@@ -1,65 +1,100 @@
 #pragma once
 
 #include "Engine/Renderer/RendererUtils.h"
+#include "Engine/Core/Base.h"
 
 #include <filesystem>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Engine
 {
 	// -----------------------------------------------------------------------
-	// ShaderBinary
+	// Shader Descriptor: everything needed to create one multi-stage Shader
 	// -----------------------------------------------------------------------
 
-	struct ShaderBinary
+	struct ShaderDescriptor
 	{
-		std::vector<uint32_t> Bytecode;
+		std::string                  Name;
+		std::filesystem::path        ShaderDirectory;
+		std::vector<ShaderStageData> Stages;    // One entry per stage to compile.
 	};
 
 	// -----------------------------------------------------------------------
-	// ShaderCreateInfo
-	// -----------------------------------------------------------------------
-
-	struct ShaderCreateInfo
-	{
-		std::string           Name;
-		std::filesystem::path Filepath;
-		std::string           EntryPoint = "main";
-		ShaderStage           Stage      = ShaderStage::Vertex;
-	};
-
-	// -----------------------------------------------------------------------
-	// Shader — abstract RHI interface
+	// Shader  —  abstract, multi-stage RHI object
 	// -----------------------------------------------------------------------
 
 	class Shader
 	{
 	public:
-		explicit Shader(ShaderCreateInfo createInfo);
 		virtual ~Shader() = default;
 
-		// No copying — GPU resources are move-only.
 		Shader(const Shader&)            = delete;
 		Shader& operator=(const Shader&) = delete;
 
-		[[nodiscard]] const ShaderCreateInfo&   GetCreateInfo()  const { return m_CreateInfo; }
-		[[nodiscard]] const std::string&        GetName()        const { return m_CreateInfo.Name; }
-		[[nodiscard]] const std::filesystem::path& GetFilepath() const { return m_CreateInfo.Filepath; }
-		[[nodiscard]] const std::string&        GetEntryPoint()  const { return m_CreateInfo.EntryPoint; }
-		[[nodiscard]] ShaderStage               GetStage()       const { return m_CreateInfo.Stage; }
-
-		static const char* ShaderStageToString(ShaderStage stage);
+		// ------------------------------------------------------------------
+		// Accessors
+		// ------------------------------------------------------------------
+		[[nodiscard]] const std::string&         GetName()   const { return m_Name; }
+		[[nodiscard]] bool                        HasStage(ShaderStage stage)  const;
+		[[nodiscard]] const ShaderStageData&      GetStage(ShaderStage stage)  const;
+		[[nodiscard]] std::vector<const  ShaderStageData*> GetStages() const;
+		
+		/**
+		 * @brief Initialise all GPU resources for every stage.
+		 *        Must be called once after Create() before the shader is used.
+		 */
+		virtual void Init() = 0;
 
 		/**
-		 * @brief Factory — dispatches to the active RHI backend.
-		 * @param createInfo  Shader metadata (name, path, entry, stage).
-		 * @param binary      Pre-loaded SPIR-V / bytecode.
-		 * @return Owning pointer to the concrete Shader implementation.
+		 * @brief Release all GPU resources.  Safe to call multiple times.
 		 */
-		[[nodiscard]] static Scope<Shader> Create(ShaderCreateInfo createInfo, ShaderBinary binary);
+		virtual void Shutdown() = 0;
+
+		// ------------------------------------------------------------------
+		// Factory
+		// ------------------------------------------------------------------
+		[[nodiscard]] static Ref<Shader> Create(const ShaderDescriptor& descriptor);
+
+		// ------------------------------------------------------------------
+		// Utilities
+		// ------------------------------------------------------------------
+		static const char* StageToString(ShaderStage stage);
 
 	protected:
-		ShaderCreateInfo m_CreateInfo;
+		explicit Shader(const ShaderDescriptor& descriptor);
+
+		std::string                                         m_Name;
+		std::filesystem::path                               m_ShaderDirectory;
+		std::unordered_map<ShaderStage, ShaderStageData>    m_Stages;
+	};
+
+	// -----------------------------------------------------------------------
+	// ShaderLibrary
+	// -----------------------------------------------------------------------
+
+	class ShaderLibrary
+	{
+	public:
+		/**
+		 * @brief Load a shader from a descriptor, add it to the library, and
+		 *        return it.  If a shader with the same name already exists the
+		 *        cached version is returned without reloading.
+		 */
+		[[nodiscard]] Ref<Shader> Load(const ShaderDescriptor& descriptor);
+
+		/**
+		 * @brief Retrieve an already-loaded shader by name.
+		 *        Asserts if the name is not found.
+		 */
+		[[nodiscard]] Ref<Shader> Get(const std::string& name) const;
+
+		[[nodiscard]] bool Exists(const std::string& name) const;
+
+		void Clear();
+
+	private:
+		std::unordered_map<std::string, Ref<Shader>> m_Shaders;
 	};
 }

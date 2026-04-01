@@ -1,5 +1,10 @@
 ﻿#pragma once
 
+#include <filesystem>
+#include <functional>
+#include <string>
+#include <vector>
+
 namespace Engine
 {
 	enum class TextureFormat
@@ -41,4 +46,28 @@ namespace Engine
 		Fragment,
 		Compute
 	};
+	/**
+		* @brief All data describing a single shader stage.
+		*
+		* Passed into Shader::Create() as part of a Shader Descriptor.
+		* The Spirv field starts empty and is populated by VulkanShader::Init()
+		* when it loads the compiled SPIR-V binary from disk.
+	*/
+	struct ShaderStageData
+	{
+		ShaderStage           Stage      = ShaderStage::Vertex;
+		std::filesystem::path Filepath;              // Relative to Shader Directory.
+		std::string           EntryPoint = "main";
+		std::vector<uint32_t> Spirv;                 // Filled during Init().
+	};
 }
+
+// std::unordered_map<ShaderStage, ...> requires a hash specialization.
+template<>
+struct std::hash<Engine::ShaderStage>
+{
+	size_t operator()(Engine::ShaderStage stage) const noexcept
+	{
+		return std::hash<int>{}(static_cast<int>(stage));
+	}
+};

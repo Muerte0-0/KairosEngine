@@ -2,7 +2,7 @@
 #include "GraphicsPipeline.h"
 
 #if defined(PLATFORM_WINDOWS) || defined(PLATFORM_LINUX)
-#	include "APIs/Vulkan/VulkanGraphicsPipeline.h"
+#include "APIs/Vulkan/VulkanGraphicsPipeline.h"
 #endif
 
 namespace Engine
@@ -13,8 +13,12 @@ namespace Engine
 
 	Scope<GraphicsPipeline> GraphicsPipeline::Create(GraphicsPipelineCreateInfo createInfo)
 	{
+		KE_CORE_ASSERT(createInfo.Shader, "GraphicsPipeline::Create — createInfo.Shader is null.");
+
 #if defined(PLATFORM_WINDOWS) || defined(PLATFORM_LINUX)
-		return CreateScope<VulkanGraphicsPipeline>(std::move(createInfo));
+		auto pipeline = CreateScope<VulkanGraphicsPipeline>(std::move(createInfo));
+		pipeline->Init();
+		return pipeline;
 #else
 		KE_CORE_ASSERT(false, "GraphicsPipeline::Create — unsupported platform!");
 		return nullptr;

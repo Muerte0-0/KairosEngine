@@ -7,74 +7,67 @@
 
 namespace Engine
 {
-	// -----------------------------------------------------------------------
-	// Helpers
-	// -----------------------------------------------------------------------
-
 	namespace
 	{
-		/** Retrieve the logical Vulkan device from the currently active renderer. */
 		vk::raii::Device& GetDevice()
 		{
 			auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
-			KE_CORE_ASSERT(api, "VulkanGraphicsPipeline: active RenderAPI is not VulkanRenderAPI");
+			KE_CORE_ASSERT(api, "VulkanGraphicsPipeline: active RenderAPI is not VulkanRenderAPI.");
 			return api->GetVulkanDevice()->GetDevice();
 		}
 	}
 
 	// -----------------------------------------------------------------------
-	// Construction
+	// Construction / destruction
 	// -----------------------------------------------------------------------
 
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineCreateInfo createInfo)
 		: GraphicsPipeline(std::move(createInfo))
 	{
-		CreateShaders();
+		// No Vulkan work here — Init() is called by GraphicsPipeline::Create().
+	}
+
+	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
+	{
+		Shutdown();
+	}
+
+	// -----------------------------------------------------------------------
+	// Lifecycle
+	// -----------------------------------------------------------------------
+
+	void VulkanGraphicsPipeline::Init()
+	{
+		Shutdown();
+
+		KE_CORE_ASSERT(m_CreateInfo.Shader,
+			"VulkanGraphicsPipeline::Init — Shader is null.");
+		KE_CORE_ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Vertex),
+			"VulkanGraphicsPipeline::Init — shader '{}' has no Vertex stage.",
+			m_CreateInfo.Shader->GetName());
+		KE_CORE_ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Fragment),
+			"VulkanGraphicsPipeline::Init — shader '{}' has no Fragment stage.",
+			m_CreateInfo.Shader->GetName());
+
 		CreatePipelineCache();
 		CreatePipelineLayout();
 		CreatePipeline();
+
+		LOG(LogLevel::Info, "VulkanGraphicsPipeline: built pipeline for shader '{}'.",
+			m_CreateInfo.Shader->GetName());
+	}
+
+	void VulkanGraphicsPipeline::Shutdown()
+	{
+		m_Pipeline            = nullptr;
+		m_PipelineLayout      = nullptr;
+		m_DescriptorSetLayout = nullptr;
+		m_PipelineCache       = nullptr;
 	}
 
 	// -----------------------------------------------------------------------
 	// Private helpers
 	// -----------------------------------------------------------------------
-
-	ShaderBinary VulkanGraphicsPipeline::LoadShaderBinary(const std::filesystem::path& filepath) const
-	{
-		std::ifstream stream(filepath, std::ios::binary | std::ios::ate);
-		KE_CORE_ASSERT(stream.is_open(),
-			"VulkanGraphicsPipeline: failed to open compiled shader '{}'", filepath.string());
-
-		const std::streamsize fileSize = stream.tellg();
-		KE_CORE_ASSERT(fileSize > 0,
-			"VulkanGraphicsPipeline: compiled shader is empty '{}'", filepath.string());
-		KE_CORE_ASSERT((fileSize % static_cast<std::streamsize>(sizeof(uint32_t))) == 0,
-			"VulkanGraphicsPipeline: '{}' is not valid SPIR-V", filepath.string());
-
-		stream.seekg(0, std::ios::beg);
-
-		ShaderBinary binary;
-		binary.Bytecode.resize(static_cast<size_t>(fileSize / sizeof(uint32_t)));
-		stream.read(reinterpret_cast<char*>(binary.Bytecode.data()), fileSize);
-		KE_CORE_ASSERT(stream.good() || stream.eof(),
-			"VulkanGraphicsPipeline: failed to read compiled shader '{}'", filepath.string());
-
-		return binary;
-	}
-
-	void VulkanGraphicsPipeline::CreateShaders()
-	{
-		const std::filesystem::path vertexPath   = m_CreateInfo.ShaderDirectory / m_CreateInfo.VertexShader.Filepath;
-		const std::filesystem::path fragmentPath = m_CreateInfo.ShaderDirectory / m_CreateInfo.FragmentShader.Filepath;
-
-		// Use the Shader factory — it routes through VulkanShader internally.
-		m_VertexShader   = CreateScope<VulkanShader>(m_CreateInfo.VertexShader,   LoadShaderBinary(vertexPath));
-		m_FragmentShader = CreateScope<VulkanShader>(m_CreateInfo.FragmentShader, LoadShaderBinary(fragmentPath));
-
-		LOG(LogLevel::Info, "Loaded shaders: '{}', '{}'",
-			m_CreateInfo.VertexShader.Filepath.string(),
-			m_CreateInfo.FragmentShader.Filepath.string());
-	}
 
 	void VulkanGraphicsPipeline::CreatePipelineCache()
 	{
@@ -93,22 +86,32 @@ namespace Engine
 
 	void VulkanGraphicsPipeline::CreatePipeline()
 	{
-		const std::array shaderStages = {
-			vk::PipelineShaderStageCreateInfo({},
-				m_VertexShader->GetVulkanStage(),
-				*m_VertexShader->GetShaderModule(),
-				m_VertexShader->GetEntryPoint().c_str()),
-			vk::PipelineShaderStageCreateInfo({},
-				m_FragmentShader->GetVulkanStage(),
-				*m_FragmentShader->GetShaderModule(),
-				m_FragmentShader->GetEntryPoint().c_str()),
-		};
+		// ------------------------------------------------------------------
+		// Build VkPipelineShaderStageCreateInfo for every stage in the shader.
+		// No hardcoded vertex/fragment — iterate whatever the shader provides.
+		// ------------------------------------------------------------------
+		auto* vulkanShader = dynamic_cast<VulkanShader*>(m_CreateInfo.Shader.get());
 
+		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
+		for (const ShaderStageData* stageData : m_CreateInfo.Shader->GetStages())
+		{
+			shaderStages.emplace_back(
+				vk::PipelineShaderStageCreateFlags{},
+				VulkanShader::ToVkStage(stageData->Stage),
+				*vulkanShader->GetModule(stageData->Stage),
+				stageData->EntryPoint.c_str());
+		}
+
+		KE_CORE_ASSERT(!shaderStages.empty(),
+			"VulkanGraphicsPipeline: shader '{}' produced zero stage infos.",
+			m_CreateInfo.Shader->GetName());
+
+		// ------------------------------------------------------------------
+		// Fixed pipeline state
+		// ------------------------------------------------------------------
 		vk::PipelineVertexInputStateCreateInfo vertexInputState;
 		vertexInputState.vertexBindingDescriptionCount   = 0;
-		vertexInputState.pVertexBindingDescriptions      = nullptr;
 		vertexInputState.vertexAttributeDescriptionCount = 0;
-		vertexInputState.pVertexAttributeDescriptions    = nullptr;
 
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState;
 		inputAssemblyState.topology               = vk::PrimitiveTopology::eTriangleList;
@@ -123,64 +126,65 @@ namespace Engine
 		viewportState.scissorCount  = 1;
 		viewportState.pScissors     = &scissor;
 
-		vk::PipelineRasterizationStateCreateInfo rasterizationState;
-		rasterizationState.depthClampEnable        = vk::False;
-		rasterizationState.rasterizerDiscardEnable = vk::False;
-		rasterizationState.polygonMode             = vk::PolygonMode::eFill;
-		rasterizationState.cullMode                = vk::CullModeFlagBits::eBack;
-		rasterizationState.frontFace               = vk::FrontFace::eCounterClockwise;
-		rasterizationState.lineWidth               = 1.0f;
+		vk::PipelineRasterizationStateCreateInfo rasterState;
+		rasterState.polygonMode = vk::PolygonMode::eFill;
+		rasterState.cullMode    = vk::CullModeFlagBits::eBack;
+		rasterState.frontFace   = vk::FrontFace::eCounterClockwise;
+		rasterState.lineWidth   = 1.0f;
 
-		vk::PipelineMultisampleStateCreateInfo multisampleState;
-		multisampleState.rasterizationSamples = VulkanUtils::ToVulkanSampleCount(m_CreateInfo.SampleCount);
-		multisampleState.sampleShadingEnable  = vk::False;
+		vk::PipelineMultisampleStateCreateInfo msaaState;
+		msaaState.rasterizationSamples = VulkanUtils::ToVulkanSampleCount(m_CreateInfo.SampleCount);
+		msaaState.sampleShadingEnable  = vk::False;
 
-		vk::PipelineDepthStencilStateCreateInfo depthStencilState;
-		depthStencilState.depthTestEnable       = vk::False;
-		depthStencilState.depthWriteEnable      = vk::False;
-		depthStencilState.depthCompareOp        = vk::CompareOp::eLess;
-		depthStencilState.depthBoundsTestEnable = vk::False;
-		depthStencilState.stencilTestEnable     = vk::False;
+		vk::PipelineDepthStencilStateCreateInfo depthState;
+		depthState.depthTestEnable  = vk::False;
+		depthState.depthWriteEnable = vk::False;
+		depthState.depthCompareOp   = vk::CompareOp::eLess;
 
-		constexpr vk::PipelineColorBlendAttachmentState colorBlendAttachment(
+		constexpr vk::PipelineColorBlendAttachmentState blendAttachment(
 			vk::False,
-			vk::BlendFactor::eOne,   vk::BlendFactor::eZero, vk::BlendOp::eAdd,
-			vk::BlendFactor::eOne,   vk::BlendFactor::eZero, vk::BlendOp::eAdd,
+			vk::BlendFactor::eOne,  vk::BlendFactor::eZero, vk::BlendOp::eAdd,
+			vk::BlendFactor::eOne,  vk::BlendFactor::eZero, vk::BlendOp::eAdd,
 			vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
 			vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
 
-		vk::PipelineColorBlendStateCreateInfo colorBlendState;
-		colorBlendState.logicOpEnable   = vk::False;
-		colorBlendState.attachmentCount = 1;
-		colorBlendState.pAttachments    = &colorBlendAttachment;
+		vk::PipelineColorBlendStateCreateInfo blendState;
+		blendState.logicOpEnable   = vk::False;
+		blendState.attachmentCount = 1;
+		blendState.pAttachments    = &blendAttachment;
 
 		constexpr std::array dynamicStates = {
 			vk::DynamicState::eViewport,
 			vk::DynamicState::eScissor,
 		};
-
 		vk::PipelineDynamicStateCreateInfo dynamicState;
 		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicState.pDynamicStates    = dynamicStates.data();
 
-		vk::Format colorFormat = VulkanUtils::ToVulkanFormat(m_CreateInfo.ColorFormat);
-		vk::Format depthFormat = VulkanUtils::ToVulkanFormat(TextureFormat::Undefined);
+		// ------------------------------------------------------------------
+		// Dynamic rendering (no render pass)
+		// ------------------------------------------------------------------
+		vk::Format colorFmt = VulkanUtils::ToVulkanFormat(m_CreateInfo.ColorFormat);
+		vk::Format depthFmt = VulkanUtils::ToVulkanFormat(m_CreateInfo.DepthFormat);
 
 		vk::PipelineRenderingCreateInfo renderingInfo;
 		renderingInfo.colorAttachmentCount    = 1;
-		renderingInfo.pColorAttachmentFormats = &colorFormat;
-		renderingInfo.depthAttachmentFormat   = depthFormat;
+		renderingInfo.pColorAttachmentFormats = &colorFmt;
+		renderingInfo.depthAttachmentFormat   = depthFmt;
 
+		// ------------------------------------------------------------------
+		// Assemble and create
+		// ------------------------------------------------------------------
 		vk::GraphicsPipelineCreateInfo pipelineInfo;
 		pipelineInfo.stageCount          = static_cast<uint32_t>(shaderStages.size());
 		pipelineInfo.pStages             = shaderStages.data();
 		pipelineInfo.pVertexInputState   = &vertexInputState;
 		pipelineInfo.pInputAssemblyState = &inputAssemblyState;
 		pipelineInfo.pViewportState      = &viewportState;
-		pipelineInfo.pRasterizationState = &rasterizationState;
-		pipelineInfo.pMultisampleState   = &multisampleState;
-		pipelineInfo.pDepthStencilState  = &depthStencilState;
-		pipelineInfo.pColorBlendState    = &colorBlendState;
+		pipelineInfo.pRasterizationState = &rasterState;
+		pipelineInfo.pMultisampleState   = &msaaState;
+		pipelineInfo.pDepthStencilState  = &depthState;
+		pipelineInfo.pColorBlendState    = &blendState;
 		pipelineInfo.pDynamicState       = &dynamicState;
 		pipelineInfo.layout              = *m_PipelineLayout;
 		pipelineInfo.renderPass          = nullptr;

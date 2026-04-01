@@ -9,6 +9,7 @@
 
 #include "VulkanFramebuffer.h"
 #include "VulkanGraphicsPipeline.h"
+#include "Engine/Renderer/RHI/Shader.h"
 
 namespace Engine
 {	
@@ -24,6 +25,9 @@ namespace Engine
 		void WindowResized() override;
 		void ResizeFramebuffer(uint32_t width, uint32_t height) override;
 		
+		// ------------------------------------------------------------------
+		// Accessors
+		// ------------------------------------------------------------------
 		const vk::raii::Instance& GetInstance() const { return m_Instance; }
 		const vk::raii::SurfaceKHR& GetSurface() const { return m_Surface; }
 		
@@ -31,33 +35,35 @@ namespace Engine
 		VulkanCommand* GetVulkanCommand() const { return m_VulkanCommand.get(); }
 		VulkanSwapchain* GetVulkanSwapchain() const { return m_VulkanSwapchain.get(); }
 		
-		Framebuffer* GetFramebuffer() override { return m_ViewportFramebuffer.get(); }
+		Framebuffer*      GetFramebuffer()      override { return m_ViewportFramebuffer.get(); }
 		GraphicsPipeline* GetGraphicsPipeline() override { return m_ViewportPipeline.get(); }
+		ShaderLibrary*    GetShaderLibrary()    override { return &m_ShaderLibrary; }
 		
 		const vk::raii::CommandBuffer& GetActiveCommandBuffer() const { return m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex]; }
 		
 	private:
-		vk::raii::Context m_Context;
-		vk::raii::Instance m_Instance = nullptr;
-		vk::raii::DebugUtilsMessengerEXT m_DebugMessenger = nullptr;
-		vk::raii::SurfaceKHR m_Surface = nullptr;
+		vk::raii::Context					m_Context;
+		vk::raii::Instance					m_Instance = nullptr;
+		vk::raii::DebugUtilsMessengerEXT	m_DebugMessenger = nullptr;
+		vk::raii::SurfaceKHR				m_Surface = nullptr;
 		
-		Scope<VulkanDevice> m_VulkanDevice = nullptr;
-		Scope<VulkanCommand> m_VulkanCommand = nullptr;
-		Scope<VulkanSwapchain> m_VulkanSwapchain = nullptr;
+		Scope<VulkanDevice>					m_VulkanDevice = nullptr;
+		Scope<VulkanCommand>				m_VulkanCommand = nullptr;
+		Scope<VulkanSwapchain>				m_VulkanSwapchain = nullptr;
 		
-		Scope<VulkanFramebuffer> m_ViewportFramebuffer = nullptr;
-		Scope<VulkanGraphicsPipeline> m_ViewportPipeline = nullptr;
+		Scope<VulkanFramebuffer>			m_ViewportFramebuffer = nullptr;
+		Scope<GraphicsPipeline>				m_ViewportPipeline    = nullptr;
+		ShaderLibrary						m_ShaderLibrary;
 		
-		uint32_t m_CurrentImageIndex = 0;
-		uint32_t m_CurrentFrameIndex = 0;
+		uint32_t							m_CurrentImageIndex = 0;
+		uint32_t							m_CurrentFrameIndex = 0;
 		
-		bool m_FrameValid = true;
-		bool m_FramebufferResized = false;
-		bool m_ViewportFramebufferResizePending = false;
-		FramebufferSpecification m_PendingViewportFramebufferSpecification{};
+		bool								m_FrameValid = true;
+		bool								m_FramebufferResized = false;
+		bool								m_ViewportFramebufferResizePending = false;
+		FramebufferSpecification			m_PendingViewportFramebufferSpecification{};
 		
-		std::filesystem::path m_ShaderDirectory;
+		std::filesystem::path				m_ShaderDirectory;
 		
 		void CreateInstance();
 		vector<const char*> GetRequiredInstanceExtensions() const;

@@ -1,25 +1,21 @@
 #pragma once
 
 #include "Shader.h"
-
 #include "Engine/Renderer/RendererUtils.h"
+#include "Engine/Core/Base.h"
 
 namespace Engine
 {
 	// -----------------------------------------------------------------------
-	// GraphicsPipelineCreateInfo
+	// Graphics Pipeline CreateInfo
 	// -----------------------------------------------------------------------
 
 	struct GraphicsPipelineCreateInfo
 	{
-		std::filesystem::path ShaderDirectory;
-
-		ShaderCreateInfo VertexShader;
-		ShaderCreateInfo FragmentShader;
-
-		TextureFormat    ColorFormat  = TextureFormat::Undefined;
-		TextureFormat    DepthFormat  = TextureFormat::Undefined;
-		SampleCountBits  SampleCount  = SampleCountBits::s1;
+		Ref<Shader>     Shader;										// Must be loaded + Init().
+		TextureFormat   ColorFormat = TextureFormat::Undefined;
+		TextureFormat   DepthFormat = TextureFormat::Undefined;
+		SampleCountBits SampleCount = SampleCountBits::s1;
 	};
 
 	// -----------------------------------------------------------------------
@@ -29,23 +25,29 @@ namespace Engine
 	class GraphicsPipeline
 	{
 	public:
-		explicit GraphicsPipeline(GraphicsPipelineCreateInfo createInfo);
 		virtual ~GraphicsPipeline() = default;
 
-		// No copying — GPU resources are move-only.
 		GraphicsPipeline(const GraphicsPipeline&)            = delete;
 		GraphicsPipeline& operator=(const GraphicsPipeline&) = delete;
 
 		[[nodiscard]] const GraphicsPipelineCreateInfo& GetCreateInfo() const { return m_CreateInfo; }
 
 		/**
-		 * @brief Factory — dispatches to the active RHI backend.
-		 * @parameter createInfo All data needed to build the pipeline.
-		 * @return Owning pointer to the concrete Graphics Pipeline implementation.
+		 * @brief Initialize all GPU pipeline objects.
+		 *        Must be called once after Create() before rendering.
 		 */
+		virtual void Init() = 0;
+
+		/**
+		 * @brief Release all GPU resources. Safe to call multiple times.
+		 */
+		virtual void Shutdown() = 0;
+		
 		[[nodiscard]] static Scope<GraphicsPipeline> Create(GraphicsPipelineCreateInfo createInfo);
 
 	protected:
+		explicit GraphicsPipeline(GraphicsPipelineCreateInfo createInfo);
+
 		GraphicsPipelineCreateInfo m_CreateInfo;
 	};
 }
