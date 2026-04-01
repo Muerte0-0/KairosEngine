@@ -290,7 +290,7 @@ namespace Engine
 		createInfo.ColorFormat = VulkanUtils::ToTextureFormat(m_ViewportFramebuffer->GetColorFormat());
 		createInfo.SampleCount = VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits::e1);
 
-		m_ViewportPipeline = CreateScope<VulkanGraphicsPipeline>(*m_VulkanDevice, std::move(createInfo));
+		m_ViewportPipeline = CreateScope<VulkanGraphicsPipeline>(std::move(createInfo));
 	}
 
 	void VulkanRenderAPI::CreateViewportFramebuffer()

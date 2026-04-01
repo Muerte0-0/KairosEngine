@@ -8,18 +8,21 @@ namespace Engine
 {
 	class VulkanDevice;
 
-	class VulkanShader : public Shader
+	class VulkanShader final : public Shader
 	{
 	public:
-		VulkanShader(VulkanDevice& device, ShaderCreateInfo createInfo, ShaderBinary shaderBinary);
+		/**
+		 * @brief Construct from pre-loaded SPIR-V bytecode.
+		 *        The device is obtained from the active VulkanRenderAPI.
+		 */
+		VulkanShader(ShaderCreateInfo createInfo, ShaderBinary shaderBinary);
 
-		const ShaderBinary& GetBinary() const { return m_ShaderBinary; }
-		const vk::raii::ShaderModule& GetShaderModule() const { return m_ShaderModule; }
-		vk::ShaderStageFlagBits GetVulkanStage() const;
+		[[nodiscard]] const ShaderBinary&          GetBinary()       const { return m_ShaderBinary; }
+		[[nodiscard]] const vk::raii::ShaderModule& GetShaderModule() const { return m_ShaderModule; }
+		[[nodiscard]] vk::ShaderStageFlagBits        GetVulkanStage()  const;
 
 	private:
-		VulkanDevice& m_Device;
-		ShaderBinary m_ShaderBinary;
+		ShaderBinary         m_ShaderBinary;
 		vk::raii::ShaderModule m_ShaderModule = nullptr;
 	};
 }

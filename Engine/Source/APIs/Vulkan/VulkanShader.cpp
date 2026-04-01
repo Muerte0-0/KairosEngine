@@ -1,38 +1,40 @@
 #include "kepch.h"
 #include "VulkanShader.h"
 
-#include "Components/VulkanDevice.h"
+#include "VulkanRenderAPI.h"
+#include "Engine/Renderer/Renderer.h"
 
 namespace Engine
 {
 	namespace
 	{
-		vk::ShaderStageFlagBits ToVulkanShaderStage(const ShaderStage stage)
+		vk::ShaderStageFlagBits ToVulkanShaderStage(ShaderStage stage)
 		{
 			switch (stage)
 			{
-			case ShaderStage::Vertex:
-				return vk::ShaderStageFlagBits::eVertex;
-			case ShaderStage::Fragment:
-				return vk::ShaderStageFlagBits::eFragment;
-			case ShaderStage::Compute:
-				return vk::ShaderStageFlagBits::eCompute;
+			case ShaderStage::Vertex:   return vk::ShaderStageFlagBits::eVertex;
+			case ShaderStage::Fragment: return vk::ShaderStageFlagBits::eFragment;
+			case ShaderStage::Compute:  return vk::ShaderStageFlagBits::eCompute;
 			default:
-				throw std::runtime_error("Unsupported shader stage.");
+				throw std::runtime_error("VulkanShader: unsupported shader stage.");
 			}
 		}
 	}
 
-	VulkanShader::VulkanShader(VulkanDevice& device, ShaderCreateInfo createInfo, ShaderBinary shaderBinary)
-		: Shader(std::move(createInfo)), m_Device(device), m_ShaderBinary(std::move(shaderBinary))
+	VulkanShader::VulkanShader(ShaderCreateInfo createInfo, ShaderBinary shaderBinary)
+		: Shader(std::move(createInfo)), m_ShaderBinary(std::move(shaderBinary))
 	{
-		KE_CORE_ASSERT(!m_ShaderBinary.Bytecode.empty(), "Shader bytecode is empty for {}", GetFilepath().string());
+		KE_CORE_ASSERT(!m_ShaderBinary.Bytecode.empty(), "VulkanShader: bytecode is empty for '{}'", GetFilepath().string());
 
-		vk::ShaderModuleCreateInfo shaderModuleCreateInfo;
-		shaderModuleCreateInfo.codeSize = m_ShaderBinary.Bytecode.size() * sizeof(uint32_t);
-		shaderModuleCreateInfo.pCode = m_ShaderBinary.Bytecode.data();
+		// Retrieve the logical device from the active Vulkan backend.
+		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
+		KE_CORE_ASSERT(api, "VulkanShader: active RenderAPI is not VulkanRenderAPI");
 
-		m_ShaderModule = vk::raii::ShaderModule(m_Device.GetDevice(), shaderModuleCreateInfo);
+		vk::ShaderModuleCreateInfo moduleInfo;
+		moduleInfo.codeSize = m_ShaderBinary.Bytecode.size() * sizeof(uint32_t);
+		moduleInfo.pCode    = m_ShaderBinary.Bytecode.data();
+
+		m_ShaderModule = vk::raii::ShaderModule(api->GetVulkanDevice()->GetDevice(), moduleInfo);
 	}
 
 	vk::ShaderStageFlagBits VulkanShader::GetVulkanStage() const

@@ -32,6 +32,7 @@ namespace Engine
 		VulkanSwapchain* GetVulkanSwapchain() const { return m_VulkanSwapchain.get(); }
 		
 		Framebuffer* GetFramebuffer() override { return m_ViewportFramebuffer.get(); }
+		GraphicsPipeline* GetGraphicsPipeline() override { return m_ViewportPipeline.get(); }
 		
 		const vk::raii::CommandBuffer& GetActiveCommandBuffer() const { return m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex]; }
 		

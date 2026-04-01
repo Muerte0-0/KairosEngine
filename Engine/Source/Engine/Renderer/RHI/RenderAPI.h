@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-#include "Shader.h"
+#include "GraphicsPipeline.h"
 
 enum class API
 {
@@ -28,6 +28,7 @@ namespace Engine
 		virtual void EndFrame() = 0;
 		
 		virtual Framebuffer* GetFramebuffer() = 0;
+		virtual GraphicsPipeline* GetGraphicsPipeline() = 0;
 		
 		virtual void WindowResized() = 0;
 		virtual void ResizeFramebuffer(uint32_t width, uint32_t height) = 0;
