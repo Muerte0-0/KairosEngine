@@ -11,15 +11,15 @@ namespace Engine
 			return c / 12.92f;
 		return powf((c + 0.055f) / 1.055f, 2.4f);
 	}
-	
-	ImVec4 RGBAtoIV4(int r, int g, int b, int a = 255)
+
+	static ImVec4 RGBAtoIV4(float r, float g, float b, float a = 255)
 	{
-		float newr = r / 255;
-		float newg = g / 255;
-		float newb = b / 255;
-		float newa = a / 255;
+		float newr = r / 255.0f;
+		float newg = g / 255.0f;
+		float newb = b / 255.0f;
+		float newa = a / 255.0f;
 		
-		return ImVec4(SRGBToLinear(newr), SRGBToLinear(newg), SRGBToLinear(newb), SRGBToLinear(newa));
+		return {SRGBToLinear(newr), SRGBToLinear(newg), SRGBToLinear(newb), SRGBToLinear(newa)};
 	}
 
 	static ImVec4 HexToImVec4(const std::string& hex)
@@ -32,16 +32,16 @@ namespace Engine
 
 		if (clean.length() == 6)
 		{
-			float r = ((value >> 16) & 0xFF) / 255.0f;
-			float g = ((value >> 8)  & 0xFF) / 255.0f;
-			float b = ((value)       & 0xFF) / 255.0f;
+			float r = static_cast<float>((value >> 16) & 0xFF) / 255.0f;
+			float g = static_cast<float>((value >> 8)  & 0xFF) / 255.0f;
+			float b = static_cast<float>((value)       & 0xFF) / 255.0f;
 
-			return ImVec4(
+			return {
 				SRGBToLinear(r),
 				SRGBToLinear(g),
 				SRGBToLinear(b),
 				1.0f
-			);
+			};
 		}
 		else if (clean.length() == 8)
 		{

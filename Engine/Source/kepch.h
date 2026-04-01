@@ -9,6 +9,8 @@
 
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>
+#else
+#include <unistd.h>
 #endif
 
 #include <fstream>

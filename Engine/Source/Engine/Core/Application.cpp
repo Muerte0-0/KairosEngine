@@ -6,13 +6,6 @@
 
 #include <glm/glm.hpp>
 
-#ifdef PLATFORM_WINDOWS
-#include <Windows.h>
-#else
-#include <limits.h>
-#include <unistd.h>
-#endif
-
 constexpr float MIN_DELTA_TIME = 0.001f;
 constexpr float MAX_DELTA_TIME = 0.1f;
 constexpr float FIXED_FRAME_TIME = 1.0f / 60.0f; // Target 60 FPS for Fixed Update
