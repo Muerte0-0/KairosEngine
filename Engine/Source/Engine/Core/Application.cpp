@@ -1,14 +1,14 @@
 ﻿#include "kepch.h"
 #include "Application.h"
+#include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Renderer/Renderer.h"
 
 #include <GLFW/glfw3.h>
-
 #include <glm/glm.hpp>
 
-constexpr float MIN_DELTA_TIME = 0.001f;
-constexpr float MAX_DELTA_TIME = 0.1f;
-constexpr float FIXED_FRAME_TIME = 1.0f / 60.0f; // Target 60 FPS for Fixed Update
+constexpr float MIN_DELTA_TIME  = 0.001f;
+constexpr float MAX_DELTA_TIME  = 0.1f;
+constexpr float FIXED_FRAME_TIME = 1.0f / 60.0f;
 
 extern bool g_ApplicationRunning;
 
@@ -18,9 +18,14 @@ namespace Engine
 	{
 		namespace fs = std::filesystem;
 
+		// ----------------------------------------------------------------
+		// Process helpers (shader compiler invocation — engine-internal,
+		// not platform-specific, so they stay here as before)
+		// ----------------------------------------------------------------
+
 		struct ProcessResult
 		{
-			int ExitCode = -1;
+			int         ExitCode = -1;
 			std::string Output;
 		};
 
@@ -30,13 +35,9 @@ namespace Engine
 			for (const char character : value)
 			{
 				if (character == '"')
-				{
 					quoted += "\\\"";
-				}
 				else
-				{
 					quoted += character;
-				}
 			}
 			quoted += "\"";
 			return quoted;
@@ -48,13 +49,9 @@ namespace Engine
 			for (size_t index = 0; index < arguments.size(); ++index)
 			{
 				if (index > 0)
-				{
 					builder << ' ';
-				}
-
 				builder << QuoteArgument(arguments[index]);
 			}
-
 			return builder.str();
 		}
 
@@ -62,7 +59,7 @@ namespace Engine
 		{
 			ProcessResult result;
 
-#ifdef PLATFORM_WINDOWS
+#if defined(PLATFORM_WINDOWS)
 			const std::string innerCommand = JoinCommand(arguments) + " 2>&1";
 			const std::string command = "cmd /d /s /c \"" + innerCommand + "\"";
 			FILE* pipe = _popen(command.c_str(), "r");
@@ -76,13 +73,11 @@ namespace Engine
 				return result;
 			}
 
-			std::array<char, 512> buffer {};
+			std::array<char, 512> buffer{};
 			while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe) != nullptr)
-			{
 				result.Output += buffer.data();
-			}
 
-#ifdef PLATFORM_WINDOWS
+#if defined(PLATFORM_WINDOWS)
 			result.ExitCode = _pclose(pipe);
 #else
 			result.ExitCode = pclose(pipe);
@@ -90,93 +85,13 @@ namespace Engine
 			return result;
 		}
 
-		std::optional<fs::path> GetExecutablePath()
-		{
-#ifdef PLATFORM_WINDOWS
-			std::wstring buffer(MAX_PATH, L'\0');
-			DWORD length = 0;
-
-			while (true)
-			{
-				length = GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
-				if (length == 0)
-				{
-					return std::nullopt;
-				}
-
-				if (length < buffer.size())
-				{
-					buffer.resize(length);
-					return fs::path(buffer);
-				}
-
-				buffer.resize(buffer.size() * 2);
-			}
-#else
-			std::vector<char> buffer(PATH_MAX, '\0');
-
-			while (true)
-			{
-				const ssize_t length = readlink("/proc/self/exe", buffer.data(), buffer.size());
-				if (length < 0)
-				{
-					return std::nullopt;
-				}
-
-				if (static_cast<size_t>(length) < buffer.size())
-				{
-					return fs::path(std::string(buffer.data(), static_cast<size_t>(length)));
-				}
-
-				buffer.resize(buffer.size() * 2);
-			}
-#endif
-		}
-
-		std::optional<fs::path> FindWorkspaceRoot(fs::path startPath)
-		{
-			if (startPath.empty())
-			{
-				return std::nullopt;
-			}
-
-			if (fs::is_regular_file(startPath))
-			{
-				startPath = startPath.parent_path();
-			}
-
-			for (fs::path current = fs::weakly_canonical(startPath); !current.empty(); current = current.parent_path())
-			{
-				if (fs::exists(current / "KairosEngine-Setup.lua"))
-				{
-					return current;
-				}
-
-				if (current == current.root_path())
-				{
-					break;
-				}
-			}
-
-			return std::nullopt;
-		}
-
-		std::optional<fs::path> ResolveWorkspaceRoot()
-		{
-			if (const auto executablePath = GetExecutablePath())
-			{
-				if (const auto root = FindWorkspaceRoot(*executablePath))
-				{
-					return root;
-				}
-			}
-
-			return FindWorkspaceRoot(fs::current_path());
-		}
+		// ----------------------------------------------------------------
+		// Shader compiler resolution
+		// ----------------------------------------------------------------
 
 		fs::path GetShaderCompilerBinaryName()
 		{
-#ifdef PLATFORM_WINDOWS
+#if defined(PLATFORM_WINDOWS)
 			return "ShaderCompiler.exe";
 #else
 			return "ShaderCompiler";
@@ -185,35 +100,34 @@ namespace Engine
 
 		std::optional<fs::path> ResolveShaderCompilerPath(const fs::path& workspaceRoot)
 		{
-			const auto executablePath = GetExecutablePath();
-			if (executablePath)
+			// 1. Look for the compiler next to the running executable first.
+			if (const auto executablePath = PlatformUtils::GetExecutablePath())
 			{
-				const fs::path executableDir = executablePath->parent_path();
-				const fs::path siblingToolsCompiler = executableDir.parent_path() / "Tools" / "ShaderCompiler" / GetShaderCompilerBinaryName();
-				if (fs::exists(siblingToolsCompiler))
-				{
-					return fs::weakly_canonical(siblingToolsCompiler);
-				}
+				const fs::path siblingCandidate =
+					executablePath->parent_path().parent_path()
+					/ "Tools" / "ShaderCompiler"
+					/ GetShaderCompilerBinaryName();
+
+				if (fs::exists(siblingCandidate))
+					return fs::weakly_canonical(siblingCandidate);
 			}
 
+			// 2. Fall back to scanning the workspace Binaries tree.
 			const fs::path binariesRoot = workspaceRoot / "Binaries";
 			if (!fs::exists(binariesRoot))
-			{
 				return std::nullopt;
-			}
 
 			for (const auto& entry : fs::directory_iterator(binariesRoot))
 			{
 				if (!entry.is_directory())
-				{
 					continue;
-				}
 
-				const fs::path candidate = entry.path() / "Tools" / "ShaderCompiler" / GetShaderCompilerBinaryName();
+				const fs::path candidate =
+					entry.path() / "Tools" / "ShaderCompiler"
+					/ GetShaderCompilerBinaryName();
+
 				if (fs::exists(candidate))
-				{
 					return fs::weakly_canonical(candidate);
-				}
 			}
 
 			return std::nullopt;
@@ -225,20 +139,21 @@ namespace Engine
 			{
 				std::cout << result.Output;
 				if (!result.Output.ends_with('\n'))
-				{
 					std::cout << '\n';
-				}
 			}
-
 			return result.ExitCode == 0;
 		}
 	}
 
+	// ====================================================================
+	// Application
+	// ====================================================================
+
 	static Application* s_Application = nullptr;
-	
+
 	static void GLFWErrorCallback(int error, const char* description)
 	{
-		cerr << "[GLFW Error]: " << description << '\n';
+		std::cerr << "[GLFW Error]: " << description << '\n';
 	}
 
 	Application::Application()
@@ -257,29 +172,28 @@ namespace Engine
 
 		glfwSetErrorCallback(GLFWErrorCallback);
 		glfwInit();
-		
+
 		WindowSpecification spec = GetApplicationSpecs().WindowSpec;
-		
-		spec.EventCallback = [this](Event& event) {RaiseEvent(event); };
-		
+		spec.EventCallback = [this](Event& event) { RaiseEvent(event); };
+
 		m_Window = CreateRef<Window>(spec);
 		m_Window->Create();
 
+		// Resolve shader directory relative to the workspace root when the
+		// configured path is relative.
 		fs::path shaderDirectory = GetApplicationSpecs().ShaderSourcePath;
-		if (const optional<fs::path> workspaceRoot = ResolveWorkspaceRoot())
+		if (const auto workspaceRoot = PlatformUtils::ResolveWorkspaceRoot())
 		{
 			if (shaderDirectory.is_relative())
-			{
 				shaderDirectory = *workspaceRoot / shaderDirectory;
-			}
 		}
 		shaderDirectory /= "Compiled";
-		
+
 		Renderer::Init(API::Vulkan, m_Window->GetHandle(), shaderDirectory);
-		
+
 		for (auto& layer : m_LayerStack)
 			layer->OnAttach();
-		
+
 		m_ImGuiLayer = ImGuiLayer::Create();
 		m_ImGuiLayer->OnAttach();
 	}
@@ -287,10 +201,10 @@ namespace Engine
 	void Application::Shutdown()
 	{
 		m_ImGuiLayer->OnDetach();
-		
+
 		for (auto& layer : views::reverse(m_LayerStack))
 			layer->OnDetach();
-		
+
 		m_Window->Destroy();
 		glfwTerminate();
 	}
@@ -299,72 +213,66 @@ namespace Engine
 	{
 		g_ApplicationRunning = true;
 
-		float lastTime = GetTime();
+		float lastTime    = GetTime();
 		float accumulator = 0.0f;
-		
+
 		while (g_ApplicationRunning)
 		{
 			glfwPollEvents();
-			
+
 			if (m_Window->ShouldClose())
 			{
 				Stop();
 				break;
 			}
-			
-			float currentTime = static_cast<float>(glfwGetTime());
-			float deltaTime = glm::clamp(currentTime - lastTime, MIN_DELTA_TIME, MAX_DELTA_TIME);
+
+			const float currentTime = static_cast<float>(glfwGetTime());
+			const float deltaTime   = glm::clamp(currentTime - lastTime, MIN_DELTA_TIME, MAX_DELTA_TIME);
 			lastTime = currentTime;
-			
+
 			accumulator += deltaTime;
-            
-			// Fixed Update
+
+			// Fixed update
 			while (accumulator >= FIXED_FRAME_TIME)
 			{
 				if (!m_IsMinimized)
 				{
 					m_ImGuiLayer->OnFixedUpdate(FIXED_FRAME_TIME);
-					
 					for (const auto& layer : m_LayerStack)
 						layer->OnFixedUpdate(FIXED_FRAME_TIME);
 				}
 				accumulator -= FIXED_FRAME_TIME;
 			}
-			
-			// Tick Update
+
+			// Per-frame update
 			if (!m_IsMinimized)
 			{
 				m_ImGuiLayer->OnUpdate(deltaTime);
-				
-				for (const unique_ptr<Layer>& layer : m_LayerStack)
+				for (const auto& layer : m_LayerStack)
 					layer->OnUpdate(deltaTime);
-			
-				// To-Do: Do This on the Render Thread
-				for (const unique_ptr<Layer>& layer : m_LayerStack)
+
+				for (const auto& layer : m_LayerStack)
 					layer->OnRender();
-				
 				m_ImGuiLayer->OnRender();
-				
+
 				Renderer::BeginFrame();
 				m_ImGuiLayer->Begin();
-				
+
 				Renderer::DrawFrame();
-				
+
 				m_ImGuiLayer->OnImGuiRender();
-				
 				for (const auto& layer : m_LayerStack)
 					layer->OnImGuiRender();
-				
+
 				m_ImGuiLayer->End();
 				Renderer::EndFrame();
-				
+
 				m_Window->Update();
 			}
-			
-			float sleepTime = FIXED_FRAME_TIME - (GetTime() - currentTime);
-			
+
+			const float sleepTime = FIXED_FRAME_TIME - (GetTime() - currentTime);
 			if (sleepTime > 0)
-				this_thread::sleep_for(chrono::duration<float>(sleepTime));
+				std::this_thread::sleep_for(std::chrono::duration<float>(sleepTime));
 		}
 	}
 
@@ -378,10 +286,11 @@ namespace Engine
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<WindowResizeEvent>(BIND_EVENT_FN(&Application::OnWindowResize));
 		dispatcher.Dispatch<WindowClosedEvent>(BIND_EVENT_FN(&Application::OnWindowClosed));
-		
+
 		m_ImGuiLayer->OnEvent(event);
-		if (event.Handled) return;
-		
+		if (event.Handled)
+			return;
+
 		for (auto& layer : views::reverse(m_LayerStack))
 		{
 			layer->OnEvent(event);
@@ -409,11 +318,11 @@ namespace Engine
 	void Application::EnsureApplicationShadersCompiled() const
 	{
 		const ApplicationSpecification appSpec = GetApplicationSpecs();
-		
+
 		if (!appSpec.CompileShadersOnStartup)
 			return;
 
-		const optional<fs::path> workspaceRoot = ResolveWorkspaceRoot();
+		const auto workspaceRoot = PlatformUtils::ResolveWorkspaceRoot();
 		if (!workspaceRoot)
 		{
 			LOG(LogLevel::Error, "Failed to resolve KairosEngine workspace root.");
@@ -428,9 +337,7 @@ namespace Engine
 		}
 
 		if (shaderSourcePath.is_relative())
-		{
 			shaderSourcePath = *workspaceRoot / shaderSourcePath;
-		}
 
 		if (!fs::exists(shaderSourcePath))
 		{
@@ -438,27 +345,23 @@ namespace Engine
 			exit(EXIT_FAILURE);
 		}
 
-		const std::optional<fs::path> shaderCompilerPath = ResolveShaderCompilerPath(*workspaceRoot);
+		const auto shaderCompilerPath = ResolveShaderCompilerPath(*workspaceRoot);
 		if (!shaderCompilerPath)
 		{
 			LOG(LogLevel::Error, "Failed to resolve the ShaderCompiler binary.");
 			exit(EXIT_FAILURE);
 		}
 
-		const vector<string> checkArguments = {
+		// Check whether any shaders need recompilation.
+		const ProcessResult checkResult = RunProcess({
 			shaderCompilerPath->string(),
-			"--source",
-			shaderSourcePath.string(),
+			"--source", shaderSourcePath.string(),
 			"--check"
-		};
-
-		const ProcessResult checkResult = RunProcess(checkArguments);
+		});
 		PrintCommandOutput(checkResult);
 
 		if (checkResult.ExitCode == 0)
-		{
-			return;
-		}
+			return; // All up-to-date.
 
 		if (checkResult.ExitCode != 2)
 		{
@@ -466,13 +369,12 @@ namespace Engine
 			exit(EXIT_FAILURE);
 		}
 
-		const std::vector<std::string> compileArguments = {
+		// Compile stale / missing shaders.
+		const ProcessResult compileResult = RunProcess({
 			shaderCompilerPath->string(),
-			"--source",
-			shaderSourcePath.string()
-		};
+			"--source", shaderSourcePath.string()
+		});
 
-		const ProcessResult compileResult = RunProcess(compileArguments);
 		if (!PrintCommandOutput(compileResult))
 		{
 			LOG(LogLevel::Error, "ShaderCompiler failed to compile application shaders.");
@@ -487,11 +389,9 @@ namespace Engine
 			m_IsMinimized = true;
 			return true;
 		}
-		
+
 		Renderer::WindowResized();
-		
 		m_IsMinimized = false;
-        
 		return false;
 	}
 
