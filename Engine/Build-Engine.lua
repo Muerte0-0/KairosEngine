@@ -28,6 +28,7 @@ includedirs {
 	"%{IncludeDir.Vulkan}",
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.GLM}",
+	"%{IncludeDir.stb_image}",
 	"%{IncludeDir.Assimp}",
 	"%{IncludeDir.JSON}",
 	"%{IncludeDir.mINI}",

@@ -55,6 +55,7 @@ IncludeDir = {}
 IncludeDir["Vulkan"] = "%{VULKAN_SDK}/include"
 IncludeDir["GLFW"] =  "%{ThirdParty}/GLFW/include"
 IncludeDir["GLM"] = "%{ThirdParty}/GLM"
+IncludeDir["stb_image"] = "%{ThirdParty}/stb_image"
 IncludeDir["ImGui"] = "%{ThirdParty}/ocornut/ImGui"
 IncludeDir["Assimp"] = "%{ThirdParty}/Assimp/include"
 IncludeDir["JSON"] = "%{ThirdParty}/json/single_include"

@@ -4,8 +4,8 @@
 #include "Engine/Events/WindowEvents.h"
 #include "Engine/Events/InputEvents.h"
 
-#include <iostream>
-#include <assert.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 namespace Engine {
 
@@ -33,6 +33,18 @@ namespace Engine {
 		}
 
 		glfwSetWindowUserPointer(m_Handle, this);
+		
+		GLFWimage images[1];
+		int channels;
+		
+		// Load image pixels (RGBA format recommended)
+		images[0].pixels = stbi_load("D:/Dev/Projects/KairosEngine/Engine/Resources/Icons/TempLogo.png", &images[0].width, &images[0].height, &channels, 4);
+    
+		if (images[0].pixels != nullptr)
+		{
+			glfwSetWindowIcon(m_Handle, 1, images);
+			stbi_image_free(images[0].pixels); // Free memory
+		}
 		
 		glfwSetWindowCloseCallback(m_Handle, [](GLFWwindow* handle)
 		{
