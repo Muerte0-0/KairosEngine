@@ -42,7 +42,7 @@ namespace Engine
 		m_VertexShader = CreateScope<VulkanShader>(m_VulkanDevice, m_CreateInfo.VertexShader, LoadShaderBinary(vertexPath));
 		m_FragmentShader = CreateScope<VulkanShader>(m_VulkanDevice, m_CreateInfo.FragmentShader, LoadShaderBinary(fragmentPath));
 
-		LOG(LogLevel::Info, "Loaded Shaders: {}, {}", vertexPath.string(), fragmentPath.string());
+		LOG(LogLevel::Info, "Loaded Shaders: {}, {}", m_CreateInfo.VertexShader.Filepath.string(), m_CreateInfo.FragmentShader.Filepath.string());
 	}
 
 	void VulkanGraphicsPipeline::CreatePipelineCache()

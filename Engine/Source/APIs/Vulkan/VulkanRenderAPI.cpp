@@ -274,7 +274,7 @@ namespace Engine
 		createInfo.VertexShader = 
 			{
 				.Name = "Shader",
-				.Filepath = "Shader.vertMain.vert.spv",
+				.Filepath = "Mesh.vertMain.vert.spv",
 				.EntryPoint = "vertMain",
 				.Stage = ShaderStage::Vertex 
 			};
@@ -282,7 +282,7 @@ namespace Engine
 		createInfo.FragmentShader = 
 			{
 				.Name = "Shader",
-				.Filepath = "Shader.fragMain.frag.spv",
+				.Filepath = "Mesh.fragMain.frag.spv",
 				.EntryPoint = "fragMain",
 				.Stage = ShaderStage::Fragment
 			};

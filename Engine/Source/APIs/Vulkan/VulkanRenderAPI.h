@@ -16,9 +16,11 @@ namespace Engine
 	{
 	public:
 		void Init(void* windowHandle, const std::filesystem::path& shaderDirectory) override;
+		
 		void BeginFrame() override;
 		void DrawFrame() override;
 		void EndFrame() override;
+		
 		void WindowResized() override;
 		void ResizeFramebuffer(uint32_t width, uint32_t height) override;
 		
@@ -60,9 +62,11 @@ namespace Engine
 		vector<const char*> GetRequiredInstanceExtensions() const;
 		void SetupDebugMessenger();
 		void CreateSurface(void* windowHandle);
+		
 		void ApplyPendingFramebufferResize();
 		void CreateViewportFramebuffer();
 		void CreateGraphicsPipeline();
+		
 		void BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const;
 	};
 }
