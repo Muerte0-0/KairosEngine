@@ -11,18 +11,18 @@
 namespace Engine
 {
 	// -----------------------------------------------------------------------
-	// Shader Descriptor: everything needed to create one multi-stage Shader
+	// Shader Descriptor
 	// -----------------------------------------------------------------------
 
 	struct ShaderDescriptor
 	{
-		std::string                  Name;
-		std::filesystem::path        ShaderDirectory;
-		std::vector<ShaderStageData> Stages;    // One entry per stage to compile.
+		std::string						Name;
+		std::filesystem::path			ShaderDirectory;
+		std::vector<ShaderStageData>	Stages;			// One entry per stage to compile.
 	};
 
 	// -----------------------------------------------------------------------
-	// Shader  —  abstract, multi-stage RHI object
+	// Shader
 	// -----------------------------------------------------------------------
 
 	class Shader
@@ -42,14 +42,14 @@ namespace Engine
 		[[nodiscard]] std::vector<const  ShaderStageData*> GetStages() const;
 		
 		/**
-		 * @brief Initialise all GPU resources for every stage.
+		 * @brief Initialize all GPU resources for every stage.
 		 *        Must be called once after Create() before the shader is used.
-		 */
+		*/
 		virtual void Init() = 0;
 
 		/**
-		 * @brief Release all GPU resources.  Safe to call multiple times.
-		 */
+		 * @brief Release all GPU resources. Safe to call multiple times.
+		*/
 		virtual void Shutdown() = 0;
 
 		// ------------------------------------------------------------------
@@ -71,7 +71,7 @@ namespace Engine
 	};
 
 	// -----------------------------------------------------------------------
-	// ShaderLibrary
+	// Shader Library
 	// -----------------------------------------------------------------------
 
 	class ShaderLibrary
@@ -79,15 +79,15 @@ namespace Engine
 	public:
 		/**
 		 * @brief Load a shader from a descriptor, add it to the library, and
-		 *        return it.  If a shader with the same name already exists the
+		 *        return it. If a shader with the same name already exists the
 		 *        cached version is returned without reloading.
-		 */
+		*/
 		[[nodiscard]] Ref<Shader> Load(const ShaderDescriptor& descriptor);
 
 		/**
 		 * @brief Retrieve an already-loaded shader by name.
 		 *        Asserts if the name is not found.
-		 */
+		*/
 		[[nodiscard]] Ref<Shader> Get(const std::string& name) const;
 
 		[[nodiscard]] bool Exists(const std::string& name) const;

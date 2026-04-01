@@ -35,12 +35,12 @@ namespace Engine
 		/**
 		 * @brief Initialize all GPU pipeline objects.
 		 *        Must be called once after Create() before rendering.
-		 */
+		*/
 		virtual void Init() = 0;
 
 		/**
 		 * @brief Release all GPU resources. Safe to call multiple times.
-		 */
+		*/
 		virtual void Shutdown() = 0;
 		
 		[[nodiscard]] static Scope<GraphicsPipeline> Create(GraphicsPipelineCreateInfo createInfo);

@@ -91,8 +91,9 @@ namespace Engine
 
 	void ShaderLibrary::Clear()
 	{
-		for (auto& [name, shader] : m_Shaders)
+		for (auto& shader : m_Shaders | views::values)
 			shader->Shutdown();
+		
 		m_Shaders.clear();
 	}
 }
