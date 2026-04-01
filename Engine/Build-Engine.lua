@@ -48,6 +48,10 @@ filter "files:Vendor/ocornut/ImGuizmo/**.cpp"
 
 filter "system:windows"
 	systemversion "latest"
+	
+defines{
+	"WIN32_LEAN_AND_MEAN",
+}
 
 links {
 	"Ws2_32.lib",

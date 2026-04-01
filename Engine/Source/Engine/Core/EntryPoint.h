@@ -16,19 +16,17 @@ inline int Main(int argc, char** argv)
         
 		app->Initialize(); // Initialize Application
 		app->Run(); // Run the Application Loop
-		app->Shutdown(); // Shutdown Application
+		app->Shutdown(); // Shut-down Application
         
 		delete app; // Clean up the Application instance
         
-		Engine::ShutdownCore(); // Shutdown the Core systems of the Engine
+		Engine::ShutdownCore(); // Shut-down the Core systems of the Engine
 	}
 	
 	return 0;
 }
 
-#ifdef PLATFORM_WINDOWS
-
-#ifdef KE_DIST
+#if defined(KE_DIST) && defined(PLATFORM_WINDOWS)
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine, int nShowCmd)
 {
@@ -36,17 +34,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR lpCmdLine,
 }
 
 #else
-
-int main(int argc, char** argv)
-{
-	return Main(argc, argv);
-}
-
-#endif
-
-#endif
-
-#ifdef PLATFORM_LINUX
 
 int main(int argc, char** argv)
 {

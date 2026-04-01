@@ -18,7 +18,7 @@ public:
 	{
 		Engine::ApplicationSpecification appSpec;
 		appSpec.Name = "KairosEditor";
-		appSpec.ShaderSourcePath = "Editor/Assets/Shaders";
+		appSpec.ShaderSourcePath = "Editor/Resources/Shaders";
 		appSpec.CompileShadersOnStartup = true;
         
 		Engine::WindowSpecification windowSpec;

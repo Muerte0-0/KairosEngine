@@ -70,9 +70,9 @@ namespace Engine
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;				// Enable Viewports
         io.ConfigFlags |= ImGuiConfigFlags_IsSRGB;						// Enable SRGB for ImGui
 
-        //float fontSize = 18.0f;
-        //io.FontDefault = io.Fonts->AddFontFromFileTTF("D:/Dev/Projects/KairosEngine/Editor/Assets/Fonts/OpenSans/OpenSans-Regular.ttf", fontSize);
-        //io.Fonts->AddFontFromFileTTF("D:/Dev/Projects/KairosEngine/Editor/Assets/Fonts/OpenSans/OpenSans-Bold.ttf", fontSize);
+        float fontSize = 18.0f;
+        io.FontDefault = io.Fonts->AddFontFromFileTTF("D:/Dev/Projects/KairosEngine/Engine/Resources/Fonts/OpenSans/OpenSans-Regular.ttf", fontSize);
+        io.Fonts->AddFontFromFileTTF("D:/Dev/Projects/KairosEngine/Engine/Resources/Fonts/OpenSans/OpenSans-Bold.ttf", fontSize);
         
 		ImGuiStyle& style = ImGui::GetStyle();
 		
