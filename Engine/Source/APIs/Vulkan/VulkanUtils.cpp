@@ -82,10 +82,50 @@ namespace Engine
 		image.bindMemory(imageMemory, 0);
 	}
 
+	void VulkanUtils::CreateBuffer(const vk::raii::Device& device, const vk::raii::PhysicalDevice& physicalDevice,
+		vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags properties,
+		vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory)
+	{
+		vk::BufferCreateInfo bufferInfo;
+		bufferInfo.size = size;
+		bufferInfo.usage = usage;
+		bufferInfo.sharingMode = vk::SharingMode::eExclusive;
+
+		buffer = vk::raii::Buffer(device, bufferInfo);
+		vk::MemoryRequirements memRequirements = buffer.getMemoryRequirements();
+		vk::MemoryAllocateInfo allocInfo;
+		allocInfo.allocationSize = memRequirements.size;
+		allocInfo.memoryTypeIndex = FindMemoryType(physicalDevice, memRequirements.memoryTypeBits, properties);
+		bufferMemory = vk::raii::DeviceMemory(device, allocInfo);
+		buffer.bindMemory(bufferMemory, 0);
+	}
+
+	void VulkanUtils::CopyBuffer(const vk::raii::Device& device, const vk::raii::CommandPool& commandPool,
+		const vk::raii::Queue& queue, const vk::raii::Buffer& srcBuffer, const vk::raii::Buffer& dstBuffer, vk::DeviceSize size)
+	{
+		vk::CommandBufferAllocateInfo allocInfo;
+		allocInfo.commandPool = commandPool;
+		allocInfo.level = vk::CommandBufferLevel::ePrimary;
+		allocInfo.commandBufferCount = 1;
+
+		vk::raii::CommandBuffer commandCopyBuffer = std::move(device.allocateCommandBuffers(allocInfo).front());
+		commandCopyBuffer.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
+		commandCopyBuffer.copyBuffer(*srcBuffer, *dstBuffer, vk::BufferCopy(0, 0, size));
+		commandCopyBuffer.end();
+
+		vk::SubmitInfo submitInfo;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &*commandCopyBuffer;
+		queue.submit(submitInfo, nullptr);
+		queue.waitIdle();
+	}
+
 	Scope<vk::raii::CommandBuffer> VulkanUtils::BeginSingleTimeCommands(const vk::raii::Device& device, const vk::raii::CommandPool& commandPool)
 	{
 		vk::CommandBufferAllocateInfo allocInfo(commandPool, vk::CommandBufferLevel::ePrimary, 1);
-		std::unique_ptr<vk::raii::CommandBuffer> commandBuffer = std::make_unique<vk::raii::CommandBuffer>(std::move(vk::raii::CommandBuffers(device, allocInfo).front()));
+		
+		std::unique_ptr<vk::raii::CommandBuffer> commandBuffer = 
+			std::make_unique<vk::raii::CommandBuffer>(std::move(vk::raii::CommandBuffers(device, allocInfo).front()));
 
 		vk::CommandBufferBeginInfo beginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
 		commandBuffer->begin(beginInfo);

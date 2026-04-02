@@ -65,6 +65,12 @@ namespace Engine
 			vk::SampleCountFlagBits numSamples, vk::Format format, vk::ImageTiling tiling, 
 			vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Image& image, vk::raii::DeviceMemory& imageMemory);
 		
+		static void CreateBuffer(const vk::raii::Device& device, const vk::raii::PhysicalDevice& physicalDevice, vk::DeviceSize size, vk::BufferUsageFlags usage, 
+			vk::MemoryPropertyFlags properties, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory);
+		
+		static void CopyBuffer(const vk::raii::Device& device, const vk::raii::CommandPool& commandPool, const vk::raii::Queue& queue,
+			const vk::raii::Buffer& srcBuffer, const vk::raii::Buffer& dstBuffer, vk::DeviceSize size);
+		
 		static Scope<vk::raii::CommandBuffer> BeginSingleTimeCommands(const vk::raii::Device& device, const vk::raii::CommandPool& commandPool);
 		static void EndSingleTimeCommands(const vk::raii::CommandBuffer& commandBuffer, const vk::raii::Queue& queue);
 		
