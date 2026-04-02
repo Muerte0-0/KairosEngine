@@ -43,10 +43,10 @@ namespace Engine
 	{
 		switch (stage)
 		{
-		case ShaderStage::Vertex:   return "Vertex";
-		case ShaderStage::Fragment: return "Fragment";
-		case ShaderStage::Compute:  return "Compute";
-		default:                    return "Unknown";
+			case ShaderStage::Vertex:   return "Vertex";
+			case ShaderStage::Fragment: return "Fragment";
+			case ShaderStage::Compute:  return "Compute";
+			default:                    return "Unknown";
 		}
 	}
 
@@ -55,13 +55,10 @@ namespace Engine
 		ASSERT(!descriptor.Name.empty(),      "Shader::Create — descriptor has no name.");
 		ASSERT(!descriptor.Stages.empty(),    "Shader::Create — descriptor has no stages.");
 		
-		Ref<Shader> result = nullptr;
-		
 		switch (Renderer::GetAPI()->GetType())
 		{
 		case API::Vulkan:
-			result = CreateRef<VulkanShader>(descriptor);
-			break;
+			return CreateRef<VulkanShader>(descriptor);
 #ifdef PLATFORM_WINDOWS
 		case API::DX11:
 			ASSERT(false, "API[Direct X 11]: Not Implemented");
@@ -72,7 +69,7 @@ namespace Engine
 #endif
 		}
 		
-		return result;
+		return nullptr;
 	}
 
 	// -----------------------------------------------------------------------

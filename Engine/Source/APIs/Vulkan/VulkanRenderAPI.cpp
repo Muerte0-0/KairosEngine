@@ -70,8 +70,6 @@ namespace Engine
 
 		CreateViewportFramebuffer();
 		CreateGraphicsPipeline();
-		
-		m_ViewportPipeline->Init();
 	}
 
 	void VulkanRenderAPI::BeginFrame()

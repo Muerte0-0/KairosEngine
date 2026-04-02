@@ -60,6 +60,30 @@ namespace Engine
 		std::string           EntryPoint = "main";
 		std::vector<uint32_t> Spirv;                 // Filled during Init().
 	};
+	
+	enum class ShaderDataType
+	{
+		None = 0,
+		Float, Float2, Float3, Float4,
+		Mat3, Mat4
+	};
+
+	static uint32_t ShaderDataTypeSize(ShaderDataType type)
+	{
+		switch (type)
+		{
+			case ShaderDataType::Float:  return 4;
+			case ShaderDataType::Float2: return 4 * 2;
+			case ShaderDataType::Float3: return 4 * 3;
+			case ShaderDataType::Float4: return 4 * 4;
+			case ShaderDataType::Mat3:   return 4 * 3 * 3;
+			case ShaderDataType::Mat4:   return 4 * 4 * 4;
+			default: break;
+		}
+
+		LOG(LogLevel::Error, "Unknown ShaderDataType!");
+		return 0;
+	}
 }
 
 // std::unordered_map<ShaderStage, ...> requires a hash specialization.

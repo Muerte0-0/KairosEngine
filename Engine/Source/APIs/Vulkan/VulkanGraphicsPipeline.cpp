@@ -21,25 +21,8 @@ namespace Engine
 	// Construction / destruction
 	// -----------------------------------------------------------------------
 
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(GraphicsPipelineCreateInfo createInfo)
-		: GraphicsPipeline(std::move(createInfo))
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) : m_CreateInfo(createInfo)
 	{
-		// No Vulkan work here — Init() is called by GraphicsPipeline::Create().
-	}
-
-	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
-	{
-		Shutdown();
-	}
-
-	// -----------------------------------------------------------------------
-	// Lifecycle
-	// -----------------------------------------------------------------------
-
-	void VulkanGraphicsPipeline::Init()
-	{
-		Shutdown();
-
 		ASSERT(m_CreateInfo.Shader,
 			"VulkanGraphicsPipeline::Init — Shader is null.");
 		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Vertex),
@@ -57,7 +40,7 @@ namespace Engine
 			m_CreateInfo.Shader->GetName());
 	}
 
-	void VulkanGraphicsPipeline::Shutdown()
+	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
 	{
 		m_Pipeline            = nullptr;
 		m_PipelineLayout      = nullptr;
@@ -86,10 +69,6 @@ namespace Engine
 
 	void VulkanGraphicsPipeline::CreatePipeline()
 	{
-		// ------------------------------------------------------------------
-		// Build VkPipelineShaderStageCreateInfo for every stage in the shader.
-		// No hardcoded vertex/fragment — iterate whatever the shader provides.
-		// ------------------------------------------------------------------
 		auto* vulkanShader = dynamic_cast<VulkanShader*>(m_CreateInfo.Shader.get());
 
 		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;

@@ -67,29 +67,35 @@ namespace Engine
 		vk::raii::PhysicalDevice &GetPhysicalDevice() { return m_PhysicalDevice; }
 
 		/**
-		 * @brief Get the logical device.
-		 * @return The logical device.
+		 * @brief Get the Logical device.
+		 * @return The Logical device.
 		*/
 		vk::raii::Device &GetDevice() { return m_Device; }
 
 		/**
-		 * @brief Get the graphics queue.
-		 * @return The graphics queue.
+		 * @brief Get the Graphics queue.
+		 * @return The Graphics queue.
 		*/
 		vk::raii::Queue &GetGraphicsQueue() { return m_GraphicsQueue; }
 
 		/**
-		 * @brief Get the present queue.
-		 * @return The present queue.
+		 * @brief Get the Present queue.
+		 * @return The Present queue.
 		*/
 		vk::raii::Queue &GetPresentQueue() { return m_PresentQueue; }
 
 		/**
-		 * @brief Get the compute queue.
-		 * @return The compute queue.
+		 * @brief Get the Compute queue.
+		 * @return The Compute queue.
 		*/
 		vk::raii::Queue &GetComputeQueue() { return m_ComputeQueue; }
 
+		/**
+		 * @brief Get the Transfer queue.
+		 * @return The Transfer queue.
+		*/
+		vk::raii::Queue &GetTransferQueue() { return m_TransferQueue; }
+		
 		/**
 		 * @brief Get the queue family indices.
 		 * @return The queue family indices.

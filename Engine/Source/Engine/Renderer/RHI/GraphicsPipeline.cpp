@@ -7,21 +7,14 @@
 
 namespace Engine
 {
-	GraphicsPipeline::GraphicsPipeline(GraphicsPipelineCreateInfo createInfo)
-		: m_CreateInfo(std::move(createInfo))
-	{}
-
 	Scope<GraphicsPipeline> GraphicsPipeline::Create(GraphicsPipelineCreateInfo createInfo)
 	{
 		ASSERT(createInfo.Shader, "GraphicsPipeline::Create — createInfo.Shader is null.");
-
-		Scope<GraphicsPipeline> result = nullptr;
 		
 		switch (Renderer::GetAPI()->GetType())
 		{
 		case API::Vulkan:
-			result = CreateScope<VulkanGraphicsPipeline>(std::move(createInfo));
-			break;
+			return CreateScope<VulkanGraphicsPipeline>(std::move(createInfo));
 #ifdef PLATFORM_WINDOWS
 		case API::DX11:
 			ASSERT(false, "API[Direct X 11]: Not Implemented");
@@ -32,6 +25,6 @@ namespace Engine
 #endif
 		}
 		
-		return result;
+		return nullptr;
 	}
 }
