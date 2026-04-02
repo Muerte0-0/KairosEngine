@@ -108,13 +108,14 @@ namespace Engine
 		vk::raii::SurfaceKHR &m_Surface;
 		
 		// Vulkan device
-		vk::raii::PhysicalDevice m_PhysicalDevice = nullptr;
-		vk::raii::Device m_Device = nullptr;
+		vk::raii::PhysicalDevice m_PhysicalDevice	= nullptr;
+		vk::raii::Device m_Device					= nullptr;
 		
 		// Vulkan queues
-		vk::raii::Queue m_GraphicsQueue = nullptr;
-		vk::raii::Queue m_PresentQueue = nullptr;
-		vk::raii::Queue m_ComputeQueue = nullptr;
+		vk::raii::Queue m_GraphicsQueue		= nullptr;
+		vk::raii::Queue m_PresentQueue		= nullptr;
+		vk::raii::Queue m_ComputeQueue		= nullptr;
+		vk::raii::Queue m_TransferQueue		= nullptr;
 		
 		// Queue family indices
 		QueueFamilyIndices m_QueueFamilyIndices;

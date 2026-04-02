@@ -9,7 +9,7 @@ namespace Engine
 		const std::vector<const char*>& optionalExtensions) : m_Instance(instance), m_Surface(surface),
 		m_RequiredExtensions(requiredExtensions), m_OptionalExtensions(optionalExtensions)
 	{
-		// Initialize deviceExtensions with required extensions
+		// Initialize m_DeviceExtensions with required extensions
 		m_DeviceExtensions = requiredExtensions;
 
 		// Add optional extensions
@@ -102,7 +102,8 @@ namespace Engine
 			std::set<uint32_t> uniqueQueueFamilies = {
 				m_QueueFamilyIndices.graphicsFamily.value(),
 				m_QueueFamilyIndices.presentFamily.value(),
-				m_QueueFamilyIndices.computeFamily.value()
+				m_QueueFamilyIndices.computeFamily.value(),
+				m_QueueFamilyIndices.transferFamily.value()
 			  };
 			
 			float queuePriority = 1.0f;
@@ -157,6 +158,7 @@ namespace Engine
 			m_GraphicsQueue = vk::raii::Queue(m_Device, m_QueueFamilyIndices.graphicsFamily.value(), 0);
 			m_PresentQueue = vk::raii::Queue(m_Device, m_QueueFamilyIndices.presentFamily.value(), 0);
 			m_ComputeQueue = vk::raii::Queue(m_Device, m_QueueFamilyIndices.computeFamily.value(), 0);
+			m_TransferQueue = vk::raii::Queue(m_Device, m_QueueFamilyIndices.transferFamily.value(), 0);
 			
 			return true;
 			
