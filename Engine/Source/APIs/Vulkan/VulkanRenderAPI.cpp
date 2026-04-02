@@ -70,6 +70,8 @@ namespace Engine
 
 		CreateViewportFramebuffer();
 		CreateGraphicsPipeline();
+		
+		m_ViewportPipeline->Init();
 	}
 
 	void VulkanRenderAPI::BeginFrame()
@@ -77,7 +79,7 @@ namespace Engine
 		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
 
 		auto fenceResult = m_VulkanDevice->GetDevice().waitForFences(*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex], vk::True, UINT64_MAX);
-		KE_CORE_ASSERT(fenceResult == vk::Result::eSuccess, "Failed to wait for Fence!");
+		ASSERT(fenceResult == vk::Result::eSuccess, "Failed to wait for Fence!");
 
 		ApplyPendingFramebufferResize();
 
@@ -92,7 +94,7 @@ namespace Engine
 			return;
 		}
 
-		KE_CORE_ASSERT(result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR, "Failed to acquire Swapchain Image!");
+		ASSERT(result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR, "Failed to acquire Swapchain Image!");
 		m_CurrentImageIndex = imageIndex;
 
 		m_VulkanDevice->GetDevice().resetFences(*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex]);
@@ -370,7 +372,7 @@ namespace Engine
 					[requiredLayer](auto const& layerProperty) { return strcmp(layerProperty.layerName, requiredLayer) == 0; });
 			});
 		
-		KE_CORE_ASSERT(unsupportedLayerIt == requiredLayers.end(), "Required layer not supported: {}", std::string(*unsupportedLayerIt));
+		ASSERT(unsupportedLayerIt == requiredLayers.end(), "Required layer not supported: {}", std::string(*unsupportedLayerIt));
 
 		auto requiredExtensions = GetRequiredInstanceExtensions();
 		auto extensionProperties = m_Context.enumerateInstanceExtensionProperties();
@@ -381,7 +383,7 @@ namespace Engine
 					[requiredExtension](auto const& extensionProperty) { return strcmp(extensionProperty.extensionName, requiredExtension) == 0; });
 			});
 		
-		KE_CORE_ASSERT(unsupportedPropertyIt == requiredExtensions.end(), "Required extension not supported: {}", std::string(*unsupportedPropertyIt));
+		ASSERT(unsupportedPropertyIt == requiredExtensions.end(), "Required extension not supported: {}", std::string(*unsupportedPropertyIt));
 
 		vk::InstanceCreateInfo createInfo;
 		createInfo.pApplicationInfo = &appInfo;
@@ -445,7 +447,7 @@ namespace Engine
 		VkSurfaceKHR surface = VK_NULL_HANDLE;
 
 		VkResult result = glfwCreateWindowSurface(*m_Instance, static_cast<GLFWwindow*>(windowHandle), nullptr, &surface);
-		KE_CORE_ASSERT(result == VK_SUCCESS, "Failed to create window surface: {}", glfwGetErrorName(result));
+		ASSERT(result == VK_SUCCESS, "Failed to create window surface: {}", glfwGetErrorName(result));
 
 		m_Surface = vk::raii::SurfaceKHR(m_Instance, surface);
 	}

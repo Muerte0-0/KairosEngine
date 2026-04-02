@@ -44,14 +44,14 @@ namespace Engine
 		const std::filesystem::path fullPath = m_ShaderDirectory / stageData.Filepath;
 
 		std::ifstream stream(fullPath, std::ios::binary | std::ios::ate);
-		KE_CORE_ASSERT(stream.is_open(),
+		ASSERT(stream.is_open(),
 			"VulkanShader '{}': cannot open SPIR-V file '{}'.",
 			m_Name, fullPath.string());
 
 		const std::streamsize fileSize = stream.tellg();
-		KE_CORE_ASSERT(fileSize > 0,
+		ASSERT(fileSize > 0,
 			"VulkanShader '{}': SPIR-V file is empty: '{}'.", m_Name, fullPath.string());
-		KE_CORE_ASSERT((fileSize % static_cast<std::streamsize>(sizeof(uint32_t))) == 0,
+		ASSERT((fileSize % static_cast<std::streamsize>(sizeof(uint32_t))) == 0,
 			"VulkanShader '{}': '{}' is not valid SPIR-V (size not divisible by 4).",
 			m_Name, fullPath.string());
 
@@ -59,7 +59,7 @@ namespace Engine
 		stageData.Spirv.resize(static_cast<size_t>(fileSize / sizeof(uint32_t)));
 		stream.read(reinterpret_cast<char*>(stageData.Spirv.data()), fileSize);
 
-		KE_CORE_ASSERT(stream.good() || stream.eof(),
+		ASSERT(stream.good() || stream.eof(),
 			"VulkanShader '{}': failed to read SPIR-V from '{}'.", m_Name, fullPath.string());
 
 		LOG(LogLevel::Info, "VulkanShader '{}': loaded {} ({} bytes).",
@@ -68,12 +68,12 @@ namespace Engine
 
 	void VulkanShader::CreateModule(ShaderStageData& stageData)
 	{
-		KE_CORE_ASSERT(!stageData.Spirv.empty(),
+		ASSERT(!stageData.Spirv.empty(),
 			"VulkanShader '{}': stage '{}' has no SPIR-V — call LoadSpirvFromDisk first.",
 			m_Name, Shader::StageToString(stageData.Stage));
 
 		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
-		KE_CORE_ASSERT(api, "VulkanShader: active RenderAPI is not VulkanRenderAPI.");
+		ASSERT(api, "VulkanShader: active RenderAPI is not VulkanRenderAPI.");
 
 		vk::ShaderModuleCreateInfo info;
 		info.codeSize = stageData.Spirv.size() * sizeof(uint32_t);
@@ -89,7 +89,7 @@ namespace Engine
 
 	const vk::raii::ShaderModule& VulkanShader::GetModule(ShaderStage stage) const
 	{
-		KE_CORE_ASSERT(m_Modules.contains(stage),
+		ASSERT(m_Modules.contains(stage),
 			"VulkanShader '{}': no module for stage '{}'.",
 			m_Name, Shader::StageToString(stage));
 		return m_Modules.at(stage);
@@ -103,7 +103,7 @@ namespace Engine
 		case ShaderStage::Fragment: return vk::ShaderStageFlagBits::eFragment;
 		case ShaderStage::Compute:  return vk::ShaderStageFlagBits::eCompute;
 		default:
-			KE_CORE_ASSERT(false, "VulkanShader::ToVkStage — unhandled ShaderStage.");
+			ASSERT(false, "VulkanShader::ToVkStage — unhandled ShaderStage.");
 			return vk::ShaderStageFlagBits::eVertex;
 		}
 	}

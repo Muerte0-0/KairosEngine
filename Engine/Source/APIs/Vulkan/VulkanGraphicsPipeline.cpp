@@ -12,7 +12,7 @@ namespace Engine
 		vk::raii::Device& GetDevice()
 		{
 			auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
-			KE_CORE_ASSERT(api, "VulkanGraphicsPipeline: active RenderAPI is not VulkanRenderAPI.");
+			ASSERT(api, "VulkanGraphicsPipeline: active RenderAPI is not VulkanRenderAPI.");
 			return api->GetVulkanDevice()->GetDevice();
 		}
 	}
@@ -40,12 +40,12 @@ namespace Engine
 	{
 		Shutdown();
 
-		KE_CORE_ASSERT(m_CreateInfo.Shader,
+		ASSERT(m_CreateInfo.Shader,
 			"VulkanGraphicsPipeline::Init — Shader is null.");
-		KE_CORE_ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Vertex),
+		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Vertex),
 			"VulkanGraphicsPipeline::Init — shader '{}' has no Vertex stage.",
 			m_CreateInfo.Shader->GetName());
-		KE_CORE_ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Fragment),
+		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Fragment),
 			"VulkanGraphicsPipeline::Init — shader '{}' has no Fragment stage.",
 			m_CreateInfo.Shader->GetName());
 
@@ -102,7 +102,7 @@ namespace Engine
 				stageData->EntryPoint.c_str());
 		}
 
-		KE_CORE_ASSERT(!shaderStages.empty(),
+		ASSERT(!shaderStages.empty(),
 			"VulkanGraphicsPipeline: shader '{}' produced zero stage infos.",
 			m_CreateInfo.Shader->GetName());
 

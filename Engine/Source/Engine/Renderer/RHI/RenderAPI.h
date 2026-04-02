@@ -7,7 +7,6 @@
 
 enum class API
 {
-	None = 0,
 	Vulkan,
 	DX11,
 	DX12
@@ -32,7 +31,9 @@ namespace Engine
 		virtual GraphicsPipeline* GetGraphicsPipeline() = 0;
 		virtual ShaderLibrary*    GetShaderLibrary()    = 0;
 
-		virtual void WindowResized()                                  = 0;
-		virtual void ResizeFramebuffer(uint32_t width, uint32_t height) = 0;
+		virtual void WindowResized()									= 0;
+		virtual void ResizeFramebuffer(uint32_t width, uint32_t height)	= 0;
+		
+		virtual API GetType() = 0;
 	};
 }

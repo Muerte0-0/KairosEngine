@@ -3,20 +3,17 @@
 
 #include <memory>
 
-#include "Engine/Debugging/Assert.h"
-
 #ifdef KE_DEBUG
 #if defined(PLATFORM_WINDOWS)
-#define KE_DEBUGBREAK() __debugbreak()
+#define DEBUGBREAK() __debugbreak()
 #elif defined(PLATFORM_LINUX)
 #include <signal.h>
-#define KE_DEBUGBREAK() raise(SIGTRAP)
+#define DEBUGBREAK() raise(SIGTRAP)
 #else
 #error "Platform doesn't support debugbreak yet!"
 #endif
-#define KE_ENABLE_ASSERTS
 #else
-#define KE_DEBUGBREAK()
+#define DEBUGBREAK()
 #endif
 
 #define KE_EXPAND_MACRO(x) x

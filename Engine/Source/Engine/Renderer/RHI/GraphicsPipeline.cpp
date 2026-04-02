@@ -1,9 +1,9 @@
 #include "kepch.h"
 #include "GraphicsPipeline.h"
 
-#if defined(PLATFORM_WINDOWS) || defined(PLATFORM_LINUX)
+#include "Engine/Renderer/Renderer.h"
+
 #include "APIs/Vulkan/VulkanGraphicsPipeline.h"
-#endif
 
 namespace Engine
 {
@@ -13,15 +13,25 @@ namespace Engine
 
 	Scope<GraphicsPipeline> GraphicsPipeline::Create(GraphicsPipelineCreateInfo createInfo)
 	{
-		KE_CORE_ASSERT(createInfo.Shader, "GraphicsPipeline::Create — createInfo.Shader is null.");
+		ASSERT(createInfo.Shader, "GraphicsPipeline::Create — createInfo.Shader is null.");
 
-#if defined(PLATFORM_WINDOWS) || defined(PLATFORM_LINUX)
-		auto pipeline = CreateScope<VulkanGraphicsPipeline>(std::move(createInfo));
-		pipeline->Init();
-		return pipeline;
-#else
-		KE_CORE_ASSERT(false, "GraphicsPipeline::Create — unsupported platform!");
-		return nullptr;
+		Scope<GraphicsPipeline> result = nullptr;
+		
+		switch (Renderer::GetAPI()->GetType())
+		{
+		case API::Vulkan:
+			result = CreateScope<VulkanGraphicsPipeline>(std::move(createInfo));
+			break;
+#ifdef PLATFORM_WINDOWS
+		case API::DX11:
+			ASSERT(false, "API[Direct X 11]: Not Implemented");
+			break;
+		case API::DX12:
+			ASSERT(false, "API[Direct X 12]: Not Implemented");
+			break;
 #endif
+		}
+		
+		return result;
 	}
 }

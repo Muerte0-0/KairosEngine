@@ -25,7 +25,7 @@ namespace Engine
 
 	const ShaderStageData& Shader::GetStage(ShaderStage stage) const
 	{
-		KE_CORE_ASSERT(HasStage(stage), "Shader '{}': requested stage '{}' does not exist.",
+		ASSERT(HasStage(stage), "Shader '{}': requested stage '{}' does not exist.",
 			m_Name, StageToString(stage));
 		return m_Stages.at(stage);
 	}
@@ -52,10 +52,27 @@ namespace Engine
 
 	Ref<Shader> Shader::Create(const ShaderDescriptor& descriptor)
 	{
-		KE_CORE_ASSERT(!descriptor.Name.empty(),      "Shader::Create — descriptor has no name.");
-		KE_CORE_ASSERT(!descriptor.Stages.empty(),    "Shader::Create — descriptor has no stages.");
+		ASSERT(!descriptor.Name.empty(),      "Shader::Create — descriptor has no name.");
+		ASSERT(!descriptor.Stages.empty(),    "Shader::Create — descriptor has no stages.");
 		
-		return CreateRef<VulkanShader>(descriptor);
+		Ref<Shader> result = nullptr;
+		
+		switch (Renderer::GetAPI()->GetType())
+		{
+		case API::Vulkan:
+			result = CreateRef<VulkanShader>(descriptor);
+			break;
+#ifdef PLATFORM_WINDOWS
+		case API::DX11:
+			ASSERT(false, "API[Direct X 11]: Not Implemented");
+			break;
+		case API::DX12:
+			ASSERT(false, "API[Direct X 12]: Not Implemented");
+			break;
+#endif
+		}
+		
+		return result;
 	}
 
 	// -----------------------------------------------------------------------
@@ -80,7 +97,7 @@ namespace Engine
 
 	Ref<Shader> ShaderLibrary::Get(const std::string& name) const
 	{
-		KE_CORE_ASSERT(Exists(name), "ShaderLibrary: shader '{}' not found.", name);
+		ASSERT(Exists(name), "ShaderLibrary: shader '{}' not found.", name);
 		return m_Shaders.at(name);
 	}
 

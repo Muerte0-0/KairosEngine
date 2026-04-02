@@ -14,17 +14,14 @@ namespace Engine
 		case API::Vulkan:
 			s_API = CreateScope<VulkanRenderAPI>();
 			break;
-#if defined(PLATFORM_WINDOWS)
+#ifdef PLATFORM_WINDOWS
 		case API::DX11:
-			std::cerr << "API[Direct X 11]: Not Implemented\n";
+			ASSERT(false, "API[Direct X 11]: Not Implemented");
 			break;
 		case API::DX12:
-			std::cerr << "API[Direct X 12]: Not Implemented\n";
+			ASSERT(false, "API[Direct X 12]: Not Implemented");
 			break;
 #endif
-		default:
-			std::cerr << "API: Unknown API\n";
-			break;
 		}
 
 		s_API->Init(windowHandle, shaderDirectory);

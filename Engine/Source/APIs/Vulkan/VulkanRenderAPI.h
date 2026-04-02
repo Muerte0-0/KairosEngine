@@ -41,6 +41,8 @@ namespace Engine
 		
 		const vk::raii::CommandBuffer& GetActiveCommandBuffer() const { return m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex]; }
 		
+		API GetType() override { return API::Vulkan; }
+		
 	private:
 		vk::raii::Context					m_Context;
 		vk::raii::Instance					m_Instance = nullptr;
