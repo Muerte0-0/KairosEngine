@@ -3,7 +3,7 @@
 
 namespace Engine
 {
-	enum class BufferUsage
+	enum class BufferUsage : uint8_t
 	{
 		Static,   // GPU-only (Fast, Staged)
 		Dynamic   // CPU-updated

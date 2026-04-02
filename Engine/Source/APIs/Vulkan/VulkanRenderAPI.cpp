@@ -105,54 +105,54 @@ namespace Engine
 	void VulkanRenderAPI::DrawFrame()
 	{
 		if (!m_FrameValid)
-		{
 			return;
-		}
 		
 		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
 
+		VulkanFramebuffer* framebuffer = dynamic_cast<VulkanFramebuffer*>(m_ViewportFramebuffer.get());
+		
 		// Render the scene into the editor viewport image first.
 		VulkanUtils::TransitionImageLayout(
 			commandBuffer,
-			m_ViewportFramebuffer->GetImage(),
-			m_ViewportFramebuffer->GetCurrentLayout(),
+			framebuffer->GetImage(),
+			framebuffer->GetCurrentLayout(),
 			vk::ImageLayout::eColorAttachmentOptimal,
 			{},
 			vk::AccessFlagBits2::eColorAttachmentWrite,
 			vk::PipelineStageFlagBits2::eTopOfPipe,
 			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 			vk::ImageAspectFlagBits::eColor);
-		m_ViewportFramebuffer->SetCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
+		framebuffer->SetCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
 		vk::ClearValue viewportClearColor;
 		viewportClearColor.color = vk::ClearColorValue(std::array<float, 4>{ 0.025f, 0.025f, 0.025f, 1.0f });
 
 		vk::RenderingAttachmentInfo viewportColorAttachment;
-		viewportColorAttachment.imageView = m_ViewportFramebuffer->GetImageView();
+		viewportColorAttachment.imageView = framebuffer->GetImageView();
 		viewportColorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
 		viewportColorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
 		viewportColorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
 		viewportColorAttachment.clearValue = viewportClearColor;
 
 		vk::RenderingInfo viewportRenderingInfo;
-		viewportRenderingInfo.renderArea = vk::Rect2D(vk::Offset2D(0, 0), m_ViewportFramebuffer->GetExtent());
+		viewportRenderingInfo.renderArea = vk::Rect2D(vk::Offset2D(0, 0), framebuffer->GetExtent());
 		viewportRenderingInfo.layerCount = 1;
 		viewportRenderingInfo.colorAttachmentCount = 1;
 		viewportRenderingInfo.pColorAttachments = &viewportColorAttachment;
 
 		commandBuffer.beginRendering(viewportRenderingInfo);
 		commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics,
-			*static_cast<VulkanGraphicsPipeline*>(m_ViewportPipeline.get())->GetPipeline());
+			*dynamic_cast<VulkanGraphicsPipeline*>(m_ViewportPipeline.get())->GetPipeline());
 		commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f,
-			static_cast<float>(m_ViewportFramebuffer->GetWidth()),
-			static_cast<float>(m_ViewportFramebuffer->GetHeight()), 0.0f, 1.0f));
-		commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), m_ViewportFramebuffer->GetExtent()));
+			static_cast<float>(framebuffer->GetWidth()),
+			static_cast<float>(framebuffer->GetHeight()), 0.0f, 1.0f));
+		commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), framebuffer->GetExtent()));
 		commandBuffer.draw(3, 1, 0, 0);
 		commandBuffer.endRendering();
 
 		VulkanUtils::TransitionImageLayout(
 			commandBuffer,
-			m_ViewportFramebuffer->GetImage(),
+			framebuffer->GetImage(),
 			vk::ImageLayout::eColorAttachmentOptimal,
 			vk::ImageLayout::eShaderReadOnlyOptimal,
 			vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -160,7 +160,7 @@ namespace Engine
 			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 			vk::PipelineStageFlagBits2::eFragmentShader,
 			vk::ImageAspectFlagBits::eColor);
-		m_ViewportFramebuffer->SetCurrentLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+		framebuffer->SetCurrentLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		BeginSwapchainRendering(commandBuffer);
 	}
@@ -236,9 +236,7 @@ namespace Engine
 	void VulkanRenderAPI::ResizeFramebuffer(uint32_t width, uint32_t height)
 	{
 		if (m_ViewportFramebuffer == nullptr)
-		{
 			return;
-		}
 
 		width = (std::max)(width, 1u);
 		height = (std::max)(height, 1u);
@@ -283,7 +281,7 @@ namespace Engine
 
 		GraphicsPipelineCreateInfo createInfo;
 		createInfo.Shader      = meshShader;
-		createInfo.ColorFormat = VulkanUtils::ToTextureFormat(m_ViewportFramebuffer->GetColorFormat());
+		createInfo.ColorFormat = VulkanUtils::ToTextureFormat(m_VulkanSwapchain->GetSwapChainImageFormat());
 		createInfo.SampleCount = VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits::e1);
 
 		// GraphicsPipeline::Create calls Init() internally.
@@ -292,18 +290,10 @@ namespace Engine
 
 	void VulkanRenderAPI::CreateViewportFramebuffer()
 	{
-		FramebufferSpecification specification;
-		if (m_ViewportFramebuffer != nullptr)
-		{
-			specification = m_ViewportFramebuffer->GetSpecification();
-		}
-		else
-		{
-			specification.Width = (std::max)(m_VulkanSwapchain->GetSwapChainExtent().width, 1u);
-			specification.Height = (std::max)(m_VulkanSwapchain->GetSwapChainExtent().height, 1u);
-		}
-
-		m_ViewportFramebuffer = CreateScope<VulkanFramebuffer>(*m_VulkanDevice, specification, m_VulkanSwapchain->GetSwapChainImageFormat());
+		uint32_t width = (std::max)(m_VulkanSwapchain->GetSwapChainExtent().width, 1u);
+		uint32_t height = (std::max)(m_VulkanSwapchain->GetSwapChainExtent().height, 1u);
+		
+		m_ViewportFramebuffer = Framebuffer::Create(width, height);
 	}
 
 	void VulkanRenderAPI::BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const
@@ -412,9 +402,7 @@ namespace Engine
 	void VulkanRenderAPI::SetupDebugMessenger()
 	{
 		if (!enableValidationLayers)
-		{
 			return;
-		}
 
 		vk::DebugUtilsMessageSeverityFlagsEXT severityFlags(vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
 			vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
@@ -433,8 +421,7 @@ namespace Engine
 		try
 		{
 			m_DebugMessenger = m_Instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
-		}
-		catch (vk::SystemError& err)
+		} catch (vk::SystemError& err)
 		{
 			LOG(LogLevel::Error, "Debug messenger not available. Validation layers may not be enabled. {}", err.what());
 		}

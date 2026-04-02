@@ -53,7 +53,7 @@ namespace Engine
 		Scope<VulkanCommand>				m_VulkanCommand = nullptr;
 		Scope<VulkanSwapchain>				m_VulkanSwapchain = nullptr;
 		
-		Scope<VulkanFramebuffer>			m_ViewportFramebuffer = nullptr;
+		Scope<Framebuffer>					m_ViewportFramebuffer = nullptr;
 		Scope<GraphicsPipeline>				m_ViewportPipeline    = nullptr;
 		ShaderLibrary						m_ShaderLibrary;
 		
