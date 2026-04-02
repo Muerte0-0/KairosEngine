@@ -276,8 +276,8 @@ namespace Engine
 			.Name            = "Mesh",
 			.ShaderDirectory = m_ShaderDirectory,
 			.Stages = {
-				{ ShaderStage::Vertex,   "Mesh.vertMain.vert.spv", "vertMain" },
-				{ ShaderStage::Fragment, "Mesh.fragMain.frag.spv", "fragMain" },
+				{.Stage = ShaderStage::Vertex, .Filepath = "Mesh.vertMain.vert.spv", .EntryPoint = "vertMain" },
+				{.Stage = ShaderStage::Fragment, .Filepath = "Mesh.fragMain.frag.spv", .EntryPoint = "fragMain" },
 			}
 		});
 

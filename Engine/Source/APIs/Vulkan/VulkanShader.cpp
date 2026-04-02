@@ -21,9 +21,9 @@ namespace Engine
 	{
 		Shutdown(); // Safe no-op if not yet initialized.
 
-		LOG(LogLevel::Info, "VulkanShader '{}': initialising {} stage(s).", m_Name, m_Stages.size());
+		LOG(LogLevel::Info, "VulkanShader '{}': Initializing {} stage(s).", m_Name, m_Stages.size());
 
-		for (auto& [stage, stageData] : m_Stages)
+		for (auto& stageData : m_Stages | views::values)
 		{
 			LoadSpirvFromDisk(stageData);
 			CreateModule(stageData);
