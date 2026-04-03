@@ -365,16 +365,20 @@ namespace Engine
 		float time = std::chrono::duration<float>(currentTime - startTime).count();
 
 		UniformBufferObject ubo{};
+		
 		ubo.Model = rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		//ubo.Model = glm::mat4(1.0f);
+		
 		ubo.View = lookAt(
-			glm::vec3(0.0f, 0.0f, 4.0f),  // camera position (in front)
-			glm::vec3(0.0f, 0.0f, 0.0f),  // looking at center
-			glm::vec3(0.0f, 1.0f, 0.0f)   // up direction
+			glm::vec3(0.0f, -2.0f, 4.0f),		// Camera position
+			glm::vec3(0.0f, 0.0f, 0.0f),		// Look at Origin
+			glm::vec3(0.0f, 1.0f, 0.0f)		// Up Vector
 			);
+		
 		ubo.Proj = glm::perspective(glm::radians(45.0f),
 			static_cast<float>(m_ViewportFramebuffer->GetWidth()) / static_cast<float>(m_ViewportFramebuffer->GetHeight()),
 			0.1f, 100.0f);
+		
 		ubo.Proj[1][1] *= -1;
 
 		memcpy(m_UniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
@@ -433,7 +437,7 @@ namespace Engine
 		{
 			// Front face (Z+)
 			{{-0.5f, -0.5f,  0.5f}, {0.5f, 0, 0}},
-			{{ 0.5f, -0.5f,  0.5f}, {0, 0.5f, 0}},
+			{{ 0.5f, -0.5f,  0.5f}, {0, 0.5f,0}},
 			{{ 0.5f,  0.5f,  0.5f}, {0, 0, 0.5f}},
 			{{-0.5f,  0.5f,  0.5f}, {0.5f, 0.5f, 0}},
 
