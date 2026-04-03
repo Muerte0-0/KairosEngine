@@ -4,6 +4,14 @@ struct VSInput
 	float3 inColor;
 };
 
+struct UniformBuffer
+{
+	float4x4 Model;
+	float4x4 View;
+	float4x4 Proj;
+};
+ConstantBuffer<UniformBuffer> ubo;
+
 struct VSOutput
 {
 	float4 pos : SV_Position;
@@ -14,7 +22,8 @@ struct VSOutput
 VSOutput vertMain(VSInput input)
 {
 	VSOutput output;
-	output.pos = float4(input.inPosition, 1.0);
+	output.pos = mul(ubo.Proj, mul(ubo.View, mul(ubo.Model, float4(input.inPosition, 1.0))));
+	//output.pos = float4(input.inPosition, 1.0);
 	output.color = input.inColor;
 	return output;
 }

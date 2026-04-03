@@ -41,6 +41,7 @@ namespace Engine
 		vk::raii::DeviceMemory m_ColorImageMemory = nullptr;
 		vk::raii::ImageView m_ColorImageView = nullptr;
 		vk::raii::Sampler m_ColorSampler = nullptr;
+		
 		void* m_ImGuiTextureID = nullptr;
 	};
 }

@@ -5,7 +5,12 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#define GLM_FORCE_RADIANS
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/hash.hpp>
 
 #include "VulkanBuffer.h"
 
@@ -18,18 +23,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 #include "VulkanUtils.h"
 
 namespace Engine
-{
-	struct Vertex
-	{
-		glm::vec3 Position;
-		glm::vec3 Color;
-
-		bool operator==(const Vertex& other) const
-		{
-			return Position == other.Position && Color == other.Color;
-		}
-	};
-	
+{	
 	const std::vector<char const*> validationLayers =
 	{
 		"VK_LAYER_KHRONOS_validation"
@@ -46,8 +40,6 @@ namespace Engine
 #else
 	constexpr bool enableValidationLayers = true;
 #endif
-	
-	constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 
 	void VulkanRenderAPI::Init(void* windowHandle, const std::filesystem::path& shaderDirectory)
 	{
@@ -83,6 +75,7 @@ namespace Engine
 		m_VulkanCommand->CreateSyncObjects(static_cast<uint32_t>(m_VulkanSwapchain->GetSwapChainImages().size()), MAX_FRAMES_IN_FLIGHT);
 
 		CreateSquareMesh();
+		CreateUniformBuffers();
 		
 		CreateViewportFramebuffer();
 		CreateGraphicsPipeline();
@@ -111,6 +104,8 @@ namespace Engine
 		ASSERT(result == vk::Result::eSuccess || result == vk::Result::eSuboptimalKHR, "Failed to acquire Swapchain Image!");
 		m_CurrentImageIndex = imageIndex;
 
+		UpdateUniformBuffer(m_CurrentFrameIndex);
+		
 		m_VulkanDevice->GetDevice().resetFences(*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex]);
 
 		commandBuffer.reset();
@@ -140,8 +135,8 @@ namespace Engine
 			vk::ImageAspectFlagBits::eColor);
 		framebuffer->SetCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
-		vk::ClearValue viewportClearColor;
-		viewportClearColor.color = vk::ClearColorValue(std::array<float, 4>{ 0.025f, 0.025f, 0.025f, 1.0f });
+		vk::ClearValue viewportClearColor = vk::ClearColorValue(0.0f, 0.0f, 0.0f, 1.0f);
+		vk::ClearValue viewportClearDepth = vk::ClearDepthStencilValue(1.0f, 0);
 
 		vk::RenderingAttachmentInfo viewportColorAttachment;
 		viewportColorAttachment.imageView = framebuffer->GetImageView();
@@ -149,7 +144,7 @@ namespace Engine
 		viewportColorAttachment.loadOp = vk::AttachmentLoadOp::eClear;
 		viewportColorAttachment.storeOp = vk::AttachmentStoreOp::eStore;
 		viewportColorAttachment.clearValue = viewportClearColor;
-
+		
 		vk::RenderingInfo viewportRenderingInfo;
 		viewportRenderingInfo.renderArea = vk::Rect2D(vk::Offset2D(0, 0), framebuffer->GetExtent());
 		viewportRenderingInfo.layerCount = 1;
@@ -163,7 +158,7 @@ namespace Engine
 			static_cast<float>(framebuffer->GetHeight()),
 			0.0f, 1.0f));
 		commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), framebuffer->GetExtent()));
-		DrawMesh(commandBuffer, m_SquareMesh);
+		DrawMesh(commandBuffer, m_CubeMesh);
 		commandBuffer.endRendering();
 
 		VulkanUtils::TransitionImageLayout(
@@ -196,6 +191,11 @@ namespace Engine
 
 		commandBuffer.bindIndexBuffer(*vkIB->GetBuffer(), 0, vk::IndexType::eUint32);
 
+		// --- Uniform Buffer ---
+		VulkanGraphicsPipeline* pipeline = dynamic_cast<VulkanGraphicsPipeline*>(m_ViewportPipeline.get());
+		commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline->GetPipelineLayout(),
+			0, *pipeline->GetDescriptorSets()[m_CurrentFrameIndex], nullptr);
+		
 		// --- Draw ---
 		commandBuffer.drawIndexed(
 			vkIB->GetCount(), // Index Count
@@ -321,16 +321,63 @@ namespace Engine
 		});
 
 		std::vector<Ref<Mesh>> meshes;
-		meshes.push_back(m_SquareMesh);
+		meshes.push_back(m_CubeMesh);
 		
 		GraphicsPipelineCreateInfo createInfo;
 		createInfo.Shader		= meshShader;
 		createInfo.ColorFormat	= VulkanUtils::ToTextureFormat(m_VulkanSwapchain->GetSwapChainImageFormat());
+		createInfo.DepthFormat	= VulkanUtils::ToTextureFormat(m_VulkanSwapchain->GetDepthImageFormat());
 		createInfo.SampleCount	= VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits::e1);
 		createInfo.Meshes		= meshes;
 
 		// GraphicsPipeline::Create calls Init() internally.
 		m_ViewportPipeline = GraphicsPipeline::Create(std::move(createInfo));
+	}
+
+	void VulkanRenderAPI::CreateUniformBuffers()
+	{
+		m_UniformBuffers.clear();
+		m_UniformBuffersMemory.clear();
+		m_UniformBuffersMapped.clear();
+
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
+			vk::raii::Buffer buffer({});
+			vk::raii::DeviceMemory bufferMem({});
+			
+			VulkanUtils::CreateBuffer(m_VulkanDevice->GetDevice(), m_VulkanDevice->GetPhysicalDevice(),
+				bufferSize, vk::BufferUsageFlagBits::eUniformBuffer,
+				vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+				buffer, bufferMem);
+			
+			m_UniformBuffers.emplace_back(std::move(buffer));
+			m_UniformBuffersMemory.emplace_back(std::move(bufferMem));
+			m_UniformBuffersMapped.emplace_back(m_UniformBuffersMemory[i].mapMemory(0, bufferSize));
+		}
+	}
+
+	void VulkanRenderAPI::UpdateUniformBuffer(uint32_t currentImage) const
+	{
+		static auto startTime = std::chrono::high_resolution_clock::now();
+
+		auto  currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float>(currentTime - startTime).count();
+
+		UniformBufferObject ubo{};
+		ubo.Model = rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		//ubo.Model = glm::mat4(1.0f);
+		ubo.View = lookAt(
+			glm::vec3(0.0f, 0.0f, 4.0f),  // camera position (in front)
+			glm::vec3(0.0f, 0.0f, 0.0f),  // looking at center
+			glm::vec3(0.0f, 1.0f, 0.0f)   // up direction
+			);
+		ubo.Proj = glm::perspective(glm::radians(45.0f),
+			static_cast<float>(m_ViewportFramebuffer->GetWidth()) / static_cast<float>(m_ViewportFramebuffer->GetHeight()),
+			0.1f, 100.0f);
+		ubo.Proj[1][1] *= -1;
+
+		memcpy(m_UniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
 	}
 
 	void VulkanRenderAPI::CreateViewportFramebuffer()
@@ -384,10 +431,17 @@ namespace Engine
 	{
 		std::vector<Vertex> vertices =
 		{
-			{.Position = {-0.5f,  0.5f, 0.0f}, .Color = {1, 0, 1}}, // top-left
-			{.Position = { 0.5f,  0.5f, 0.0f}, .Color = {0, 0, 1}}, // top-right
-			{.Position = { 0.5f, -0.5f, 0.0f}, .Color = {0, 1, 0}}, // bottom-right
-			{.Position = {-0.5f, -0.5f, 0.0f}, .Color = {1, 0, 0}}, // bottom-left
+			// Front face (Z+)
+			{{-0.5f, -0.5f,  0.5f}, {0.5f, 0, 0}},
+			{{ 0.5f, -0.5f,  0.5f}, {0, 0.5f, 0}},
+			{{ 0.5f,  0.5f,  0.5f}, {0, 0, 0.5f}},
+			{{-0.5f,  0.5f,  0.5f}, {0.5f, 0.5f, 0}},
+
+			// Back face (Z-)
+			{{-0.5f, -0.5f, -0.5f}, {0.5f, 0, 0.5f}},
+			{{ 0.5f, -0.5f, -0.5f}, {0, 0.5f, 0.5f}},
+			{{ 0.5f,  0.5f, -0.5f}, {0.5f, 0, 0.5f}},
+			{{-0.5f,  0.5f, -0.5f}, {0, 0.5f, 0}},
 		};
 		
 		Ref<VertexBuffer> vb = VertexBuffer::Create(vertices.data(), static_cast<uint32_t>(vertices.size() * sizeof(Vertex)));
@@ -402,13 +456,34 @@ namespace Engine
 		
 		std::vector<uint32_t> indices =
 		{
+			// Front
 			0, 1, 2,
-			2, 3, 0
+			2, 3, 0,
+
+			// Back
+			5, 4, 7,
+			7, 6, 5,
+
+			// Left
+			4, 0, 3,
+			3, 7, 4,
+
+			// Right
+			1, 5, 6,
+			6, 2, 1,
+
+			// Top
+			3, 2, 6,
+			6, 7, 3,
+
+			// Bottom
+			4, 5, 1,
+			1, 0, 4
 		};
 
 		Ref<IndexBuffer> ib = IndexBuffer::Create( indices.data(), static_cast<uint32_t>(indices.size()));
 
-		m_SquareMesh = CreateRef<Mesh>(vb, ib);
+		m_CubeMesh = CreateRef<Mesh>(vb, ib);
 	}
 
 	void VulkanRenderAPI::CreateInstance()

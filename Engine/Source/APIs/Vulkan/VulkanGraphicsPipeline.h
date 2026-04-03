@@ -20,20 +20,26 @@ namespace Engine
 		// ------------------------------------------------------------------
 		// Accessors
 		// ------------------------------------------------------------------
-		[[nodiscard]] const vk::raii::Pipeline&            GetPipeline()            const { return m_Pipeline; }
-		[[nodiscard]] const vk::raii::PipelineLayout&      GetPipelineLayout()      const { return m_PipelineLayout; }
-		[[nodiscard]] const vk::raii::DescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
+		[[nodiscard]] const vk::raii::Pipeline&						GetPipeline()				const { return m_Pipeline; }
+		[[nodiscard]] const vk::raii::PipelineLayout&				GetPipelineLayout()			const { return m_PipelineLayout; }
+		[[nodiscard]] const vk::raii::DescriptorPool&				GetDescriptorPool()			const { return m_DescriptorPool; }
+		[[nodiscard]] const vk::raii::DescriptorSetLayout&			GetDescriptorSetLayout()	const { return m_DescriptorSetLayout; }
+		[[nodiscard]] const std::vector<vk::raii::DescriptorSet>&	GetDescriptorSets()			const { return m_DescriptorSets; }
 
 	private:
-		GraphicsPipelineCreateInfo		m_CreateInfo;
+		GraphicsPipelineCreateInfo				m_CreateInfo;
 		
-		vk::raii::PipelineCache			m_PipelineCache       = nullptr;
-		vk::raii::DescriptorSetLayout	m_DescriptorSetLayout = nullptr;
-		vk::raii::PipelineLayout		m_PipelineLayout      = nullptr;
-		vk::raii::Pipeline				m_Pipeline            = nullptr;
-
+		vk::raii::PipelineCache					m_PipelineCache			= nullptr;
+		vk::raii::DescriptorPool				m_DescriptorPool		= nullptr;
+		vk::raii::DescriptorSetLayout			m_DescriptorSetLayout	= nullptr;
+		std::vector<vk::raii::DescriptorSet>	m_DescriptorSets;
+		vk::raii::PipelineLayout				m_PipelineLayout		= nullptr;
+		vk::raii::Pipeline						m_Pipeline				= nullptr;
+		
 		void CreatePipelineCache();
 		void CreatePipelineLayout();
 		void CreatePipeline();
+		void CreateDescriptorPool();
+		void CreateDescriptorSets();
 	};
 }

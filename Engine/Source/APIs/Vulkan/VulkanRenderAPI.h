@@ -13,6 +13,8 @@
 #include "Engine/Renderer/RHI/Shader.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 
+constexpr int MAX_FRAMES_IN_FLIGHT = 3;
+
 namespace Engine
 {	
 	class VulkanRenderAPI : public RenderAPI
@@ -41,6 +43,8 @@ namespace Engine
 		GraphicsPipeline* GetGraphicsPipeline() override { return m_ViewportPipeline.get(); }
 		ShaderLibrary*    GetShaderLibrary()    override { return &m_ShaderLibrary; }
 		
+		const std::vector<vk::raii::Buffer>& GetUniformBuffers() const { return m_UniformBuffers; }
+		
 		const vk::raii::CommandBuffer& GetActiveCommandBuffer() const { return m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex]; }
 		
 		API GetType() override { return API::Vulkan; }
@@ -58,6 +62,10 @@ namespace Engine
 		Scope<Framebuffer>					m_ViewportFramebuffer = nullptr;
 		Scope<GraphicsPipeline>				m_ViewportPipeline    = nullptr;
 		ShaderLibrary						m_ShaderLibrary;
+		
+		std::vector<vk::raii::Buffer>		m_UniformBuffers;
+		std::vector<vk::raii::DeviceMemory>	m_UniformBuffersMemory;
+		std::vector<void*>					m_UniformBuffersMapped;
 		
 		uint32_t							m_CurrentImageIndex = 0;
 		uint32_t							m_CurrentFrameIndex = 0;
@@ -78,11 +86,14 @@ namespace Engine
 		void CreateViewportFramebuffer();
 		void CreateGraphicsPipeline();
 		
+		void CreateUniformBuffers();
+		void UpdateUniformBuffer(uint32_t currentImage) const;
+		
 		void BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const;
 		
 		void CreateSquareMesh();
 		void DrawMesh(vk::CommandBuffer commandBuffer, const Ref<Mesh>& mesh) const;
 		
-		Ref<Mesh> m_SquareMesh;
+		Ref<Mesh> m_CubeMesh;
 	};
 }

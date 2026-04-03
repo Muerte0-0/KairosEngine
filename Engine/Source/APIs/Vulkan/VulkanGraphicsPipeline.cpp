@@ -35,9 +35,10 @@ namespace Engine
 		CreatePipelineCache();
 		CreatePipelineLayout();
 		CreatePipeline();
+		CreateDescriptorPool();
+		CreateDescriptorSets();
 
-		LOG(LogLevel::Info, "VulkanGraphicsPipeline: built pipeline for shader '{}'.",
-			m_CreateInfo.Shader->GetName());
+		LOG(LogLevel::Info, "VulkanGraphicsPipeline: built pipeline for shader '{}'.", m_CreateInfo.Shader->GetName());
 	}
 
 	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
@@ -60,11 +61,23 @@ namespace Engine
 
 	void VulkanGraphicsPipeline::CreatePipelineLayout()
 	{
-		vk::DescriptorSetLayoutCreateInfo setLayoutInfo;
-		m_DescriptorSetLayout = vk::raii::DescriptorSetLayout(GetDevice(), setLayoutInfo);
+		std::array bindings = {
+			vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr),
+			//vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr)
+		};
 
-		vk::PipelineLayoutCreateInfo layoutInfo;
-		m_PipelineLayout = vk::raii::PipelineLayout(GetDevice(), layoutInfo);
+		vk::DescriptorSetLayoutCreateInfo layoutInfo;
+		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+		layoutInfo.pBindings = bindings.data();
+
+		m_DescriptorSetLayout = vk::raii::DescriptorSetLayout(GetDevice(), layoutInfo);
+		
+		vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
+		pipelineLayoutInfo.setLayoutCount = 1;
+		pipelineLayoutInfo.pSetLayouts = &*m_DescriptorSetLayout;
+		pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+		m_PipelineLayout = vk::raii::PipelineLayout(GetDevice(), pipelineLayoutInfo);
 	}
 
 	void VulkanGraphicsPipeline::CreatePipeline()
@@ -181,5 +194,52 @@ namespace Engine
 		};
 
 		m_Pipeline = vk::raii::Pipeline(GetDevice(), m_PipelineCache, chain.get<vk::GraphicsPipelineCreateInfo>());
+	}
+
+	void VulkanGraphicsPipeline::CreateDescriptorPool()
+	{
+		std::array poolSize{
+			vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
+			//vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT)
+		};
+
+		vk::DescriptorPoolCreateInfo poolInfo(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, MAX_FRAMES_IN_FLIGHT, poolSize);
+		m_DescriptorPool = vk::raii::DescriptorPool(GetDevice(), poolInfo);
+	}
+
+	void VulkanGraphicsPipeline::CreateDescriptorSets()
+	{
+		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
+		
+		std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *m_DescriptorSetLayout);
+		vk::DescriptorSetAllocateInfo allocInfo(m_DescriptorPool, static_cast<uint32_t>(layouts.size()), layouts.data());
+
+		m_DescriptorSets = api->GetVulkanDevice()->GetDevice().allocateDescriptorSets(allocInfo);
+
+		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+		{
+			vk::DescriptorBufferInfo bufferInfo(*api->GetUniformBuffers()[i], 0, sizeof(UniformBufferObject));
+			//vk::DescriptorImageInfo imageInfo(textureSampler, textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal);
+
+			std::array<vk::WriteDescriptorSet, 1> descriptorWrites{};
+
+			// Uniform buffer write
+			descriptorWrites[0].setDstSet(*m_DescriptorSets[i]);
+			descriptorWrites[0].setDstBinding(0);
+			descriptorWrites[0].setDstArrayElement(0);
+			descriptorWrites[0].setDescriptorCount(1);
+			descriptorWrites[0].setDescriptorType(vk::DescriptorType::eUniformBuffer);
+			descriptorWrites[0].setPBufferInfo(&bufferInfo);
+
+			//// Combined image sampler write
+			//descriptorWrites[1].setDstSet(*m_DescriptorSets[i]);
+			//descriptorWrites[1].setDstBinding(1);
+			//descriptorWrites[1].setDstArrayElement(0);
+			//descriptorWrites[1].setDescriptorCount(1);
+			//descriptorWrites[1].setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+			//descriptorWrites[1].setPImageInfo(&imageInfo);
+
+			GetDevice().updateDescriptorSets(descriptorWrites, {});
+		}
 	}
 }

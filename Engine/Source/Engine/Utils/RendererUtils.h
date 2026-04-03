@@ -5,8 +5,28 @@
 #include <string>
 #include <vector>
 
+#include <glm/glm.hpp>
+
 namespace Engine
 {
+	struct Vertex
+	{
+		glm::vec3 Position;
+		glm::vec3 Color;
+
+		bool operator==(const Vertex& other) const
+		{
+			return Position == other.Position && Color == other.Color;
+		}
+	};
+
+	struct UniformBufferObject
+	{
+		alignas(16) glm::mat4 Model;
+		alignas(16) glm::mat4 View;
+		alignas(16) glm::mat4 Proj;
+	};
+	
 	enum class TextureFormat : uint8_t
 	{
 		Undefined = 0,
