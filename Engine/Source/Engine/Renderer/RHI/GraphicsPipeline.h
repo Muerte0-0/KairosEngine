@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "Engine/Utils/RendererUtils.h"
 #include "Engine/Core/Base.h"
+#include "Resources/Mesh.h"
 
 namespace Engine
 {
@@ -16,6 +17,8 @@ namespace Engine
 		TextureFormat   ColorFormat = TextureFormat::Undefined;
 		TextureFormat   DepthFormat = TextureFormat::Undefined;
 		SampleCountBits SampleCount = SampleCountBits::s1;
+		
+		std::vector<Ref<Mesh>> Meshes;
 	};
 
 	// -----------------------------------------------------------------------

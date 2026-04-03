@@ -11,8 +11,8 @@ objdir (ProjectIntDir)
 files {
 	"Source/**.h",
 	"Source/**.cpp",
-	"Assets/Shaders/**.slang",
-	"Assets/Shaders/**.spv",
+	"Resources/Shaders/**.slang",
+	"Resources/Shaders/**.spv",
 }
 
 externalincludedirs {

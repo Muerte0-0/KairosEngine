@@ -51,7 +51,7 @@ filter "files:Vendor/ocornut/ImGuizmo/**.cpp"
 filter "system:windows"
 	systemversion "latest"
 	
-defines{
+defines {
 	"WIN32_LEAN_AND_MEAN",
 }
 

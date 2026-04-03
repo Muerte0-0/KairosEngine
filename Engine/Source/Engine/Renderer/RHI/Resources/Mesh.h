@@ -7,8 +7,10 @@ namespace Engine
 	class Mesh
 	{
 	public:
-		Mesh(const Ref<VertexBuffer>& vb, const Ref<IndexBuffer>& ib) : m_VertexBuffer(vb), m_IndexBuffer(ib), m_Layout(vb->GetLayout()) {}
+		Mesh(const Ref<VertexBuffer>& vb, const Ref<IndexBuffer>& ib);
 
+		const Ref<VertexBuffer>& GetVertexBuffer() const { return m_VertexBuffer; }		
+		const Ref<IndexBuffer>& GetIndexBuffer() const { return m_IndexBuffer; }		
 		const BufferLayout& GetLayout() const { return m_Layout; }
 
 	private:

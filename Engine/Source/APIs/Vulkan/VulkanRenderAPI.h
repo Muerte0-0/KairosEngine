@@ -9,7 +9,9 @@
 
 #include "VulkanFramebuffer.h"
 #include "VulkanGraphicsPipeline.h"
+
 #include "Engine/Renderer/RHI/Shader.h"
+#include "Engine/Renderer/RHI/Resources/Mesh.h"
 
 namespace Engine
 {	
@@ -77,5 +79,10 @@ namespace Engine
 		void CreateGraphicsPipeline();
 		
 		void BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const;
+		
+		void CreateSquareMesh();
+		void DrawMesh(vk::CommandBuffer commandBuffer, const Ref<Mesh>& mesh) const;
+		
+		Ref<Mesh> m_SquareMesh;
 	};
 }

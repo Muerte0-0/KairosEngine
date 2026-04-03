@@ -50,15 +50,14 @@ namespace Engine
 		* @brief All data describing a single shader stage.
 		*
 		* Passed into Shader::Create() as part of a Shader Descriptor.
-		* The Spirv field starts empty and is populated by VulkanShader::Init()
-		* when it loads the compiled SPIR-V binary from disk.
+		* The Bytecode field starts empty and is populated later when shader is Created
 	*/
 	struct ShaderStageData
 	{
 		ShaderStage				Stage		= ShaderStage::Vertex;
 		std::filesystem::path	Filepath;								// Relative to Shader Directory.
 		std::string				EntryPoint	= "main";
-		std::vector<uint32_t>	Spirv;									// Filled during Init().
+		std::vector<uint32_t>	Bytecode;								// Filled during Init().
 	};
 	
 	enum class ShaderDataType : uint8_t

@@ -62,7 +62,7 @@ namespace Engine
 			m_Size, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
 			vk::MemoryPropertyFlagBits::eDeviceLocal, m_Buffer, m_BufferMemory);
 
-		VulkanUtils::CopyBuffer(api->GetVulkanDevice()->GetDevice(), api->GetVulkanCommand()->GetCommandPool(), api->GetVulkanDevice()->GetTransferQueue(),
+		VulkanUtils::CopyBuffer(api->GetVulkanDevice()->GetDevice(), api->GetVulkanCommand()->GetCommandPool(), api->GetVulkanDevice()->GetGraphicsQueue(),
 			stagingBuffer, m_Buffer, m_Size);
 	}
 
@@ -128,7 +128,7 @@ namespace Engine
 			size, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
 			vk::MemoryPropertyFlagBits::eDeviceLocal, m_Buffer, m_BufferMemory);
 
-		VulkanUtils::CopyBuffer(api->GetVulkanDevice()->GetDevice(), api->GetVulkanCommand()->GetCommandPool(), api->GetVulkanDevice()->GetTransferQueue(),
+		VulkanUtils::CopyBuffer(api->GetVulkanDevice()->GetDevice(), api->GetVulkanCommand()->GetCommandPool(), api->GetVulkanDevice()->GetGraphicsQueue(),
 			stagingBuffer, m_Buffer, size);
 	}
 

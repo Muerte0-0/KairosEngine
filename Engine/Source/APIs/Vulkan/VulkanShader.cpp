@@ -32,7 +32,7 @@ namespace Engine
 
 	void VulkanShader::Shutdown()
 	{
-		m_Modules.clear(); // vk::raii handles VkShaderModule destruction.
+		m_Modules.clear(); // vk::raii handles vk::ShaderModule destruction.
 	}
 
 	// -----------------------------------------------------------------------
@@ -56,8 +56,8 @@ namespace Engine
 			m_Name, fullPath.string());
 
 		stream.seekg(0, std::ios::beg);
-		stageData.Spirv.resize(static_cast<size_t>(fileSize / sizeof(uint32_t)));
-		stream.read(reinterpret_cast<char*>(stageData.Spirv.data()), fileSize);
+		stageData.Bytecode.resize(static_cast<size_t>(fileSize / sizeof(uint32_t)));
+		stream.read(reinterpret_cast<char*>(stageData.Bytecode.data()), fileSize);
 
 		ASSERT(stream.good() || stream.eof(),
 			"VulkanShader '{}': failed to read SPIR-V from '{}'.", m_Name, fullPath.string());
@@ -76,8 +76,8 @@ namespace Engine
 		ASSERT(api, "VulkanShader: active RenderAPI is not VulkanRenderAPI.");
 
 		vk::ShaderModuleCreateInfo info;
-		info.codeSize = stageData.Spirv.size() * sizeof(uint32_t);
-		info.pCode    = stageData.Spirv.data();
+		info.codeSize = stageData.Bytecode.size() * sizeof(uint32_t);
+		info.pCode    = stageData.Bytecode.data();
 
 		m_Modules.emplace(stageData.Stage,
 			vk::raii::ShaderModule(api->GetVulkanDevice()->GetDevice(), info));

@@ -5,6 +5,10 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+
+#include "VulkanBuffer.h"
+
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 
@@ -15,6 +19,30 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 
 namespace Engine
 {
+	struct Vertex
+	{
+		glm::vec3 Position;
+		glm::vec3 Color;
+		
+		static vk::VertexInputBindingDescription GetBindingDescription()
+		{
+			return { 0, sizeof(Vertex), vk::VertexInputRate::eVertex };
+		}
+
+		static std::array<vk::VertexInputAttributeDescription, 3> GetAttributeDescriptions()
+		{
+			return {
+				vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, Position)),
+				vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, Color)),
+			};
+		}
+
+		bool operator==(const Vertex& other) const
+		{
+			return Position == other.Position && Color == other.Color;
+		}
+	};
+	
 	const std::vector<char const*> validationLayers =
 	{
 		"VK_LAYER_KHRONOS_validation"
@@ -38,8 +66,7 @@ namespace Engine
 	{
 		m_ShaderDirectory = shaderDirectory;
 
-		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddrPtr =
-			reinterpret_cast<PFN_vkGetInstanceProcAddr>(glfwGetInstanceProcAddress(nullptr, "vkGetInstanceProcAddr"));
+		PFN_vkGetInstanceProcAddr vkGetInstanceProcAddrPtr = reinterpret_cast<PFN_vkGetInstanceProcAddr>(glfwGetInstanceProcAddress(nullptr, "vkGetInstanceProcAddr"));
     
 		if (!vkGetInstanceProcAddrPtr)
 		{
@@ -68,6 +95,8 @@ namespace Engine
 		m_VulkanCommand->CreateCommandBuffers(MAX_FRAMES_IN_FLIGHT);
 		m_VulkanCommand->CreateSyncObjects(static_cast<uint32_t>(m_VulkanSwapchain->GetSwapChainImages().size()), MAX_FRAMES_IN_FLIGHT);
 
+		CreateSquareMesh();
+		
 		CreateViewportFramebuffer();
 		CreateGraphicsPipeline();
 	}
@@ -141,13 +170,13 @@ namespace Engine
 		viewportRenderingInfo.pColorAttachments = &viewportColorAttachment;
 
 		commandBuffer.beginRendering(viewportRenderingInfo);
-		commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics,
-			*dynamic_cast<VulkanGraphicsPipeline*>(m_ViewportPipeline.get())->GetPipeline());
+		commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, *dynamic_cast<VulkanGraphicsPipeline*>(m_ViewportPipeline.get())->GetPipeline());
 		commandBuffer.setViewport(0, vk::Viewport(0.0f, 0.0f,
 			static_cast<float>(framebuffer->GetWidth()),
-			static_cast<float>(framebuffer->GetHeight()), 0.0f, 1.0f));
+			static_cast<float>(framebuffer->GetHeight()),
+			0.0f, 1.0f));
 		commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), framebuffer->GetExtent()));
-		commandBuffer.draw(3, 1, 0, 0);
+		DrawMesh(commandBuffer, m_SquareMesh);
 		commandBuffer.endRendering();
 
 		VulkanUtils::TransitionImageLayout(
@@ -163,6 +192,31 @@ namespace Engine
 		framebuffer->SetCurrentLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
 		BeginSwapchainRendering(commandBuffer);
+	}
+	
+	void VulkanRenderAPI::DrawMesh(vk::CommandBuffer commandBuffer, const Ref<Mesh>& mesh) const
+	{
+		// --- Vertex Buffer ---
+		const auto& vb = mesh->GetVertexBuffer();
+		auto vkVB = dynamic_cast<VulkanVertexBuffer*>(vb.get());
+		vk::DeviceSize offsets[] = { 0 };
+
+		commandBuffer.bindVertexBuffers(0, *vkVB->GetBuffer(), offsets);
+
+		// --- Index Buffer ---
+		const auto& ib = mesh->GetIndexBuffer();
+		auto vkIB = dynamic_cast<VulkanIndexBuffer*>(ib.get());
+
+		commandBuffer.bindIndexBuffer(*vkIB->GetBuffer(), 0, vk::IndexType::eUint32);
+
+		// --- Draw ---
+		commandBuffer.drawIndexed(
+			vkIB->GetCount(), // Index Count
+			1,                // Instance Count
+			0,                // First Index
+			0,                // Vertex Offset
+			0                 // First Instance
+		);
 	}
 	
 	void VulkanRenderAPI::EndFrame()
@@ -279,10 +333,14 @@ namespace Engine
 			}
 		});
 
+		std::vector<Ref<Mesh>> meshes;
+		meshes.push_back(m_SquareMesh);
+		
 		GraphicsPipelineCreateInfo createInfo;
-		createInfo.Shader      = meshShader;
-		createInfo.ColorFormat = VulkanUtils::ToTextureFormat(m_VulkanSwapchain->GetSwapChainImageFormat());
-		createInfo.SampleCount = VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits::e1);
+		createInfo.Shader		= meshShader;
+		createInfo.ColorFormat	= VulkanUtils::ToTextureFormat(m_VulkanSwapchain->GetSwapChainImageFormat());
+		createInfo.SampleCount	= VulkanUtils::ToSampleCountBits(vk::SampleCountFlagBits::e1);
+		createInfo.Meshes		= meshes;
 
 		// GraphicsPipeline::Create calls Init() internally.
 		m_ViewportPipeline = GraphicsPipeline::Create(std::move(createInfo));
@@ -333,6 +391,37 @@ namespace Engine
 			vk::ImageAspectFlagBits::eDepth);
 
 		commandBuffer.beginRendering(m_VulkanSwapchain->GetRenderingInfo(m_CurrentImageIndex));
+	}
+	
+	void VulkanRenderAPI::CreateSquareMesh()
+	{
+		std::vector<Vertex> vertices =
+		{
+			{.Position = {-0.5f,  0.5f, 0.0f}, .Color = {1, 0, 1}}, // top-left
+			{.Position = { 0.5f,  0.5f, 0.0f}, .Color = {0, 0, 1}}, // top-right
+			{.Position = { 0.5f, -0.5f, 0.0f}, .Color = {0, 1, 0}}, // bottom-right
+			{.Position = {-0.5f, -0.5f, 0.0f}, .Color = {1, 0, 0}}, // bottom-left
+		};
+		
+		Ref<VertexBuffer> vb = VertexBuffer::Create(vertices.data(), static_cast<uint32_t>(vertices.size() * sizeof(Vertex)));
+
+		BufferLayout layout =
+		{
+			{ ShaderDataType::Float3, "a_Position" },
+			{ ShaderDataType::Float3, "a_Color" }
+		};
+
+		vb->SetLayout(layout);
+		
+		std::vector<uint32_t> indices =
+		{
+			0, 1, 2,
+			2, 3, 0
+		};
+
+		Ref<IndexBuffer> ib = IndexBuffer::Create( indices.data(), static_cast<uint32_t>(indices.size()));
+
+		m_SquareMesh = CreateRef<Mesh>(vb, ib);
 	}
 
 	void VulkanRenderAPI::CreateInstance()

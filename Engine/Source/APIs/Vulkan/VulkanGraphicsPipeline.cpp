@@ -89,8 +89,16 @@ namespace Engine
 		// Fixed pipeline state
 		// ------------------------------------------------------------------
 		vk::PipelineVertexInputStateCreateInfo vertexInputState;
-		vertexInputState.vertexBindingDescriptionCount   = 0;
-		vertexInputState.vertexAttributeDescriptionCount = 0;
+		
+		Mesh* mesh = m_CreateInfo.Meshes[0].get();
+		vk::VertexInputBindingDescription bindDesc = VulkanUtils::CreateBindingDescription(mesh->GetLayout());
+		std::array<vk::VertexInputBindingDescription, 1> bindings = { bindDesc };
+		std::vector<vk::VertexInputAttributeDescription> vertAttribDesc = VulkanUtils::CreateAttributeDescriptions(mesh->GetLayout());
+		
+		vertexInputState.vertexBindingDescriptionCount		= static_cast<uint32_t>(bindings.size());
+		vertexInputState.pVertexBindingDescriptions			= bindings.data();
+		vertexInputState.vertexAttributeDescriptionCount	= static_cast<uint32_t>(vertAttribDesc.size());
+		vertexInputState.pVertexAttributeDescriptions		= vertAttribDesc.data();
 
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState;
 		inputAssemblyState.topology					= vk::PrimitiveTopology::eTriangleList;
@@ -172,8 +180,6 @@ namespace Engine
 			pipelineInfo, renderingInfo
 		};
 
-		m_Pipeline = vk::raii::Pipeline(
-			GetDevice(), m_PipelineCache,
-			chain.get<vk::GraphicsPipelineCreateInfo>());
+		m_Pipeline = vk::raii::Pipeline(GetDevice(), m_PipelineCache, chain.get<vk::GraphicsPipelineCreateInfo>());
 	}
 }
