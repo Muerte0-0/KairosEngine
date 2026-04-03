@@ -110,7 +110,7 @@ namespace Engine
 	{
 		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
 		
-		vk::DeviceSize size = m_IndexSize;
+		vk::DeviceSize size = static_cast<vk::DeviceSize>(count) * indexSize;
 		
 		vk::raii::Buffer stagingBuffer({});
 		vk::raii::DeviceMemory stagingBufferMemory({});
@@ -136,7 +136,7 @@ namespace Engine
 	{
 		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
 		
-		vk::DeviceSize size = m_IndexSize;
+		vk::DeviceSize size = static_cast<vk::DeviceSize>(count) * indexSize;
 		
 		VulkanUtils::CreateBuffer(api->GetVulkanDevice()->GetDevice(), api->GetVulkanDevice()->GetPhysicalDevice(),
 			size, vk::BufferUsageFlagBits::eIndexBuffer,

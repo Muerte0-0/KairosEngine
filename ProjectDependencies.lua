@@ -57,10 +57,11 @@ IncludeDir["GLFW"] =  "%{ThirdParty}/GLFW/include"
 IncludeDir["GLM"] = "%{ThirdParty}/GLM"
 IncludeDir["stb_image"] = "%{ThirdParty}/stb_image"
 IncludeDir["ImGui"] = "%{ThirdParty}/ocornut/ImGui"
+IncludeDir["spdlog"] = "%{ThirdParty}/spdlog/include"
+IncludeDir["EnTT"] = "%{ThirdParty}/EnTT/single_include"
 IncludeDir["Assimp"] = "%{ThirdParty}/Assimp/include"
 IncludeDir["JSON"] = "%{ThirdParty}/json/single_include"
 IncludeDir["mINI"] = "%{ThirdParty}/mINI/src"
-IncludeDir["spdlog"] = "%{ThirdParty}/spdlog/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"

@@ -68,7 +68,7 @@ namespace Engine
 		std::filesystem::path				m_ShaderDirectory;
 		
 		void CreateInstance();
-		vector<const char*> GetRequiredInstanceExtensions() const;
+		static vector<const char*> GetRequiredInstanceExtensions();
 		void SetupDebugMessenger();
 		void CreateSurface(void* windowHandle);
 		

@@ -93,11 +93,11 @@ namespace Engine
 		vertexInputState.vertexAttributeDescriptionCount = 0;
 
 		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState;
-		inputAssemblyState.topology               = vk::PrimitiveTopology::eTriangleList;
-		inputAssemblyState.primitiveRestartEnable = vk::False;
+		inputAssemblyState.topology					= vk::PrimitiveTopology::eTriangleList;
+		inputAssemblyState.primitiveRestartEnable	= vk::False;
 
-		constexpr vk::Viewport viewport(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
-		constexpr vk::Rect2D   scissor(vk::Offset2D(0, 0), vk::Extent2D(1, 1));
+		constexpr vk::Viewport	viewport(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
+		constexpr vk::Rect2D	scissor(vk::Offset2D(0, 0), vk::Extent2D(1, 1));
 
 		vk::PipelineViewportStateCreateInfo viewportState;
 		viewportState.viewportCount = 1;

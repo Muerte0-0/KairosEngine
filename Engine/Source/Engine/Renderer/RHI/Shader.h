@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/Renderer/RendererUtils.h"
+#include "Engine/Utils/RendererUtils.h"
 #include "Engine/Core/Base.h"
 
 #include <filesystem>
@@ -18,7 +18,7 @@ namespace Engine
 	{
 		std::string						Name;
 		std::filesystem::path			ShaderDirectory;
-		std::vector<ShaderStageData>	Stages;			// One entry per stage to compile.
+		std::vector<ShaderStageData>	Stages;				// One entry per stage to compile.
 	};
 
 	// -----------------------------------------------------------------------
@@ -36,10 +36,10 @@ namespace Engine
 		// ------------------------------------------------------------------
 		// Accessors
 		// ------------------------------------------------------------------
-		[[nodiscard]] const std::string&         GetName()   const { return m_Name; }
-		[[nodiscard]] bool                        HasStage(ShaderStage stage)  const;
-		[[nodiscard]] const ShaderStageData&      GetStage(ShaderStage stage)  const;
-		[[nodiscard]] std::vector<const  ShaderStageData*> GetStages() const;
+		const std::string&         GetName()   const { return m_Name; }
+		bool                        HasStage(ShaderStage stage)  const;
+		const ShaderStageData&      GetStage(ShaderStage stage)  const;
+		std::vector<const  ShaderStageData*> GetStages() const;
 		
 		/**
 		 * @brief Initialize all GPU resources for every stage.
@@ -51,10 +51,7 @@ namespace Engine
 		 * @brief Release all GPU resources. Safe to call multiple times.
 		*/
 		virtual void Shutdown() = 0;
-
-		// ------------------------------------------------------------------
-		// Factory
-		// ------------------------------------------------------------------
+		
 		[[nodiscard]] static Ref<Shader> Create(const ShaderDescriptor& descriptor);
 
 		// ------------------------------------------------------------------

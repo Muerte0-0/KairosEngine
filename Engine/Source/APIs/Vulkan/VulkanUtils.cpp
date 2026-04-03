@@ -1,6 +1,8 @@
 ﻿#include "kepch.h"
 #include "VulkanUtils.h"
 
+#include "Engine/Renderer/RHI/Buffer.h"
+
 namespace Engine
 {
 	uint32_t VulkanUtils::FindMemoryType(const vk::raii::PhysicalDevice& physicalDevice, uint32_t typeFilter, vk::MemoryPropertyFlags properties)
@@ -248,5 +250,59 @@ namespace Engine
 			case vk::SampleCountFlagBits::e16:	return SampleCountBits::s16;
 			default:					return SampleCountBits::s1;
 		}
+	}
+
+	vk::Format VulkanUtils::ShaderDataTypeToVulkanFormat(ShaderDataType type)
+	{
+		switch (type)
+		{
+		case ShaderDataType::Float:   return vk::Format::eR32Sfloat;
+		case ShaderDataType::Float2:  return vk::Format::eR32G32Sfloat;
+		case ShaderDataType::Float3:  return vk::Format::eR32G32B32Sfloat;
+		case ShaderDataType::Float4:  return vk::Format::eR32G32B32A32Sfloat;
+
+		case ShaderDataType::Int:     return vk::Format::eR32Sint;
+		case ShaderDataType::Int2:    return vk::Format::eR32G32Sint;
+		case ShaderDataType::Int3:    return vk::Format::eR32G32B32Sint;
+		case ShaderDataType::Int4:    return vk::Format::eR32G32B32A32Sint;
+
+		case ShaderDataType::Bool:    return vk::Format::eR8Uint; // safe fallback
+
+		default:
+			ASSERT(false, "Unknown ShaderDataType!");
+			return vk::Format::eUndefined;
+		}
+	}
+
+	vk::VertexInputBindingDescription VulkanUtils::CreateBindingDescription(const BufferLayout& layout)
+	{
+		vk::VertexInputBindingDescription binding{};
+		binding.binding = 0;
+		binding.stride = layout.GetStride();
+		binding.inputRate = vk::VertexInputRate::eVertex; // per-vertex
+
+		return binding;
+	}
+
+	std::vector<vk::VertexInputAttributeDescription> VulkanUtils::CreateAttributeDescriptions(const BufferLayout& layout)
+	{
+		std::vector<vk::VertexInputAttributeDescription> attributes;
+
+		uint32_t location = 0;
+
+		for (const auto& element : layout)
+		{
+			vk::VertexInputAttributeDescription attr{};
+			attr.binding  = 0;
+			attr.location = location;
+			attr.format   = ShaderDataTypeToVulkanFormat(element.Type);
+			attr.offset   = element.Offset;
+
+			attributes.push_back(attr);
+
+			location++;
+		}
+
+		return attributes;
 	}
 }

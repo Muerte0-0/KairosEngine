@@ -1,14 +1,16 @@
 ﻿#pragma once
 #include <vulkan/vulkan_raii.hpp>
 
-#include "Engine/Renderer/RendererUtils.h"
+#include "Engine/Utils/RendererUtils.h"
 
 namespace Engine
-{	
+{
+	class BufferLayout;
+
 	static VKAPI_ATTR vk::Bool32 VKAPI_CALL DebugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT severity,
-		vk::DebugUtilsMessageTypeFlagsEXT type,
-		const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
-		void* pUserData)
+														  vk::DebugUtilsMessageTypeFlagsEXT type,
+														  const vk::DebugUtilsMessengerCallbackDataEXT* pCallbackData,
+														  void* pUserData)
 	{
 		std::cerr << "validation layer: type " << to_string(type) << " msg: " << pCallbackData->pMessage << std::endl;
 
@@ -28,7 +30,6 @@ namespace Engine
 	class VulkanUtils
 	{
 	public:
-		
 		/**
 		 * @brief Find a memory type with the specified properties.
 		 * @param physicalDevice The Physical Device
@@ -89,5 +90,11 @@ namespace Engine
 		static vk::SampleCountFlagBits ToVulkanSampleCount(SampleCountBits samples);
 		static TextureFormat ToTextureFormat(vk::Format format);
 		static SampleCountBits ToSampleCountBits(vk::SampleCountFlagBits samples);
+		
+		static vk::Format ShaderDataTypeToVulkanFormat(ShaderDataType type);
+
+		static vk::VertexInputBindingDescription CreateBindingDescription(const BufferLayout& layout);
+		
+		static std::vector<vk::VertexInputAttributeDescription> CreateAttributeDescriptions(const BufferLayout& layout);
 	};
 }

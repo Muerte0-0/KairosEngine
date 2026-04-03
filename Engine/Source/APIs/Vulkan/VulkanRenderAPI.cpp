@@ -384,7 +384,7 @@ namespace Engine
 		VULKAN_HPP_DEFAULT_DISPATCHER.init(*m_Instance);
 	}
 	
-	vector<const char*> VulkanRenderAPI::GetRequiredInstanceExtensions() const
+	vector<const char*> VulkanRenderAPI::GetRequiredInstanceExtensions()
 	{
 		uint32_t glfwExtensionCount = 0;
 		auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);

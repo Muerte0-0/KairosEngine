@@ -25,12 +25,12 @@ namespace Engine
 		[[nodiscard]] const vk::raii::DescriptorSetLayout& GetDescriptorSetLayout() const { return m_DescriptorSetLayout; }
 
 	private:
-		GraphicsPipelineCreateInfo m_CreateInfo;
+		GraphicsPipelineCreateInfo		m_CreateInfo;
 		
-		vk::raii::PipelineCache       m_PipelineCache       = nullptr;
-		vk::raii::DescriptorSetLayout m_DescriptorSetLayout = nullptr;
-		vk::raii::PipelineLayout      m_PipelineLayout      = nullptr;
-		vk::raii::Pipeline            m_Pipeline            = nullptr;
+		vk::raii::PipelineCache			m_PipelineCache       = nullptr;
+		vk::raii::DescriptorSetLayout	m_DescriptorSetLayout = nullptr;
+		vk::raii::PipelineLayout		m_PipelineLayout      = nullptr;
+		vk::raii::Pipeline				m_Pipeline            = nullptr;
 
 		void CreatePipelineCache();
 		void CreatePipelineLayout();

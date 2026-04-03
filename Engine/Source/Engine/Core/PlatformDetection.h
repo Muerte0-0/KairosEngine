@@ -6,9 +6,6 @@
 #ifdef _WIN64
 	/* Windows x64  */
 #define PLATFORM_WINDOWS
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
 #else
 	/* Windows x86 */
 #error "x86 Builds are not supported!"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Shader.h"
-#include "Engine/Renderer/RendererUtils.h"
+#include "Engine/Utils/RendererUtils.h"
 #include "Engine/Core/Base.h"
 
 namespace Engine

@@ -29,6 +29,7 @@ includedirs {
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.GLM}",
 	"%{IncludeDir.stb_image}",
+	"%{IncludeDir.EnTT}",
 	"%{IncludeDir.Assimp}",
 	"%{IncludeDir.JSON}",
 	"%{IncludeDir.mINI}",

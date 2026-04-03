@@ -7,7 +7,7 @@
 
 namespace Engine
 {
-	enum class TextureFormat
+	enum class TextureFormat : uint8_t
 	{
 		Undefined = 0,
 
@@ -31,7 +31,7 @@ namespace Engine
 		RG8_UNorm
 	};
 	
-	enum class SampleCountBits
+	enum class SampleCountBits : uint8_t
 	{
 		s1 = 1,
 		s2 = 2,
@@ -40,7 +40,7 @@ namespace Engine
 		s16 = 16
 	};
 	
-	enum class ShaderStage
+	enum class ShaderStage : uint8_t
 	{
 		Vertex = 0,
 		Fragment,
@@ -55,16 +55,18 @@ namespace Engine
 	*/
 	struct ShaderStageData
 	{
-		ShaderStage           Stage      = ShaderStage::Vertex;
-		std::filesystem::path Filepath;              // Relative to Shader Directory.
-		std::string           EntryPoint = "main";
-		std::vector<uint32_t> Spirv;                 // Filled during Init().
+		ShaderStage				Stage		= ShaderStage::Vertex;
+		std::filesystem::path	Filepath;								// Relative to Shader Directory.
+		std::string				EntryPoint	= "main";
+		std::vector<uint32_t>	Spirv;									// Filled during Init().
 	};
 	
-	enum class ShaderDataType
+	enum class ShaderDataType : uint8_t
 	{
 		None = 0,
 		Float, Float2, Float3, Float4,
+		Int, Int2, Int3, Int4,
+		Bool,
 		Mat3, Mat4
 	};
 
@@ -72,12 +74,17 @@ namespace Engine
 	{
 		switch (type)
 		{
-			case ShaderDataType::Float:  return 4;
-			case ShaderDataType::Float2: return 4 * 2;
-			case ShaderDataType::Float3: return 4 * 3;
-			case ShaderDataType::Float4: return 4 * 4;
-			case ShaderDataType::Mat3:   return 4 * 3 * 3;
-			case ShaderDataType::Mat4:   return 4 * 4 * 4;
+			case ShaderDataType::Float:		return 4;
+			case ShaderDataType::Float2:	return 4 * 2;
+			case ShaderDataType::Float3:	return 4 * 3;
+			case ShaderDataType::Float4:	return 4 * 4;
+			case ShaderDataType::Int:		return 4;
+			case ShaderDataType::Int2:		return 4 * 2;
+			case ShaderDataType::Int3:		return 4 * 3;
+			case ShaderDataType::Int4:		return 4 * 4;
+			case ShaderDataType::Mat3:		return 4 * 3 * 3;
+			case ShaderDataType::Mat4:		return 4 * 4 * 4;
+			case ShaderDataType::Bool:		return 1;
 			default: break;
 		}
 
