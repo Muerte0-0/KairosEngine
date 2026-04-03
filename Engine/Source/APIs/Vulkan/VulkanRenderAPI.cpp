@@ -23,19 +23,6 @@ namespace Engine
 	{
 		glm::vec3 Position;
 		glm::vec3 Color;
-		
-		static vk::VertexInputBindingDescription GetBindingDescription()
-		{
-			return { 0, sizeof(Vertex), vk::VertexInputRate::eVertex };
-		}
-
-		static std::array<vk::VertexInputAttributeDescription, 3> GetAttributeDescriptions()
-		{
-			return {
-				vk::VertexInputAttributeDescription(0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, Position)),
-				vk::VertexInputAttributeDescription(1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, Color)),
-			};
-		}
 
 		bool operator==(const Vertex& other) const
 		{
