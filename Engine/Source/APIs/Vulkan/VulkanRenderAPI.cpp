@@ -81,7 +81,7 @@ namespace Engine
 		CreateGraphicsPipeline();
 	}
 
-	void VulkanRenderAPI::BeginFrame()
+	void VulkanRenderAPI::BeginScene()
 	{
 		auto& commandBuffer = m_VulkanCommand->GetCommandBuffers()[m_CurrentFrameIndex];
 
@@ -206,7 +206,7 @@ namespace Engine
 		);
 	}
 	
-	void VulkanRenderAPI::EndFrame()
+	void VulkanRenderAPI::EndScene()
 	{
 		if (!m_FrameValid)
 		{
@@ -436,16 +436,16 @@ namespace Engine
 		std::vector<Vertex> vertices =
 		{
 			// Front face (Z+)
-			{{-0.5f, -0.5f,  0.5f}, {0.5f, 0, 0}},
-			{{ 0.5f, -0.5f,  0.5f}, {0, 0.5f,0}},
-			{{ 0.5f,  0.5f,  0.5f}, {0, 0, 0.5f}},
-			{{-0.5f,  0.5f,  0.5f}, {0.5f, 0.5f, 0}},
+			{.Position = {-0.5f, -0.5f,  0.5f}, .Color = {0.5f, 0, 0}},
+			{.Position = { 0.5f, -0.5f,  0.5f}, .Color = {0, 0.5f,0}},
+			{.Position = { 0.5f,  0.5f,  0.5f}, .Color = {0, 0, 0.5f}},
+			{.Position = {-0.5f,  0.5f,  0.5f}, .Color = {0.5f, 0.5f, 0}},
 
 			// Back face (Z-)
-			{{-0.5f, -0.5f, -0.5f}, {0.5f, 0, 0.5f}},
-			{{ 0.5f, -0.5f, -0.5f}, {0, 0.5f, 0.5f}},
-			{{ 0.5f,  0.5f, -0.5f}, {0.5f, 0, 0.5f}},
-			{{-0.5f,  0.5f, -0.5f}, {0, 0.5f, 0}},
+			{.Position = {-0.5f, -0.5f, -0.5f}, .Color = {0.5f, 0, 0.5f}},
+			{.Position = { 0.5f, -0.5f, -0.5f}, .Color = {0, 0.5f, 0.5f}},
+			{.Position = { 0.5f,  0.5f, -0.5f}, .Color = {0.5f, 0, 0.5f}},
+			{.Position = {-0.5f,  0.5f, -0.5f}, .Color = {0, 0.5f, 0}},
 		};
 		
 		Ref<VertexBuffer> vb = VertexBuffer::Create(vertices.data(), static_cast<uint32_t>(vertices.size() * sizeof(Vertex)));

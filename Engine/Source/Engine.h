@@ -18,8 +18,10 @@
 #include "Engine/ImGui/ImGuiLogSink.h"
 // ------------------------------- //
 
-// ------------- ECS ------------- //
-
+// ------------- Scene ------------- //
+#include "Engine/Scene/Scene.h"
+#include "Engine/Scene/Components.h"
+#include "Engine/Scene/Entity.h"
 // ------------------------------- //
 
 // ---------- Renderer ----------- //
@@ -31,3 +33,4 @@
 // ------------------------------- //
 
 using namespace std;
+using namespace Engine;

@@ -255,7 +255,7 @@ namespace Engine
 					layer->OnRender();
 				m_ImGuiLayer->OnRender();
 
-				Renderer::BeginFrame();
+				Renderer::BeginScene();
 				m_ImGuiLayer->Begin();
 
 				Renderer::DrawFrame();
@@ -265,7 +265,7 @@ namespace Engine
 					layer->OnImGuiRender();
 
 				m_ImGuiLayer->End();
-				Renderer::EndFrame();
+				Renderer::EndScene();
 
 				m_Window->Update();
 			}

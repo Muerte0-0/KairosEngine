@@ -27,9 +27,9 @@ namespace Engine
 		s_API->Init(windowHandle, shaderDirectory);
 	}
 
-	void Renderer::BeginFrame()       { s_API->BeginFrame(); }
+	void Renderer::BeginScene()       { s_API->BeginScene(); }
 	void Renderer::DrawFrame()        { s_API->DrawFrame(); }
-	void Renderer::EndFrame()         { s_API->EndFrame(); }
+	void Renderer::EndScene()         { s_API->EndScene(); }
 	void Renderer::WindowResized()    { s_API->WindowResized(); }
 
 	Framebuffer* Renderer::GetFramebuffer()

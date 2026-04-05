@@ -7,6 +7,8 @@ EditorLayer::EditorLayer()
 void EditorLayer::OnAttach()
 {
     Layer::OnAttach();
+	
+	m_ActiveScene = CreateRef<Scene>();
 }
 
 void EditorLayer::OnDetach()

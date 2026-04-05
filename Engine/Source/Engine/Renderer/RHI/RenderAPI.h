@@ -23,9 +23,11 @@ namespace Engine
 
 		virtual void Init(void* windowHandle, const std::filesystem::path& shaderDirectory) = 0;
 
-		virtual void BeginFrame() = 0;
+		virtual void BeginScene() = 0;
+		
 		virtual void DrawFrame()  = 0;
-		virtual void EndFrame()   = 0;
+		
+		virtual void EndScene()   = 0;
 
 		virtual Framebuffer*      GetFramebuffer()      = 0;
 		virtual GraphicsPipeline* GetGraphicsPipeline() = 0;

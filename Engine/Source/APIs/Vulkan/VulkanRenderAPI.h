@@ -22,9 +22,9 @@ namespace Engine
 	public:
 		void Init(void* windowHandle, const std::filesystem::path& shaderDirectory) override;
 		
-		void BeginFrame() override;
+		void BeginScene() override;
 		void DrawFrame() override;
-		void EndFrame() override;
+		void EndScene() override;
 		
 		void WindowResized() override;
 		void ResizeFramebuffer(uint32_t width, uint32_t height) override;
@@ -86,10 +86,11 @@ namespace Engine
 		void CreateViewportFramebuffer();
 		void CreateGraphicsPipeline();
 		
+		void BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const;
+		
+		// Will Remove This Later -- Temp Stuff
 		void CreateUniformBuffers();
 		void UpdateUniformBuffer(uint32_t currentImage) const;
-		
-		void BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const;
 		
 		void CreateSquareMesh();
 		void DrawMesh(vk::CommandBuffer commandBuffer, const Ref<Mesh>& mesh) const;

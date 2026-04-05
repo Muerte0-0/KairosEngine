@@ -22,6 +22,7 @@ externalincludedirs {
 	"%{IncludeDir.GLFW}",
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.GLM}",
+	"%{IncludeDir.EnTT}",
 }
 
 links {

@@ -10,9 +10,11 @@ namespace Engine
 	public:
 		static void Init(API api, void* windowHandle, const std::filesystem::path& shaderDirectory);
 
-		static void BeginFrame();
+		static void BeginScene();
+		
 		static void DrawFrame();
-		static void EndFrame();
+		
+		static void EndScene();
 
 		static Framebuffer*     GetFramebuffer();
 		static GraphicsPipeline* GetGraphicsPipeline();

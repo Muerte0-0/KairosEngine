@@ -22,6 +22,8 @@ private:
     glm::vec2 m_ViewportSize = { 1280, 720 };
     glm::vec2 m_ViewportBounds[2];
     
+    Ref<Scene> m_ActiveScene;
+    
     // ----------- ImGui ----------- //
     void DrawMenuBar();
     void DrawViewport();
