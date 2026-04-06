@@ -249,7 +249,7 @@ namespace Engine
 			&pushConstantObject);
 		commandBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
-			vkPipeline->GetPipelineLayout(),
+			*vkPipeline->GetPipelineLayout(),
 			0,
 			*vkPipeline->GetDescriptorSets()[m_CurrentFrameIndex],
 			nullptr);

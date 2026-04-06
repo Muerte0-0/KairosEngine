@@ -92,11 +92,12 @@ namespace Engine
 		m_ResizePending = true;
 	}
 
-	void SceneRenderer::Flush() const
+	void SceneRenderer::Flush()
 	{
 		RenderAPI* api = Renderer::GetAPI();
 		ASSERT(api, "SceneRenderer::Flush requires a valid RenderAPI.");
 
+		m_RenderPass.TargetFramebuffer = m_Framebuffer.get();
 		api->BeginPass(m_RenderPass);
 
 		if (m_Pipeline != nullptr && !m_DrawQueue.empty())

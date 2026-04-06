@@ -49,7 +49,7 @@ namespace Engine
 		uint32_t GetHeight() const { return m_Spec.Height; }
 
 	private:
-		void Flush() const;
+		void Flush();
 		void CreateFramebuffer();
 		void CreatePipeline(const BufferLayout& vertexLayout);
 		void EnsureFormats();
