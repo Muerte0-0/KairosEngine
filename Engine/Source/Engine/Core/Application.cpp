@@ -17,12 +17,7 @@ namespace Engine
 	namespace
 	{
 		namespace fs = std::filesystem;
-
-		// ----------------------------------------------------------------
-		// Process helpers (shader compiler invocation — engine-internal,
-		// not platform-specific, so they stay here as before)
-		// ----------------------------------------------------------------
-
+		
 		struct ProcessResult
 		{
 			int         ExitCode = -1;
@@ -59,7 +54,7 @@ namespace Engine
 		{
 			ProcessResult result;
 
-#if defined(PLATFORM_WINDOWS)
+#ifdef PLATFORM_WINDOWS
 			const std::string innerCommand = JoinCommand(arguments) + " 2>&1";
 			const std::string command = "cmd /d /s /c \"" + innerCommand + "\"";
 			FILE* pipe = _popen(command.c_str(), "r");
@@ -91,7 +86,7 @@ namespace Engine
 
 		fs::path GetShaderCompilerBinaryName()
 		{
-#if defined(PLATFORM_WINDOWS)
+#ifdef PLATFORM_WINDOWS
 			return "ShaderCompiler.exe";
 #else
 			return "ShaderCompiler";
@@ -251,11 +246,12 @@ namespace Engine
 				for (const auto& layer : m_LayerStack)
 					layer->OnUpdate(deltaTime);
 
+				Renderer::BeginScene();
+
 				for (const auto& layer : m_LayerStack)
 					layer->OnRender();
 				m_ImGuiLayer->OnRender();
 
-				Renderer::BeginScene();
 				m_ImGuiLayer->Begin();
 
 				Renderer::DrawFrame();

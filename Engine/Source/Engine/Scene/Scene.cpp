@@ -3,6 +3,7 @@
 
 #include "Components.h"
 #include "Entity.h"
+#include "Systems/MeshRenderSystem.h"
 
 namespace Engine
 {
@@ -27,5 +28,10 @@ namespace Engine
 
 	void Scene::OnUpdate(float deltaTime)
 	{
+	}
+
+	void Scene::OnRender(SceneRenderer& renderer)
+	{
+		MeshRenderSystem::Render(m_Registry, renderer);
 	}
 }

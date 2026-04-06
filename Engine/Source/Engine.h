@@ -26,6 +26,7 @@
 
 // ---------- Renderer ----------- //
 #include "Engine/Renderer/Renderer.h"
+#include "Engine/Renderer/SceneRenderer.h"
 // ------------------------------- //
 
 // ------------ Utils ------------ //

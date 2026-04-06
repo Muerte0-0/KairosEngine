@@ -22,9 +22,13 @@ namespace Engine
 
 	struct UniformBufferObject
 	{
-		alignas(16) glm::mat4 Model;
 		alignas(16) glm::mat4 View;
 		alignas(16) glm::mat4 Proj;
+	};
+
+	struct PushConstantObject
+	{
+		alignas(16) glm::mat4 Model;
 	};
 	
 	enum class TextureFormat : uint8_t

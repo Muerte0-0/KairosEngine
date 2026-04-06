@@ -68,7 +68,7 @@ namespace Engine
 
 	void VulkanShader::CreateModule(ShaderStageData& stageData)
 	{
-		ASSERT(!stageData.Spirv.empty(),
+		ASSERT(!stageData.Bytecode.empty(),
 			"VulkanShader '{}': stage '{}' has no SPIR-V — call LoadSpirvFromDisk first.",
 			m_Name, Shader::StageToString(stageData.Stage));
 

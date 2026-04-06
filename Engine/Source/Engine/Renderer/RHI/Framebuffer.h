@@ -6,11 +6,12 @@ namespace Engine
 {
 	struct FramebufferSpecification
 	{
-		uint32_t Width = 1;
+		uint32_t Width  = 1;
 		uint32_t Height = 1;
-		
-		TextureFormat Format = TextureFormat::Undefined;
-		SampleCountBits SampleBits = SampleCountBits::s1;
+
+		TextureFormat   ColorFormat = TextureFormat::Undefined;
+		TextureFormat   DepthFormat = TextureFormat::Undefined;
+		SampleCountBits SampleCount = SampleCountBits::s1;
 	};
 
 	class Framebuffer

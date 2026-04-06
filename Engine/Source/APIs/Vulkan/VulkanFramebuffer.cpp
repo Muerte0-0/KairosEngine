@@ -3,17 +3,15 @@
 
 #include "Components/VulkanDevice.h"
 #include "VulkanUtils.h"
-#include "VulkanRenderAPI.h"
 
 #include "imgui.h"
-
-#include "Engine/Renderer/Renderer.h"
 
 #include "backends/imgui_impl_vulkan.h"
 
 namespace Engine
 {
-	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec) : m_FramebufferSpec(spec)
+	VulkanFramebuffer::VulkanFramebuffer(VulkanDevice& device, const FramebufferSpecification& spec)
+		: m_Device(device), m_FramebufferSpec(spec)
 	{
 		CreateColorAttachment();
 		CreateSampler();
@@ -32,6 +30,7 @@ namespace Engine
 		if (m_FramebufferSpec.Width == width && m_FramebufferSpec.Height == height)
 			return;
 
+		m_Device.WaitIdle();
 		ReleaseImGuiTexture();
 
 		m_FramebufferSpec.Width = width;
@@ -57,30 +56,30 @@ namespace Engine
 
 	void VulkanFramebuffer::CreateColorAttachment()
 	{
-		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
-		
 		VulkanUtils::CreateImage(
-			api->GetVulkanDevice()->GetDevice(),
-			api->GetVulkanDevice()->GetPhysicalDevice(),
+			m_Device.GetDevice(),
+			m_Device.GetPhysicalDevice(),
 			m_FramebufferSpec.Width,
 			m_FramebufferSpec.Height,
 			1,
-			VulkanUtils::ToVulkanSampleCount(m_FramebufferSpec.SampleBits),
-			VulkanUtils::ToVulkanFormat(m_FramebufferSpec.Format),
+			VulkanUtils::ToVulkanSampleCount(m_FramebufferSpec.SampleCount),
+			VulkanUtils::ToVulkanFormat(m_FramebufferSpec.ColorFormat),
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
 			vk::MemoryPropertyFlagBits::eDeviceLocal,
 			m_ColorImage,
 			m_ColorImageMemory);
 
-		m_ColorImageView = VulkanUtils::CreateImageView(api->GetVulkanDevice()->GetDevice(),
-			m_ColorImage, api->GetVulkanSwapchain()->GetSwapChainImageFormat(), vk::ImageAspectFlagBits::eColor, 1);
+		m_ColorImageView = VulkanUtils::CreateImageView(
+			m_Device.GetDevice(),
+			m_ColorImage,
+			VulkanUtils::ToVulkanFormat(m_FramebufferSpec.ColorFormat),
+			vk::ImageAspectFlagBits::eColor,
+			1);
 	}
 
 	void VulkanFramebuffer::CreateSampler()
 	{
-		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
-		
 		vk::SamplerCreateInfo samplerInfo;
 		samplerInfo.magFilter = vk::Filter::eLinear;
 		samplerInfo.minFilter = vk::Filter::eLinear;
@@ -94,7 +93,7 @@ namespace Engine
 		samplerInfo.compareEnable = vk::False;
 		samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
 
-		m_ColorSampler = vk::raii::Sampler(api->GetVulkanDevice()->GetDevice(), samplerInfo);
+		m_ColorSampler = vk::raii::Sampler(m_Device.GetDevice(), samplerInfo);
 	}
 
 	void VulkanFramebuffer::ReleaseImGuiTexture()

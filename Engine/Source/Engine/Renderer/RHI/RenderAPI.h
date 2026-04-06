@@ -2,8 +2,13 @@
 
 #include <filesystem>
 
+#include "Buffer.h"
+#include "Framebuffer.h"
 #include "GraphicsPipeline.h"
+#include "Resources/Mesh.h"
 #include "Shader.h"
+#include "Engine/Renderer/RenderPass.h"
+#include "Engine/Utils/RendererUtils.h"
 
 enum class API
 {
@@ -14,8 +19,6 @@ enum class API
 
 namespace Engine
 {
-	class Framebuffer;
-
 	class RenderAPI
 	{
 	public:
@@ -24,18 +27,25 @@ namespace Engine
 		virtual void Init(void* windowHandle, const std::filesystem::path& shaderDirectory) = 0;
 
 		virtual void BeginScene() = 0;
-		
+		virtual void BeginPass(const RenderPass& renderPass) = 0;
+		virtual void EndPass() = 0;
+		virtual void DrawMesh(
+			const Framebuffer& framebuffer,
+			const GraphicsPipeline& pipeline,
+			const Mesh& mesh,
+			const glm::mat4& modelTransform,
+			const UniformBufferObject& uniformBufferObject) = 0;
 		virtual void DrawFrame()  = 0;
-		
 		virtual void EndScene()   = 0;
 
-		virtual Framebuffer*      GetFramebuffer()      = 0;
-		virtual GraphicsPipeline* GetGraphicsPipeline() = 0;
-		virtual ShaderLibrary*    GetShaderLibrary()    = 0;
+		virtual void WindowResized() = 0;
 
-		virtual void WindowResized()									= 0;
-		virtual void ResizeFramebuffer(uint32_t width, uint32_t height)	= 0;
-		
+		virtual ShaderLibrary* GetShaderLibrary() = 0;
+		virtual const std::filesystem::path& GetShaderDirectory() const = 0;
+		virtual TextureFormat GetDefaultColorFormat() const = 0;
+		virtual TextureFormat GetDefaultDepthFormat() const = 0;
+		virtual void WaitIdle() = 0;
+
 		virtual API GetType() = 0;
 	};
 }

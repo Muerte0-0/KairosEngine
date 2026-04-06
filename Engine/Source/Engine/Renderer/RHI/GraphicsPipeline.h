@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Shader.h"
+#include "Buffer.h"
 #include "Engine/Utils/RendererUtils.h"
 #include "Engine/Core/Base.h"
-#include "Resources/Mesh.h"
 
 namespace Engine
 {
@@ -13,12 +13,11 @@ namespace Engine
 
 	struct GraphicsPipelineCreateInfo
 	{
-		Ref<Shader>     Shader;										// Must be loaded + Init().
+		Ref<Shader>     Shader;								// Must be loaded + Init().
+		BufferLayout    VertexLayout;						// Describes vertex input — no mesh reference needed.
 		TextureFormat   ColorFormat = TextureFormat::Undefined;
 		TextureFormat   DepthFormat = TextureFormat::Undefined;
 		SampleCountBits SampleCount = SampleCountBits::s1;
-		
-		std::vector<Ref<Mesh>> Meshes;
 	};
 
 	// -----------------------------------------------------------------------
@@ -29,7 +28,7 @@ namespace Engine
 	{
 	public:
 		virtual ~GraphicsPipeline() = default;
-		
+
 		[[nodiscard]] static Scope<GraphicsPipeline> Create(GraphicsPipelineCreateInfo createInfo);
 	};
 }

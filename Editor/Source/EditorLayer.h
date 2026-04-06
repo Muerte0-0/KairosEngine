@@ -4,7 +4,7 @@
 class EditorLayer : public Engine::Layer
 {
 public:
-    EditorLayer();
+    EditorLayer() = default;
     virtual ~EditorLayer() override = default;
     
     void OnAttach() override;
@@ -23,6 +23,10 @@ private:
     glm::vec2 m_ViewportBounds[2];
     
     Ref<Scene> m_ActiveScene;
+    Scope<SceneRenderer> m_SceneRenderer;
+    
+    Entity m_CubeEntity;
+    float m_CubeRotation = 0.0f;
     
     // ----------- ImGui ----------- //
     void DrawMenuBar();

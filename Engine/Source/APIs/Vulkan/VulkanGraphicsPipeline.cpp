@@ -21,15 +21,16 @@ namespace Engine
 	// Construction / destruction
 	// -----------------------------------------------------------------------
 
-	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) : m_CreateInfo(createInfo)
+	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo)
+		: m_CreateInfo(createInfo)
 	{
 		ASSERT(m_CreateInfo.Shader,
-			"VulkanGraphicsPipeline::Init — Shader is null.");
+			"VulkanGraphicsPipeline: Shader is null.");
 		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Vertex),
-			"VulkanGraphicsPipeline::Init — shader '{}' has no Vertex stage.",
+			"VulkanGraphicsPipeline: shader '{}' has no Vertex stage.",
 			m_CreateInfo.Shader->GetName());
 		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Fragment),
-			"VulkanGraphicsPipeline::Init — shader '{}' has no Fragment stage.",
+			"VulkanGraphicsPipeline: shader '{}' has no Fragment stage.",
 			m_CreateInfo.Shader->GetName());
 
 		CreatePipelineCache();
@@ -38,7 +39,8 @@ namespace Engine
 		CreateDescriptorPool();
 		CreateDescriptorSets();
 
-		LOG(LogLevel::Info, "VulkanGraphicsPipeline: built pipeline for shader '{}'.", m_CreateInfo.Shader->GetName());
+		LOG(LogLevel::Info, "VulkanGraphicsPipeline: built pipeline for shader '{}'.",
+			m_CreateInfo.Shader->GetName());
 	}
 
 	VulkanGraphicsPipeline::~VulkanGraphicsPipeline()
@@ -62,21 +64,25 @@ namespace Engine
 	void VulkanGraphicsPipeline::CreatePipelineLayout()
 	{
 		std::array bindings = {
-			vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr),
-			//vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr)
+			vk::DescriptorSetLayoutBinding(
+				0, vk::DescriptorType::eUniformBuffer, 1,
+				vk::ShaderStageFlagBits::eVertex, nullptr),
 		};
 
 		vk::DescriptorSetLayoutCreateInfo layoutInfo;
 		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-		layoutInfo.pBindings = bindings.data();
+		layoutInfo.pBindings    = bindings.data();
+		m_DescriptorSetLayout   = vk::raii::DescriptorSetLayout(GetDevice(), layoutInfo);
 
-		m_DescriptorSetLayout = vk::raii::DescriptorSetLayout(GetDevice(), layoutInfo);
-		
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-		pipelineLayoutInfo.setLayoutCount = 1;
-		pipelineLayoutInfo.pSetLayouts = &*m_DescriptorSetLayout;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
-
+		pipelineLayoutInfo.setLayoutCount         = 1;
+		pipelineLayoutInfo.pSetLayouts            = &*m_DescriptorSetLayout;
+		const vk::PushConstantRange pushConstantRange(
+			vk::ShaderStageFlagBits::eVertex,
+			0,
+			sizeof(PushConstantObject));
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges    = &pushConstantRange;
 		m_PipelineLayout = vk::raii::PipelineLayout(GetDevice(), pipelineLayoutInfo);
 	}
 
@@ -84,6 +90,7 @@ namespace Engine
 	{
 		auto* vulkanShader = dynamic_cast<VulkanShader*>(m_CreateInfo.Shader.get());
 
+		// Shader stages
 		std::vector<vk::PipelineShaderStageCreateInfo> shaderStages;
 		for (const ShaderStageData* stageData : m_CreateInfo.Shader->GetStages())
 		{
@@ -93,32 +100,28 @@ namespace Engine
 				*vulkanShader->GetModule(stageData->Stage),
 				stageData->EntryPoint.c_str());
 		}
-
 		ASSERT(!shaderStages.empty(),
 			"VulkanGraphicsPipeline: shader '{}' produced zero stage infos.",
 			m_CreateInfo.Shader->GetName());
 
-		// ------------------------------------------------------------------
-		// Fixed pipeline state
-		// ------------------------------------------------------------------
+		// Vertex input — built from the VertexLayout in createInfo (no mesh reference)
+		vk::VertexInputBindingDescription bindDesc =
+			VulkanUtils::CreateBindingDescription(m_CreateInfo.VertexLayout);
+		std::vector<vk::VertexInputAttributeDescription> attribDescs =
+			VulkanUtils::CreateAttributeDescriptions(m_CreateInfo.VertexLayout);
+
 		vk::PipelineVertexInputStateCreateInfo vertexInputState;
-		
-		Mesh* mesh = m_CreateInfo.Meshes[0].get();
-		vk::VertexInputBindingDescription bindDesc = VulkanUtils::CreateBindingDescription(mesh->GetLayout());
-		std::array<vk::VertexInputBindingDescription, 1> bindings = { bindDesc };
-		std::vector<vk::VertexInputAttributeDescription> vertAttribDesc = VulkanUtils::CreateAttributeDescriptions(mesh->GetLayout());
-		
-		vertexInputState.vertexBindingDescriptionCount		= static_cast<uint32_t>(bindings.size());
-		vertexInputState.pVertexBindingDescriptions			= bindings.data();
-		vertexInputState.vertexAttributeDescriptionCount	= static_cast<uint32_t>(vertAttribDesc.size());
-		vertexInputState.pVertexAttributeDescriptions		= vertAttribDesc.data();
+		vertexInputState.vertexBindingDescriptionCount   = 1;
+		vertexInputState.pVertexBindingDescriptions      = &bindDesc;
+		vertexInputState.vertexAttributeDescriptionCount = static_cast<uint32_t>(attribDescs.size());
+		vertexInputState.pVertexAttributeDescriptions    = attribDescs.data();
 
-		vk::PipelineInputAssemblyStateCreateInfo inputAssemblyState;
-		inputAssemblyState.topology					= vk::PrimitiveTopology::eTriangleList;
-		inputAssemblyState.primitiveRestartEnable	= vk::False;
+		vk::PipelineInputAssemblyStateCreateInfo inputAssembly;
+		inputAssembly.topology               = vk::PrimitiveTopology::eTriangleList;
+		inputAssembly.primitiveRestartEnable = vk::False;
 
-		constexpr vk::Viewport	viewport(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
-		constexpr vk::Rect2D	scissor(vk::Offset2D(0, 0), vk::Extent2D(1, 1));
+		constexpr vk::Viewport viewport(0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f);
+		constexpr vk::Rect2D   scissor(vk::Offset2D(0, 0), vk::Extent2D(1, 1));
 
 		vk::PipelineViewportStateCreateInfo viewportState;
 		viewportState.viewportCount = 1;
@@ -161,9 +164,6 @@ namespace Engine
 		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicState.pDynamicStates    = dynamicStates.data();
 
-		// ------------------------------------------------------------------
-		// Dynamic rendering (no render pass)
-		// ------------------------------------------------------------------
 		vk::Format colorFmt = VulkanUtils::ToVulkanFormat(m_CreateInfo.ColorFormat);
 		vk::Format depthFmt = VulkanUtils::ToVulkanFormat(m_CreateInfo.DepthFormat);
 
@@ -172,14 +172,11 @@ namespace Engine
 		renderingInfo.pColorAttachmentFormats = &colorFmt;
 		renderingInfo.depthAttachmentFormat   = depthFmt;
 
-		// ------------------------------------------------------------------
-		// Assemble and create
-		// ------------------------------------------------------------------
 		vk::GraphicsPipelineCreateInfo pipelineInfo;
 		pipelineInfo.stageCount          = static_cast<uint32_t>(shaderStages.size());
 		pipelineInfo.pStages             = shaderStages.data();
 		pipelineInfo.pVertexInputState   = &vertexInputState;
-		pipelineInfo.pInputAssemblyState = &inputAssemblyState;
+		pipelineInfo.pInputAssemblyState = &inputAssembly;
 		pipelineInfo.pViewportState      = &viewportState;
 		pipelineInfo.pRasterizationState = &rasterState;
 		pipelineInfo.pMultisampleState   = &msaaState;
@@ -193,53 +190,48 @@ namespace Engine
 			pipelineInfo, renderingInfo
 		};
 
-		m_Pipeline = vk::raii::Pipeline(GetDevice(), m_PipelineCache, chain.get<vk::GraphicsPipelineCreateInfo>());
+		m_Pipeline = vk::raii::Pipeline(
+			GetDevice(), m_PipelineCache, chain.get<vk::GraphicsPipelineCreateInfo>());
 	}
 
 	void VulkanGraphicsPipeline::CreateDescriptorPool()
 	{
-		std::array poolSize{
+		std::array poolSizes{
 			vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
-			//vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT)
 		};
 
-		vk::DescriptorPoolCreateInfo poolInfo(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, MAX_FRAMES_IN_FLIGHT, poolSize);
+		vk::DescriptorPoolCreateInfo poolInfo(
+			vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+			MAX_FRAMES_IN_FLIGHT, poolSizes);
 		m_DescriptorPool = vk::raii::DescriptorPool(GetDevice(), poolInfo);
 	}
 
 	void VulkanGraphicsPipeline::CreateDescriptorSets()
 	{
 		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
-		
+
 		std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *m_DescriptorSetLayout);
-		vk::DescriptorSetAllocateInfo allocInfo(m_DescriptorPool, static_cast<uint32_t>(layouts.size()), layouts.data());
+		vk::DescriptorSetAllocateInfo allocInfo(
+			m_DescriptorPool,
+			static_cast<uint32_t>(layouts.size()),
+			layouts.data());
 
 		m_DescriptorSets = api->GetVulkanDevice()->GetDevice().allocateDescriptorSets(allocInfo);
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			vk::DescriptorBufferInfo bufferInfo(*api->GetUniformBuffers()[i], 0, sizeof(UniformBufferObject));
-			//vk::DescriptorImageInfo imageInfo(textureSampler, textureImageView, vk::ImageLayout::eShaderReadOnlyOptimal);
+			vk::DescriptorBufferInfo bufferInfo(
+				*api->GetUniformBuffers()[i], 0, sizeof(UniformBufferObject));
 
-			std::array<vk::WriteDescriptorSet, 1> descriptorWrites{};
+			std::array<vk::WriteDescriptorSet, 1> writes{};
+			writes[0].setDstSet(*m_DescriptorSets[i]);
+			writes[0].setDstBinding(0);
+			writes[0].setDstArrayElement(0);
+			writes[0].setDescriptorCount(1);
+			writes[0].setDescriptorType(vk::DescriptorType::eUniformBuffer);
+			writes[0].setPBufferInfo(&bufferInfo);
 
-			// Uniform buffer write
-			descriptorWrites[0].setDstSet(*m_DescriptorSets[i]);
-			descriptorWrites[0].setDstBinding(0);
-			descriptorWrites[0].setDstArrayElement(0);
-			descriptorWrites[0].setDescriptorCount(1);
-			descriptorWrites[0].setDescriptorType(vk::DescriptorType::eUniformBuffer);
-			descriptorWrites[0].setPBufferInfo(&bufferInfo);
-
-			//// Combined image sampler write
-			//descriptorWrites[1].setDstSet(*m_DescriptorSets[i]);
-			//descriptorWrites[1].setDstBinding(1);
-			//descriptorWrites[1].setDstArrayElement(0);
-			//descriptorWrites[1].setDescriptorCount(1);
-			//descriptorWrites[1].setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
-			//descriptorWrites[1].setPImageInfo(&imageInfo);
-
-			GetDevice().updateDescriptorSets(descriptorWrites, {});
+			GetDevice().updateDescriptorSets(writes, {});
 		}
 	}
 }

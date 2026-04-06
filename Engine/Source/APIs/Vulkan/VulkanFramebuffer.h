@@ -8,10 +8,10 @@ namespace Engine
 {
 	class VulkanDevice;
 
-	class VulkanFramebuffer : public Framebuffer
+	class VulkanFramebuffer final : public Framebuffer
 	{
 	public:
-		VulkanFramebuffer(const FramebufferSpecification& spec);
+		VulkanFramebuffer(VulkanDevice& device, const FramebufferSpecification& spec);
 		~VulkanFramebuffer() override;
 
 		void Resize(uint32_t width, uint32_t height) override;
@@ -32,6 +32,7 @@ namespace Engine
 		void CreateSampler();
 		void ReleaseImGuiTexture();
 
+		VulkanDevice& m_Device;
 		vk::ImageLayout m_CurrentLayout = vk::ImageLayout::eUndefined;
 
 		FramebufferSpecification m_FramebufferSpec;

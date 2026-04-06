@@ -27,28 +27,13 @@ namespace Engine
 		s_API->Init(windowHandle, shaderDirectory);
 	}
 
-	void Renderer::BeginScene()       { s_API->BeginScene(); }
-	void Renderer::DrawFrame()        { s_API->DrawFrame(); }
-	void Renderer::EndScene()         { s_API->EndScene(); }
-	void Renderer::WindowResized()    { s_API->WindowResized(); }
-
-	Framebuffer* Renderer::GetFramebuffer()
-	{
-		return s_API->GetFramebuffer();
-	}
-
-	GraphicsPipeline* Renderer::GetGraphicsPipeline()
-	{
-		return s_API->GetGraphicsPipeline();
-	}
+	void Renderer::BeginScene()    { s_API->BeginScene(); }
+	void Renderer::DrawFrame()     { s_API->DrawFrame(); }
+	void Renderer::EndScene()      { s_API->EndScene(); }
+	void Renderer::WindowResized() { s_API->WindowResized(); }
 
 	ShaderLibrary* Renderer::GetShaderLibrary()
 	{
 		return s_API->GetShaderLibrary();
-	}
-
-	void Renderer::ResizeFramebuffer(uint32_t width, uint32_t height)
-	{
-		s_API->ResizeFramebuffer(width, height);
 	}
 }

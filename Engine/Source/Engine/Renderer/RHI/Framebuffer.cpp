@@ -4,6 +4,7 @@
 #include "Engine/Renderer/Renderer.h"
 
 #include "APIs/Vulkan/VulkanFramebuffer.h"
+#include "APIs/Vulkan/VulkanRenderAPI.h"
 
 namespace Engine
 {
@@ -12,7 +13,11 @@ namespace Engine
 		switch (Renderer::GetAPI()->GetType())
 		{
 		case API::Vulkan:
-			return CreateScope<VulkanFramebuffer>(spec);
+		{
+			auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
+			ASSERT(api, "Framebuffer::Create: active RenderAPI is not VulkanRenderAPI.");
+			return CreateScope<VulkanFramebuffer>(*api->GetVulkanDevice(), spec);
+		}
 #ifdef PLATFORM_WINDOWS
 		case API::DX11:
 			ASSERT(false, "API[Direct X 11]: Not Implemented");

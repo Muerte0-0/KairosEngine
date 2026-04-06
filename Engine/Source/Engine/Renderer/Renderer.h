@@ -1,6 +1,5 @@
 #pragma once
 #include "RHI/RenderAPI.h"
-#include "RHI/Framebuffer.h"
 #include "RHI/Shader.h"
 
 namespace Engine
@@ -11,17 +10,12 @@ namespace Engine
 		static void Init(API api, void* windowHandle, const std::filesystem::path& shaderDirectory);
 
 		static void BeginScene();
-		
 		static void DrawFrame();
-		
 		static void EndScene();
 
-		static Framebuffer*     GetFramebuffer();
-		static GraphicsPipeline* GetGraphicsPipeline();
-		static ShaderLibrary*   GetShaderLibrary();
-
 		static void WindowResized();
-		static void ResizeFramebuffer(uint32_t width, uint32_t height);
+
+		static ShaderLibrary* GetShaderLibrary();
 
 		static RenderAPI* GetAPI() { return s_API.get(); }
 
