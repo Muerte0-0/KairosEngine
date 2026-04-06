@@ -1,9 +1,5 @@
 #include "EditorLayer.h"
 
-#include "Engine/Renderer/RHI/Buffer.h"
-#include "Engine/Renderer/RHI/Resources/Mesh.h"
-
-#include <iterator>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace

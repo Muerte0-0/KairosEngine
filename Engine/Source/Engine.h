@@ -27,6 +27,9 @@
 // ---------- Renderer ----------- //
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/SceneRenderer.h"
+
+#include "Engine/Renderer/RHI/Buffer.h"
+#include "Engine/Renderer/RHI/Resources/Mesh.h"
 // ------------------------------- //
 
 // ------------ Utils ------------ //
