@@ -389,7 +389,14 @@ namespace Engine
 		uint32_t width = (std::max)(m_VulkanSwapchain->GetSwapChainExtent().width, 1u);
 		uint32_t height = (std::max)(m_VulkanSwapchain->GetSwapChainExtent().height, 1u);
 		
-		m_ViewportFramebuffer = Framebuffer::Create(width, height);
+		FramebufferSpecification spec{
+			.Width = width,
+			.Height = height,
+			.Format = VulkanUtils::ToTextureFormat(m_VulkanSwapchain->GetSwapChainImageFormat()),
+			.SampleBits = SampleCountBits::s1
+		};
+		
+		m_ViewportFramebuffer = Framebuffer::Create(spec);
 	}
 
 	void VulkanRenderAPI::BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const

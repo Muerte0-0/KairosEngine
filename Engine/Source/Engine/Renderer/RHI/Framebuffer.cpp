@@ -7,12 +7,12 @@
 
 namespace Engine
 {
-	Scope<Framebuffer> Framebuffer::Create(uint32_t width, uint32_t height)
+	Scope<Framebuffer> Framebuffer::Create(const FramebufferSpecification& spec)
 	{
 		switch (Renderer::GetAPI()->GetType())
 		{
 		case API::Vulkan:
-			return CreateScope<VulkanFramebuffer>(width, height);
+			return CreateScope<VulkanFramebuffer>(spec);
 #ifdef PLATFORM_WINDOWS
 		case API::DX11:
 			ASSERT(false, "API[Direct X 11]: Not Implemented");

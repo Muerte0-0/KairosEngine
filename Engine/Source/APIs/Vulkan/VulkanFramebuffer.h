@@ -11,19 +11,19 @@ namespace Engine
 	class VulkanFramebuffer : public Framebuffer
 	{
 	public:
-		VulkanFramebuffer(uint32_t width, uint32_t height);
+		VulkanFramebuffer(const FramebufferSpecification& spec);
 		~VulkanFramebuffer() override;
 
 		void Resize(uint32_t width, uint32_t height) override;
 		void* GetImGuiTextureID() override;
 		
-		uint32_t GetWidth() const override { return m_Width; }
-		uint32_t GetHeight() const override { return m_Height; }
+		uint32_t GetWidth() const override { return m_FramebufferSpec.Width; }
+		uint32_t GetHeight() const override { return m_FramebufferSpec.Height; }
 
 		vk::Image GetImage() const { return *m_ColorImage; }
 		vk::ImageView GetImageView() const { return *m_ColorImageView; }
 		vk::Sampler GetSampler() const { return *m_ColorSampler; }
-		vk::Extent2D GetExtent() const { return vk::Extent2D(m_Width, m_Height); }
+		vk::Extent2D GetExtent() const { return vk::Extent2D(m_FramebufferSpec.Width, m_FramebufferSpec.Height); }
 		vk::ImageLayout GetCurrentLayout() const { return m_CurrentLayout; }
 		void SetCurrentLayout(vk::ImageLayout layout) { m_CurrentLayout = layout; }
 
@@ -34,8 +34,7 @@ namespace Engine
 
 		vk::ImageLayout m_CurrentLayout = vk::ImageLayout::eUndefined;
 
-		uint32_t m_Width = 0;
-		uint32_t m_Height = 0;
+		FramebufferSpecification m_FramebufferSpec;
 		
 		vk::raii::Image m_ColorImage = nullptr;
 		vk::raii::DeviceMemory m_ColorImageMemory = nullptr;

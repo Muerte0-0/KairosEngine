@@ -13,7 +13,7 @@
 
 namespace Engine
 {
-	VulkanFramebuffer::VulkanFramebuffer(uint32_t width, uint32_t height) : m_Width(width), m_Height(height)
+	VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec) : m_FramebufferSpec(spec)
 	{
 		CreateColorAttachment();
 		CreateSampler();
@@ -29,13 +29,13 @@ namespace Engine
 		width = (std::max)(width, 1u);
 		height = (std::max)(height, 1u);
 
-		if (m_Width == width && m_Height == height)
+		if (m_FramebufferSpec.Width == width && m_FramebufferSpec.Height == height)
 			return;
 
 		ReleaseImGuiTexture();
 
-		m_Width = width;
-		m_Height = height;
+		m_FramebufferSpec.Width = width;
+		m_FramebufferSpec.Height = height;
 
 		m_ColorImageView = nullptr;
 		m_ColorImage = nullptr;
@@ -62,11 +62,11 @@ namespace Engine
 		VulkanUtils::CreateImage(
 			api->GetVulkanDevice()->GetDevice(),
 			api->GetVulkanDevice()->GetPhysicalDevice(),
-			m_Width,
-			m_Height,
+			m_FramebufferSpec.Width,
+			m_FramebufferSpec.Height,
 			1,
-			vk::SampleCountFlagBits::e1,
-			api->GetVulkanSwapchain()->GetSwapChainImageFormat(),
+			VulkanUtils::ToVulkanSampleCount(m_FramebufferSpec.SampleBits),
+			VulkanUtils::ToVulkanFormat(m_FramebufferSpec.Format),
 			vk::ImageTiling::eOptimal,
 			vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled,
 			vk::MemoryPropertyFlagBits::eDeviceLocal,

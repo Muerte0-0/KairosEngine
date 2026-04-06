@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include "Engine/Utils/RendererUtils.h"
 
 namespace Engine
 {
@@ -8,6 +8,9 @@ namespace Engine
 	{
 		uint32_t Width = 1;
 		uint32_t Height = 1;
+		
+		TextureFormat Format = TextureFormat::Undefined;
+		SampleCountBits SampleBits = SampleCountBits::s1;
 	};
 
 	class Framebuffer
@@ -21,6 +24,6 @@ namespace Engine
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 		
-		[[nodiscard]] static Scope<Framebuffer> Create(uint32_t width, uint32_t height);
+		[[nodiscard]] static Scope<Framebuffer> Create(const FramebufferSpecification& spec);
 	};
 }
