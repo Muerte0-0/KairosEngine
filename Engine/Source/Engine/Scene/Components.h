@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Renderer/Camera.h"
+#include "Engine/Renderer/Cameras/Camera.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 
 namespace Engine

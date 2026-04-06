@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Camera.h"
+#include "Cameras/Camera.h"
 #include "RenderPass.h"
 #include "RHI/Framebuffer.h"
 #include "RHI/GraphicsPipeline.h"
