@@ -22,6 +22,11 @@
 #include "Engine/Scene/Scene.h"
 #include "Engine/Scene/Components.h"
 #include "Engine/Scene/Entity.h"
+
+// Cameras
+#include "Engine/Renderer/Cameras/SceneCamera.h"
+#include "Engine/Renderer/Cameras/SceneCameraController.h"
+#include "Engine/Renderer/Cameras/CameraManager.h"
 // ------------------------------- //
 
 // ---------- Renderer ----------- //

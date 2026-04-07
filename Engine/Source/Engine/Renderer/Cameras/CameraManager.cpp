@@ -3,5 +3,7 @@
 
 namespace Engine
 {
-	
+	void CameraManager::UpdateFromRegistry(entt::registry& registry)
+	{
+	}
 }

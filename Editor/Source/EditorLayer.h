@@ -18,12 +18,15 @@ public:
     
     void OnEvent(Engine::Event& event) override;
 private:
-    bool m_ViewportFocused = false, m_ViewportHovered = false, m_ViewportRightClicked = false;
+    bool m_ViewportFocused = false, m_ViewportHovered = false;
     glm::vec2 m_ViewportSize = { 1280, 720 };
     glm::vec2 m_ViewportBounds[2];
     
-    Ref<Scene> m_ActiveScene;
-    Scope<SceneRenderer> m_SceneRenderer;
+    Ref<Scene>                      m_ActiveScene;
+    Scope<SceneRenderer>            m_SceneRenderer;
+    Scope<SceneCamera>              m_SceneCamera;
+    Scope<SceneCameraController>    m_SceneCameraController;
+    CameraManager                   m_CameraManager;
     
     Entity m_CubeEntity;
     float m_CubeRotation = 0.0f;

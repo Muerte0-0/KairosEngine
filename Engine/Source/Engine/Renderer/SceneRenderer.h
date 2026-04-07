@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Cameras/Camera.h"
 #include "RenderPass.h"
 #include "RHI/Framebuffer.h"
 #include "RHI/GraphicsPipeline.h"
@@ -9,6 +8,8 @@
 #include "Engine/Core/Base.h"
 
 #include <glm/glm.hpp>
+
+#include "Cameras/CameraManager.h"
 
 namespace Engine
 {
@@ -36,7 +37,7 @@ namespace Engine
 		SceneRenderer(const SceneRenderer&)            = delete;
 		SceneRenderer& operator=(const SceneRenderer&) = delete;
 
-		void BeginScene(const Camera& camera);
+		void BeginScene(const CameraManager& cameraManager);
 		void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform = glm::mat4(1.0f));
 		void EndScene();
 

@@ -70,6 +70,10 @@ void EditorLayer::OnAttach()
 
     m_ActiveScene = CreateRef<Scene>();
     m_SceneRenderer = CreateScope<SceneRenderer>();
+	m_SceneCamera = CreateScope<SceneCamera>();
+	m_SceneCameraController = CreateScope<SceneCameraController>(*m_SceneCamera);
+	m_CameraManager.SetSceneCamera(m_SceneCamera.get());
+	m_CameraManager.SetMode(CameraManagerMode::Editor);
 
 	m_CubeEntity = m_ActiveScene->CreateEntity("Viewport Cube");
 	m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
@@ -91,7 +95,14 @@ void EditorLayer::OnUpdate(float DeltaTime)
 {
     Layer::OnUpdate(DeltaTime);
 	
-	Input::SetCursorLockMode(m_ViewportRightClicked ? CursorMode::Locked : CursorMode::Normal);
+	m_SceneCameraController->SetViewportFocused(m_ViewportFocused);
+	m_SceneCameraController->SetViewportHovered(m_ViewportHovered);
+	m_SceneCameraController->OnUpdate(DeltaTime);
+	
+	if (m_SceneCameraController->GetMode() != SceneCameraMode::None)
+		Input::SetCursorLockMode(CursorMode::Locked);
+	else
+		Input::SetCursorLockMode(CursorMode::Normal);
 }
 
 void EditorLayer::OnFixedUpdate(float DeltaTime)
@@ -126,7 +137,7 @@ void EditorLayer::OnRender()
         glm::vec3(0.0f, 1.0f, 0.0f));
 
     Camera viewportCamera(view, projection);
-    m_SceneRenderer->BeginScene(viewportCamera);
+    m_SceneRenderer->BeginScene(m_CameraManager);
     m_ActiveScene->OnRender(*m_SceneRenderer);
     m_SceneRenderer->EndScene();
 }
@@ -193,6 +204,8 @@ void EditorLayer::OnImGuiRender()
 void EditorLayer::OnEvent(Engine::Event& event)
 {
     Layer::OnEvent(event);
+	
+	m_SceneCameraController->OnEvent(event);
 }
 
 void EditorLayer::DrawMenuBar()
@@ -283,6 +296,10 @@ void EditorLayer::DrawViewport()
         m_SceneRenderer->Resize(
             static_cast<uint32_t>(viewportPanelSize.x),
             static_cast<uint32_t>(viewportPanelSize.y));
+    	
+    	m_SceneCamera->OnViewportResize(
+    		static_cast<uint32_t>(viewportPanelSize.x),
+    		 static_cast<uint32_t>(viewportPanelSize.y));
 
         if (void* textureID = framebuffer->GetImGuiTextureID())
         {
@@ -296,11 +313,6 @@ void EditorLayer::DrawViewport()
 
     m_ViewportFocused = ImGui::IsWindowFocused();
     m_ViewportHovered = ImGui::IsWindowHovered();
-
-    if (ImGui::IsMouseDown(ImGuiMouseButton_Right) && m_ViewportHovered)
-        m_ViewportRightClicked = true;
-    else
-        m_ViewportRightClicked = false;
 
     ImGui::End();
 }

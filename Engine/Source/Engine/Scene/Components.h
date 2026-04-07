@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/Renderer/Cameras/Camera.h"
+#include "Engine/Renderer/Cameras/GameCamera.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 
 namespace Engine
@@ -38,11 +38,10 @@ namespace Engine
 
 	struct CameraComponent
 	{
-		Engine::Camera Camera;
+		Engine::GameCamera Camera;
 		bool Primary = false;
 		
 		CameraComponent() = default;
-		CameraComponent(const glm::mat4& projection) : Camera(projection) {}
 	};
 
 	struct MeshComponent

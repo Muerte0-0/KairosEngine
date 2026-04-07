@@ -39,7 +39,7 @@ namespace Engine
 		m_RenderPass.TargetFramebuffer = m_Framebuffer.get();
 	}
 
-	void SceneRenderer::BeginScene(const Camera& camera)
+	void SceneRenderer::BeginScene(const CameraManager& cameraManager)
 	{
 		ASSERT(!m_SceneActive, "SceneRenderer::BeginScene called while already active.");
 
@@ -55,8 +55,11 @@ namespace Engine
 			m_ResizePending = false;
 		}
 
-		m_View       = camera.GetView();
-		m_Projection = camera.GetProjection();
+		const Camera* cam = cameraManager.GetActiveCamera();
+		if (!cam) return;
+		
+		m_View       = cam->GetView();
+		m_Projection = cam->GetProjection();
 		m_DrawQueue.clear();
 		m_SceneActive = true;
 	}
