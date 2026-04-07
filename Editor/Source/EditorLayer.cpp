@@ -90,6 +90,8 @@ void EditorLayer::OnDetach()
 void EditorLayer::OnUpdate(float DeltaTime)
 {
     Layer::OnUpdate(DeltaTime);
+	
+	Input::SetCursorLockMode(m_ViewportRightClicked ? CursorMode::Locked : CursorMode::Normal);
 }
 
 void EditorLayer::OnFixedUpdate(float DeltaTime)

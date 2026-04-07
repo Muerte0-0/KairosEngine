@@ -61,6 +61,9 @@ namespace Engine
 
 		glfwSetWindowUserPointer(m_Handle, this);
 
+		if (glfwRawMouseMotionSupported())
+			glfwSetInputMode(m_Handle, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+		
 		// ---------------------------------------------------------------
 		// Window icon
 		// ---------------------------------------------------------------

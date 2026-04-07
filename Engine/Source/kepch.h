@@ -9,6 +9,7 @@
 
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>
+#undef APIENTRY
 #else
 #include <unistd.h>
 #endif
