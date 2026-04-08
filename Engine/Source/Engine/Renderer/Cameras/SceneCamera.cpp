@@ -65,7 +65,7 @@ namespace Engine
 		glm::vec3 right = GetRight();
 		glm::vec3 up    = GetUp();
 
-		glm::vec3 offset = (-right * delta.x + up * delta.y) * panSpeed;
+		glm::vec3 offset = (right * delta.x + up * delta.y) * panSpeed;
 
 		m_Position   += offset;
 		m_FocalPoint += offset;
@@ -141,6 +141,7 @@ namespace Engine
 
 	glm::vec3 SceneCamera::GetUp() const
 	{
-		return glm::normalize(glm::cross(GetRight(), GetForward()));
+		return glm::vec3{0.0f, 1.0f, 0.0f}; // Use World Up Vector
+		// return glm::normalize(glm::cross(GetRight(), GetForward()));
 	}
 }

@@ -64,272 +64,266 @@ namespace
 	}
 }
 
-void EditorLayer::OnAttach()
+namespace Kairos
 {
-    Layer::OnAttach();
+	void EditorLayer::OnAttach()
+	{
+		Layer::OnAttach();
 
-    m_ActiveScene = CreateRef<Scene>();
-    m_SceneRenderer = CreateScope<SceneRenderer>();
-	m_SceneCamera = CreateScope<SceneCamera>();
-	m_SceneCameraController = CreateScope<SceneCameraController>(*m_SceneCamera);
-	m_CameraManager.SetSceneCamera(m_SceneCamera.get());
-	m_CameraManager.SetMode(CameraManagerMode::Editor);
+		m_ActiveScene = CreateRef<Scene>();
+		m_SceneRenderer = CreateScope<SceneRenderer>();
+		m_SceneCamera = CreateScope<SceneCamera>();
+		m_SceneCameraController = CreateScope<SceneCameraController>(*m_SceneCamera);
+		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
+		m_CameraManager.SetMode(CameraManagerMode::Editor);
 
-	m_CubeEntity = m_ActiveScene->CreateEntity("Viewport Cube");
-	m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
-	m_CubeEntity.GetComponent<TransformComponent>().Transform =
-		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-}
+		m_CubeEntity = m_ActiveScene->CreateEntity("Viewport Cube");
+		m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
+		m_CubeEntity.GetComponent<TransformComponent>().Transform =
+			glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	}
 
-void EditorLayer::OnDetach()
-{
-    Layer::OnDetach();
-}
+	void EditorLayer::OnDetach()
+	{
+		Layer::OnDetach();
+	}
 
-void EditorLayer::OnUpdate(float DeltaTime)
-{
-    Layer::OnUpdate(DeltaTime);
+	void EditorLayer::OnUpdate(float DeltaTime)
+	{
+		Layer::OnUpdate(DeltaTime);
 	
-	m_SceneCameraController->SetViewportFocused(m_ViewportFocused);
-	m_SceneCameraController->SetViewportHovered(m_ViewportHovered);
-	m_SceneCameraController->OnUpdate(DeltaTime);
+		m_SceneCameraController->SetViewportFocused(m_ViewportFocused);
+		m_SceneCameraController->SetViewportHovered(m_ViewportHovered);
+		m_SceneCameraController->OnUpdate(DeltaTime);
 	
-	if (m_SceneCameraController->GetMode() != SceneCameraMode::None)
-		Input::SetCursorLockMode(CursorMode::Locked);
-	else
-		Input::SetCursorLockMode(CursorMode::Normal);
-}
+		if (m_SceneCameraController->GetMode() != SceneCameraMode::None)
+			Input::SetCursorLockMode(CursorMode::Locked);
+		else
+			Input::SetCursorLockMode(CursorMode::Normal);
+	}
 
-void EditorLayer::OnFixedUpdate(float DeltaTime)
-{
-    Layer::OnFixedUpdate(DeltaTime);
-}
+	void EditorLayer::OnFixedUpdate(float DeltaTime)
+	{
+		Layer::OnFixedUpdate(DeltaTime);
+	}
 
-void EditorLayer::OnRender()
-{
-    Layer::OnRender();
+	void EditorLayer::OnRender()
+	{
+		Layer::OnRender();
 
-    if (!m_SceneRenderer)
-        return;
+		if (!m_SceneRenderer)
+			return;
 
-    const float width = (std::max)(m_ViewportSize.x, 1.0f);
-    const float height = (std::max)(m_ViewportSize.y, 1.0f);
+		const float width = (std::max)(m_ViewportSize.x, 1.0f);
+		const float height = (std::max)(m_ViewportSize.y, 1.0f);
+		
+		m_SceneRenderer->BeginScene(m_CameraManager);
+		m_ActiveScene->OnRender(*m_SceneRenderer);
+		m_SceneRenderer->EndScene();
+	}
 
-    glm::mat4 projection = glm::perspective(glm::radians(45.0f), width / height, 0.1f, 100.0f);
-    projection[1][1] *= -1.0f;
+	void EditorLayer::OnImGuiRender()
+	{
+		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
 
-    glm::mat4 view = glm::lookAt(
-        glm::vec3(0.0f, 0.0f, 2.5f),
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(0.0f, 1.0f, 0.0f));
+		ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 
-    Camera viewportCamera(view, projection);
-    m_SceneRenderer->BeginScene(m_CameraManager);
-    m_ActiveScene->OnRender(*m_SceneRenderer);
-    m_SceneRenderer->EndScene();
-}
+		dockspaceWindowFlags |= ImGuiWindowFlags_NoTitleBar;
+		dockspaceWindowFlags |= ImGuiWindowFlags_NoCollapse;
+		dockspaceWindowFlags |= ImGuiWindowFlags_NoResize;
+		dockspaceWindowFlags |= ImGuiWindowFlags_NoMove;
+		dockspaceWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+		dockspaceWindowFlags |= ImGuiWindowFlags_NoNavFocus;
+		dockspaceWindowFlags |= ImGuiWindowFlags_NoBackground;
 
-void EditorLayer::OnImGuiRender()
-{
-    static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->WorkPos);
+		ImGui::SetNextWindowSize(viewport->WorkSize);
+		ImGui::SetNextWindowViewport(viewport->ID);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-    ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+		ImGui::Begin("Editor Dockspace", nullptr, dockspaceWindowFlags);
 
-    dockspaceWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-    dockspaceWindowFlags |= ImGuiWindowFlags_NoCollapse;
-    dockspaceWindowFlags |= ImGuiWindowFlags_NoResize;
-    dockspaceWindowFlags |= ImGuiWindowFlags_NoMove;
-    dockspaceWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-    dockspaceWindowFlags |= ImGuiWindowFlags_NoNavFocus;
-    dockspaceWindowFlags |= ImGuiWindowFlags_NoBackground;
+		ImGui::PopStyleVar();
+		ImGui::PopStyleVar(2);
 
-    const ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImGui::SetNextWindowPos(viewport->WorkPos);
-    ImGui::SetNextWindowSize(viewport->WorkSize);
-    ImGui::SetNextWindowViewport(viewport->ID);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+		{
+			ImGuiID dockspaceID = ImGui::GetID("Editor Dockspace");
+			ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
+		}
 
-    ImGui::Begin("Editor Dockspace", nullptr, dockspaceWindowFlags);
+		DrawMenuBar();
 
-    ImGui::PopStyleVar();
-    ImGui::PopStyleVar(2);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-    ImGuiIO& io = ImGui::GetIO();
-    if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-    {
-        ImGuiID dockspaceID = ImGui::GetID("Editor Dockspace");
-        ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
-    }
+		DrawViewport();
 
-    DrawMenuBar();
+		ImGui::PopStyleVar();
 
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::Begin("Scene Hierarchy");
+		ImGui::End();
 
-    DrawViewport();
+		ImGui::Begin("Content Browser");
+		ImGui::End();
 
-    ImGui::PopStyleVar();
+		if (m_ShowConsole)
+			DrawConsole();
 
-    ImGui::Begin("Scene Hierarchy");
-    ImGui::End();
+		ImGui::Begin("Details");
+		ImGui::End();
 
-    ImGui::Begin("Content Browser");
-    ImGui::End();
+		DrawImGuiDebug();
 
-    if (m_ShowConsole)
-        DrawConsole();
+		ImGui::End();
+	}
 
-    ImGui::Begin("Details");
-    ImGui::End();
-
-    DrawImGuiDebug();
-
-    ImGui::End();
-}
-
-void EditorLayer::OnEvent(Engine::Event& event)
-{
-    Layer::OnEvent(event);
+	void EditorLayer::OnEvent(Engine::Event& event)
+	{
+		Layer::OnEvent(event);
 	
-	m_SceneCameraController->OnEvent(event);
-}
+		m_SceneCameraController->OnEvent(event);
+	}
 
-void EditorLayer::DrawMenuBar()
-{
-    if (ImGui::BeginMenuBar())
-    {
-        if (ImGui::BeginMenu("File"))
-        {
-            if (ImGui::MenuItem("New Project", "Ctrl+N"))
-            {
-            }
+	void EditorLayer::DrawMenuBar()
+	{
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("New Project", "Ctrl+N"))
+				{
+				}
 
-            if (ImGui::MenuItem("Open Project", "Ctrl+O"))
-            {
-            }
+				if (ImGui::MenuItem("Open Project", "Ctrl+O"))
+				{
+				}
 
-            if (ImGui::MenuItem("Save Project", "Ctrl+S"))
-            {
-            }
+				if (ImGui::MenuItem("Save Project", "Ctrl+S"))
+				{
+				}
 
-            if (ImGui::MenuItem("Save Project As", "Ctrl+Shift+S"))
-            {
-            }
+				if (ImGui::MenuItem("Save Project As", "Ctrl+Shift+S"))
+				{
+				}
 
-            if (ImGui::MenuItem("Exit"))
-            {
-                Engine::Application::Get().Stop();
-            }
-            ImGui::EndMenu();
-        }
+				if (ImGui::MenuItem("Exit"))
+				{
+					Engine::Application::Get().Stop();
+				}
+				ImGui::EndMenu();
+			}
 
-        if (ImGui::BeginMenu("Tools"))
-        {
-            if (ImGui::MenuItem("New Script"))
-            {
-            }
+			if (ImGui::BeginMenu("Tools"))
+			{
+				if (ImGui::MenuItem("New Script"))
+				{
+				}
 
-            if (ImGui::MenuItem("Asset Browser"))
-            {
-            }
+				if (ImGui::MenuItem("Asset Browser"))
+				{
+				}
 
-            if (ImGui::MenuItem("Console", nullptr, &m_ShowConsole))
-            {
-                LOG(Engine::LogLevel::Info, "Console {}", m_ShowConsole ? "Shown" : "Hidden");
-            }
+				if (ImGui::MenuItem("Console", nullptr, &m_ShowConsole))
+				{
+					LOG(Engine::LogLevel::Info, "Console {}", m_ShowConsole ? "Shown" : "Hidden");
+				}
 
-            ImGui::EndMenu();
-        }
+				ImGui::EndMenu();
+			}
 
-        if (ImGui::BeginMenu("About"))
-        {
-            if (ImGui::MenuItem("About Kairos Engine"))
-            {
-            }
+			if (ImGui::BeginMenu("About"))
+			{
+				if (ImGui::MenuItem("About Kairos Engine"))
+				{
+				}
 
-            if (ImGui::MenuItem("Documentation"))
-            {
-            }
+				if (ImGui::MenuItem("Documentation"))
+				{
+				}
 
-            if (ImGui::MenuItem("GitHub Repository"))
-            {
-                string url = "https://github.com/Muerte0-0/KairosEngine";
+				if (ImGui::MenuItem("GitHub Repository"))
+				{
+					string url = "https://github.com/Muerte0-0/KairosEngine";
 
 #ifdef PLATFORM_WINDOWS
-                system(("start " + url).c_str());
+					system(("start " + url).c_str());
 #else
 #if PLATFORM_LINUX
-                system(("xdg-open " + url).c_str());
+					system(("xdg-open " + url).c_str());
 #endif
 #endif
-            }
-            ImGui::EndMenu();
-        }
+				}
+				ImGui::EndMenu();
+			}
 
-        ImGui::EndMenuBar();
-    }
-}
+			ImGui::EndMenuBar();
+		}
+	}
 
-void EditorLayer::DrawViewport()
-{
-    ImGui::Begin("Viewport");
-    ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-    m_ViewportSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
+	void EditorLayer::DrawViewport()
+	{
+		ImGui::Begin("Viewport");
+		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+		m_ViewportSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
 
-    Engine::Framebuffer* framebuffer = m_SceneRenderer ? m_SceneRenderer->GetFramebuffer() : nullptr;
-    if (framebuffer != nullptr && viewportPanelSize.x > 0.0f && viewportPanelSize.y > 0.0f)
-    {
-        m_SceneRenderer->Resize(
-            static_cast<uint32_t>(viewportPanelSize.x),
-            static_cast<uint32_t>(viewportPanelSize.y));
+		Engine::Framebuffer* framebuffer = m_SceneRenderer ? m_SceneRenderer->GetFramebuffer() : nullptr;
+		if (framebuffer != nullptr && viewportPanelSize.x > 0.0f && viewportPanelSize.y > 0.0f)
+		{
+			m_SceneRenderer->Resize(
+				static_cast<uint32_t>(viewportPanelSize.x),
+				static_cast<uint32_t>(viewportPanelSize.y));
     	
-    	m_SceneCamera->OnViewportResize(
-    		static_cast<uint32_t>(viewportPanelSize.x),
-    		 static_cast<uint32_t>(viewportPanelSize.y));
+			m_SceneCamera->OnViewportResize(
+				static_cast<uint32_t>(viewportPanelSize.x),
+				 static_cast<uint32_t>(viewportPanelSize.y));
 
-        if (void* textureID = framebuffer->GetImGuiTextureID())
-        {
-            ImGui::Image(textureID, viewportPanelSize, ImVec2(0, 1), ImVec2(1, 0));
-        }
-    }
-    else
-    {
-        ImGui::TextColored(ImVec4(1, 0, 0, 1), "Not Implemented Yet! :)");
-    }
+			if (void* textureID = framebuffer->GetImGuiTextureID())
+			{
+				ImGui::Image(textureID, viewportPanelSize, ImVec2(0, 1), ImVec2(1, 0));
+			}
+		}
+		else
+		{
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), "Not Implemented Yet! :)");
+		}
 
-    m_ViewportFocused = ImGui::IsWindowFocused();
-    m_ViewportHovered = ImGui::IsWindowHovered();
+		m_ViewportFocused = ImGui::IsWindowFocused();
+		m_ViewportHovered = ImGui::IsWindowHovered();
 	
-	if (m_ViewportHovered && !m_ViewportFocused)
-		ImGui::SetWindowFocus();
+		if (m_ViewportHovered && !m_ViewportFocused)
+			ImGui::SetWindowFocus();
 
-    ImGui::End();
-}
+		ImGui::End();
+	}
 
-void EditorLayer::DrawImGuiDebug()
-{
-    ImGuiIO& io = ImGui::GetIO();
+	void EditorLayer::DrawImGuiDebug()
+	{
+		ImGuiIO& io = ImGui::GetIO();
 
-    ImGui::Begin("Debug Info");
+		ImGui::Begin("Debug Info");
 
-    ImGui::Text("ConfigFlags:");
-    ImGui::Text("  ViewportsEnable: %d", (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != 0);
-    ImGui::Text("  DockingEnable: %d", (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) != 0);
+		ImGui::Text("ConfigFlags:");
+		ImGui::Text("  ViewportsEnable: %d", (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) != 0);
+		ImGui::Text("  DockingEnable: %d", (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) != 0);
 
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-    ImGui::Text("Viewports: %d", platform_io.Viewports.Size);
+		ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+		ImGui::Text("Viewports: %d", platform_io.Viewports.Size);
 
-    for (int i = 0; i < platform_io.Viewports.Size; i++)
-    {
-        ImGuiViewport* vp = platform_io.Viewports[i];
-        ImGui::Text("  Viewport %d: Pos(%.0f, %.0f) Size(%.0f, %.0f) DrawData: %s",
-                    i, vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y,
-                    vp->DrawData ? "Yes" : "No");
-    }
-    ImGui::End();
-}
+		for (int i = 0; i < platform_io.Viewports.Size; i++)
+		{
+			ImGuiViewport* vp = platform_io.Viewports[i];
+			ImGui::Text("  Viewport %d: Pos(%.0f, %.0f) Size(%.0f, %.0f) DrawData: %s",
+						i, vp->Pos.x, vp->Pos.y, vp->Size.x, vp->Size.y,
+						vp->DrawData ? "Yes" : "No");
+		}
+		ImGui::End();
+	}
 
-void EditorLayer::DrawConsole()
-{
+	void EditorLayer::DrawConsole()
+	{
+	}
 }
