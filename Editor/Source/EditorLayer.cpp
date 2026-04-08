@@ -78,12 +78,7 @@ void EditorLayer::OnAttach()
 	m_CubeEntity = m_ActiveScene->CreateEntity("Viewport Cube");
 	m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
 	m_CubeEntity.GetComponent<TransformComponent>().Transform =
-		glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 0.0f, -2.5f));
-	
-	Entity cube2 = m_ActiveScene->CreateEntity("Viewport Cube 2");
-	cube2.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
-	cube2.GetComponent<TransformComponent>().Transform =
-		glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 0.0f, -2.5f));
+		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 }
 
 void EditorLayer::OnDetach()
@@ -108,14 +103,6 @@ void EditorLayer::OnUpdate(float DeltaTime)
 void EditorLayer::OnFixedUpdate(float DeltaTime)
 {
     Layer::OnFixedUpdate(DeltaTime);
-	
-	m_CubeRotation += DeltaTime * glm::radians(45.0f);
-
-	glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 0.0f, -2.5f));
-	transform = glm::rotate(transform, m_CubeRotation, glm::vec3(0.0f, 1.0f, 0.0f));
-	transform = glm::rotate(transform, m_CubeRotation * 0.5f, glm::vec3(1.0f, 0.0f, 0.0f));
-
-	m_CubeEntity.GetComponent<TransformComponent>().Transform = transform;
 }
 
 void EditorLayer::OnRender()
@@ -313,6 +300,9 @@ void EditorLayer::DrawViewport()
 
     m_ViewportFocused = ImGui::IsWindowFocused();
     m_ViewportHovered = ImGui::IsWindowHovered();
+	
+	if (m_ViewportHovered && !m_ViewportFocused)
+		ImGui::SetWindowFocus();
 
     ImGui::End();
 }

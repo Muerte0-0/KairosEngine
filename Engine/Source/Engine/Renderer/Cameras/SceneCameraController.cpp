@@ -9,7 +9,7 @@ namespace Engine
 
 	void SceneCameraController::OnUpdate(float deltaTime)
 	{
-		if (!m_ViewportFocused && !m_ViewportHovered)
+		if (!m_ViewportFocused)
 			return;
 
         glm::vec2 mousePos = Input::GetMousePos();
