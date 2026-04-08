@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "Engine.h"
 
+#include "Panels/SceneHierarchyPanel.h"
+
 namespace Kairos
 {
 	class EditorLayer : public Engine::Layer
@@ -35,8 +37,13 @@ namespace Kairos
 		CameraManager m_CameraManager;
 
 		Entity m_CubeEntity;
-		float m_CubeRotation = 0.0f;
-
+		
+		// ----------- Panels ----------- //
+		
+		SceneHierarchyPanel m_SceneHierarchyPanel;
+		
+		// ------------------------------ //
+		
 		// ----------- ImGui ----------- //
 		void DrawMenuBar();
 		void DrawViewport();

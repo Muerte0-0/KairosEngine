@@ -2,6 +2,11 @@
 
 #include "entt.hpp"
 
+namespace Kairos
+{
+	class SceneHierarchyPanel;
+}
+
 namespace Engine
 {
 	class Entity;
@@ -28,5 +33,6 @@ namespace Engine
 		entt::registry m_Registry;
 
 		friend class Entity;
+		friend class Kairos::SceneHierarchyPanel;
 	};
 }

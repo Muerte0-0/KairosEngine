@@ -2,6 +2,8 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "Panels/SceneHierarchyPanel.h"
+
 namespace
 {
 	Ref<Mesh> CreateDefaultCubeMesh()
@@ -76,6 +78,8 @@ namespace Kairos
 		m_SceneCameraController = CreateScope<SceneCameraController>(*m_SceneCamera);
 		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
 		m_CameraManager.SetMode(CameraManagerMode::Editor);
+		
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 		m_CubeEntity = m_ActiveScene->CreateEntity("Viewport Cube");
 		m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
@@ -164,8 +168,7 @@ namespace Kairos
 
 		ImGui::PopStyleVar();
 
-		ImGui::Begin("Scene Hierarchy");
-		ImGui::End();
+		m_SceneHierarchyPanel.OnImGuiRender();
 
 		ImGui::Begin("Content Browser");
 		ImGui::End();
@@ -173,7 +176,7 @@ namespace Kairos
 		if (m_ShowConsole)
 			DrawConsole();
 
-		ImGui::Begin("Details");
+		ImGui::Begin("Properties");
 		ImGui::End();
 
 		DrawImGuiDebug();

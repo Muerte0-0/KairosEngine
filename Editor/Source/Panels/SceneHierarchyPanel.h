@@ -1,7 +1,22 @@
 ﻿#pragma once
+#include "Engine.h"
 
-class SceneHierarchyPanel
+namespace Kairos
 {
-public:
-	
-};
+	class SceneHierarchyPanel
+	{
+	public:
+		SceneHierarchyPanel() = default;
+		SceneHierarchyPanel(const Ref<Scene>& context);
+		
+		void SetContext(const Ref<Scene>& context) { m_Context = context; }
+		
+		void OnImGuiRender();
+	private:
+		void DrawEntityNode(Entity entity);
+		
+		Ref<Scene>		m_Context;
+		Entity			m_SelectionContext;
+		
+	};
+}
