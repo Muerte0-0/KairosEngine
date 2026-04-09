@@ -81,7 +81,7 @@ namespace Kairos
 		
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
-		m_CubeEntity = m_ActiveScene->CreateEntity("Viewport Cube");
+		m_CubeEntity = m_ActiveScene->CreateEntity("Cube");
 		m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
 		m_CubeEntity.GetComponent<TransformComponent>().Transform =
 			glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
@@ -175,11 +175,6 @@ namespace Kairos
 
 		if (m_ShowConsole)
 			DrawConsole();
-
-		ImGui::Begin("Properties");
-		ImGui::End();
-
-		DrawImGuiDebug();
 
 		ImGui::End();
 	}

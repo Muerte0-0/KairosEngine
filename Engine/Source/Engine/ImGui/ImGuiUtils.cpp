@@ -113,28 +113,22 @@ namespace Engine
 		// =========================================================
 		// Layout
 		// =========================================================
-		style.WindowRounding    = 6.0f;
-		style.ChildRounding     = 6.0f;
-		style.FrameRounding     = 4.0f;
-		style.PopupRounding     = 4.0f;
-		style.ScrollbarRounding = 9.0f;
-		style.GrabRounding      = 4.0f;
-		style.TabRounding       = 4.0f;
+		style.WindowRounding    	= 6.0f;		style.ChildRounding  = 6.0f;
+		style.FrameRounding     	= 4.0f;		style.PopupRounding  = 4.0f;
+		style.ScrollbarRounding 	= 9.0f;		style.GrabRounding   = 4.0f;
+		style.TabRounding       	= 4.0f;
 
-		style.WindowPadding    = ImVec2(8.0f, 8.0f);
-		style.FramePadding     = ImVec2(5.0f, 3.0f);
-		style.ItemSpacing      = ImVec2(8.0f, 4.0f);
-		style.ItemInnerSpacing = ImVec2(4.0f, 4.0f);
+		style.WindowPadding			= ImVec2(8.0f, 8.0f);
+		style.FramePadding			= ImVec2(8.0f, 4.0f);
+		style.ItemSpacing			= ImVec2(8.0f, 4.0f);
+		style.ItemInnerSpacing		= ImVec2(4.0f, 4.0f);
+		style.IndentSpacing			= 21.0f;
+		style.ScrollbarSize			= 14.0f;
+		style.GrabMinSize			= 10.0f;
 
-		style.IndentSpacing  = 21.0f;
-		style.ScrollbarSize  = 14.0f;
-		style.GrabMinSize    = 10.0f;
-
-		style.WindowBorderSize = 1.0f;
-		style.ChildBorderSize  = 1.0f;
-		style.PopupBorderSize  = 1.0f;
-		style.FrameBorderSize  = 0.0f;
-		style.TabBorderSize    = 0.0f;
+		style.WindowBorderSize		= 1.0f;		style.ChildBorderSize = 1.0f;
+		style.PopupBorderSize		= 1.0f;		style.FrameBorderSize = 0.0f;
+		style.TabBorderSize			= 0.0f;
 
 		switch (theme)
 		{
@@ -149,35 +143,13 @@ namespace Engine
 	}
 
 	// -----------------------------------------------------------------------
-	// Themes  (unchanged from original — only included for completeness)
+	// Themes
 	// -----------------------------------------------------------------------
 
 	void ImGuiUtils::SetTheme_Dark()
 	{
 		ImGuiStyle& style = ImGui::GetStyle();
 		ImVec4*     colors = style.Colors;
-
-		style.WindowPadding    = ImVec2(12.0f, 12.0f);
-		style.FramePadding     = ImVec2(6.0f,  4.0f);
-		style.CellPadding      = ImVec2(6.0f,  4.0f);
-		style.ItemSpacing      = ImVec2(8.0f,  6.0f);
-		style.ItemInnerSpacing = ImVec2(6.0f,  4.0f);
-		style.ScrollbarSize    = 14.0f;
-		style.GrabMinSize      = 12.0f;
-
-		style.WindowRounding    = 2.0f;
-		style.ChildRounding     = 2.0f;
-		style.FrameRounding     = 2.0f;
-		style.PopupRounding     = 2.0f;
-		style.ScrollbarRounding = 12.0f;
-		style.GrabRounding      = 2.0f;
-		style.TabRounding       = 2.0f;
-
-		style.WindowBorderSize = 1.0f;
-		style.ChildBorderSize  = 1.0f;
-		style.PopupBorderSize  = 1.0f;
-		style.FrameBorderSize  = 1.0f;
-		style.TabBorderSize    = 1.0f;
 
 		const ImVec4 bg      = ImVec4(0.010f, 0.0105f, 0.011f, 1.00f);
 		const ImVec4 panel   = ImVec4(0.015f, 0.015f,  0.015f, 1.00f);
@@ -244,28 +216,6 @@ namespace Engine
 		ImGuiStyle& style  = ImGui::GetStyle();
 		ImVec4*     colors = style.Colors;
 
-		style.WindowPadding    = ImVec2(12.0f, 12.0f);
-		style.FramePadding     = ImVec2(6.0f,  4.0f);
-		style.CellPadding      = ImVec2(6.0f,  4.0f);
-		style.ItemSpacing      = ImVec2(8.0f,  6.0f);
-		style.ItemInnerSpacing = ImVec2(6.0f,  4.0f);
-		style.ScrollbarSize    = 14.0f;
-		style.GrabMinSize      = 12.0f;
-
-		style.WindowRounding    = 2.0f;
-		style.ChildRounding     = 2.0f;
-		style.FrameRounding     = 2.0f;
-		style.PopupRounding     = 2.0f;
-		style.ScrollbarRounding = 12.0f;
-		style.GrabRounding      = 2.0f;
-		style.TabRounding       = 2.0f;
-
-		style.WindowBorderSize = 1.0f;
-		style.ChildBorderSize  = 1.0f;
-		style.PopupBorderSize  = 1.0f;
-		style.FrameBorderSize  = 1.0f;
-		style.TabBorderSize    = 1.0f;
-
 		colors[ImGuiCol_Text]             = ImVec4(0.12f, 0.12f, 0.12f, 1.00f);
 		colors[ImGuiCol_TextDisabled]     = ImVec4(0.55f, 0.55f, 0.55f, 1.00f);
 		colors[ImGuiCol_WindowBg]         = ImVec4(0.96f, 0.96f, 0.94f, 1.00f);
@@ -317,65 +267,65 @@ namespace Engine
 	}
 
 	// -----------------------------------------------------------------------
-	// Catppuccin helper macro — all four flavours share the same structure;
+	// Catppuccin helper macro — all four flavors share the same structure;
 	// only the palette values differ.
 	// -----------------------------------------------------------------------
 
-#define KE_CATPPUCCIN_APPLY_COLORS()                                                    \
-	colors[ImGuiCol_WindowBg]  = base;   colors[ImGuiCol_ChildBg]  = mantle;           \
-	colors[ImGuiCol_PopupBg]   = crust;                                                  \
-	colors[ImGuiCol_Border]        = surface1;                                           \
-	colors[ImGuiCol_BorderShadow]  = ImVec4(0,0,0,0);                                   \
-	colors[ImGuiCol_Text]          = text;                                               \
-	colors[ImGuiCol_TextDisabled]  = subtext0;                                           \
-	colors[ImGuiCol_FrameBg]         = surface0;                                         \
-	colors[ImGuiCol_FrameBgHovered]  = surface1;                                         \
-	colors[ImGuiCol_FrameBgActive]   = surface2;                                         \
-	colors[ImGuiCol_Button]        = ImVec4(blue.x, blue.y, blue.z, 0.10f);             \
-	colors[ImGuiCol_ButtonHovered] = ImVec4(blue.x, blue.y, blue.z, 0.22f);             \
-	colors[ImGuiCol_ButtonActive]  = ImVec4(blue.x, blue.y, blue.z, 0.35f);             \
-	colors[ImGuiCol_Header]          = surface0;                                         \
-	colors[ImGuiCol_HeaderHovered]   = surface1;                                         \
-	colors[ImGuiCol_HeaderActive]    = surface2;                                         \
-	colors[ImGuiCol_TitleBg]          = mantle;                                          \
-	colors[ImGuiCol_TitleBgActive]    = surface0;                                        \
-	colors[ImGuiCol_TitleBgCollapsed] = mantle;                                          \
-	colors[ImGuiCol_MenuBarBg]        = mantle;                                          \
-	colors[ImGuiCol_ScrollbarBg]          = surface0;                                    \
-	colors[ImGuiCol_ScrollbarGrab]        = surface2;                                    \
-	colors[ImGuiCol_ScrollbarGrabHovered] = overlay0;                                    \
-	colors[ImGuiCol_ScrollbarGrabActive]  = overlay2;                                    \
-	colors[ImGuiCol_Tab]                = surface0;                                      \
-	colors[ImGuiCol_TabHovered]         = surface2;                                      \
-	colors[ImGuiCol_TabActive]          = surface1;                                      \
-	colors[ImGuiCol_TabUnfocused]       = surface0;                                      \
-	colors[ImGuiCol_TabUnfocusedActive] = surface1;                                      \
-	colors[ImGuiCol_CheckMark]        = green;                                           \
-	colors[ImGuiCol_SliderGrab]       = sapphire;                                        \
-	colors[ImGuiCol_SliderGrabActive] = blue;                                            \
-	colors[ImGuiCol_Separator]        = surface1;                                        \
-	colors[ImGuiCol_SeparatorHovered] = mauve;                                           \
-	colors[ImGuiCol_SeparatorActive]  = mauve;                                           \
-	colors[ImGuiCol_ResizeGrip]        = surface2;                                       \
-	colors[ImGuiCol_ResizeGripHovered] = mauve;                                          \
-	colors[ImGuiCol_ResizeGripActive]  = mauve;                                          \
-	colors[ImGuiCol_TableHeaderBg]      = surface0;                                      \
-	colors[ImGuiCol_TableBorderStrong]  = surface1;                                      \
-	colors[ImGuiCol_TableBorderLight]   = surface0;                                      \
-	colors[ImGuiCol_TableRowBg]         = ImVec4(0,0,0,0);                               \
-	colors[ImGuiCol_TableRowBgAlt]      = ImVec4(1,1,1,0.06f);                           \
-	colors[ImGuiCol_TextSelectedBg]     = surface2;                                      \
-	colors[ImGuiCol_DragDropTarget]     = yellow;                                        \
-	colors[ImGuiCol_NavHighlight]              = blue;                                   \
-	colors[ImGuiCol_NavWindowingHighlight]     = ImVec4(1,1,1,0.7f);                     \
-	colors[ImGuiCol_NavWindowingDimBg]         = ImVec4(0.8f,0.8f,0.8f,0.2f);           \
-	colors[ImGuiCol_ModalWindowDimBg]          = ImVec4(0,0,0,0.35f);                   \
+#define KE_CATPPUCCIN_APPLY_COLORS()																	\
+	colors[ImGuiCol_WindowBg]					= base;   colors[ImGuiCol_ChildBg]  = mantle;			\
+	colors[ImGuiCol_PopupBg]					= crust;												\
+	colors[ImGuiCol_Border]						= surface1;												\
+	colors[ImGuiCol_BorderShadow]				= ImVec4(0,0,0,0);										\
+	colors[ImGuiCol_Text]						= text;													\
+	colors[ImGuiCol_TextDisabled]				= subtext0;												\
+	colors[ImGuiCol_FrameBg]					= surface0;												\
+	colors[ImGuiCol_FrameBgHovered]				= surface1;												\
+	colors[ImGuiCol_FrameBgActive]				= surface2;												\
+	colors[ImGuiCol_Button]						= ImVec4(blue.x, blue.y, blue.z, 0.10f);				\
+	colors[ImGuiCol_ButtonHovered]				= ImVec4(blue.x, blue.y, blue.z, 0.22f);				\
+	colors[ImGuiCol_ButtonActive]				= ImVec4(blue.x, blue.y, blue.z, 0.35f);				\
+	colors[ImGuiCol_Header]						= surface0;												\
+	colors[ImGuiCol_HeaderHovered]				= surface1;												\
+	colors[ImGuiCol_HeaderActive]				= surface2;												\
+	colors[ImGuiCol_TitleBg]					= mantle;												\
+	colors[ImGuiCol_TitleBgActive]				= surface0;												\
+	colors[ImGuiCol_TitleBgCollapsed]			= mantle;												\
+	colors[ImGuiCol_MenuBarBg]					= mantle;												\
+	colors[ImGuiCol_ScrollbarBg]				= surface0;												\
+	colors[ImGuiCol_ScrollbarGrab]				= surface2;												\
+	colors[ImGuiCol_ScrollbarGrabHovered]		= overlay0;												\
+	colors[ImGuiCol_ScrollbarGrabActive]		= overlay2;												\
+	colors[ImGuiCol_Tab]						= surface0;												\
+	colors[ImGuiCol_TabHovered]					= surface2;												\
+	colors[ImGuiCol_TabActive]					= surface1;												\
+	colors[ImGuiCol_TabUnfocused]				= surface0;												\
+	colors[ImGuiCol_TabUnfocusedActive]			= surface1;												\
+	colors[ImGuiCol_CheckMark]					= green;												\
+	colors[ImGuiCol_SliderGrab]					= sapphire;												\
+	colors[ImGuiCol_SliderGrabActive]			= blue;													\
+	colors[ImGuiCol_Separator]					= surface1;												\
+	colors[ImGuiCol_SeparatorHovered]			= mauve;												\
+	colors[ImGuiCol_SeparatorActive]			= mauve;												\
+	colors[ImGuiCol_ResizeGrip]					= surface2;												\
+	colors[ImGuiCol_ResizeGripHovered]			= mauve;												\
+	colors[ImGuiCol_ResizeGripActive]			= mauve;												\
+	colors[ImGuiCol_TableHeaderBg]				= surface0;												\
+	colors[ImGuiCol_TableBorderStrong]			= surface1;												\
+	colors[ImGuiCol_TableBorderLight]			= surface0;												\
+	colors[ImGuiCol_TableRowBg]					= ImVec4(0,0,0,0);										\
+	colors[ImGuiCol_TableRowBgAlt]				= ImVec4(1,1,1,0.06f);									\
+	colors[ImGuiCol_TextSelectedBg]				= surface2;												\
+	colors[ImGuiCol_DragDropTarget]				= yellow;												\
+	colors[ImGuiCol_NavHighlight]				= blue;													\
+	colors[ImGuiCol_NavWindowingHighlight]		= ImVec4(1,1,1,0.7f);									\
+	colors[ImGuiCol_NavWindowingDimBg]			= ImVec4(0.8f,0.8f,0.8f,0.2f);							\
+	colors[ImGuiCol_ModalWindowDimBg]			= ImVec4(0,0,0,0.35f);									\
 	KE_CATPPUCCIN_DOCK_COLORS()
 
 #ifdef IMGUI_HAS_DOCK
-#	define KE_CATPPUCCIN_DOCK_COLORS() \
-		colors[ImGuiCol_DockingPreview] = ImVec4(0.71f, 0.75f, 1.00f, 0.50f); \
-		colors[ImGuiCol_DockingEmptyBg] = ImVec4(0.12f, 0.12f, 0.18f, 1.00f);
+#	define KE_CATPPUCCIN_DOCK_COLORS()																	\
+		colors[ImGuiCol_DockingPreview]			= ImVec4(0.71f, 0.75f, 1.00f, 0.50f);					\
+		colors[ImGuiCol_DockingEmptyBg]			= ImVec4(0.12f, 0.12f, 0.18f, 1.00f);
 #else
 #	define KE_CATPPUCCIN_DOCK_COLORS()
 #endif
@@ -453,23 +403,6 @@ namespace Engine
 	{
 		ImGuiStyle& style  = ImGui::GetStyle();
 		ImVec4*     colors = style.Colors;
-
-		style.WindowRounding    = 6.0f;  style.ChildRounding  = 6.0f;
-		style.FrameRounding     = 4.0f;  style.PopupRounding  = 4.0f;
-		style.ScrollbarRounding = 9.0f;  style.GrabRounding   = 4.0f;
-		style.TabRounding       = 4.0f;
-
-		style.WindowPadding    = ImVec2(8.0f, 8.0f);
-		style.FramePadding     = ImVec2(5.0f, 3.0f);
-		style.ItemSpacing      = ImVec2(8.0f, 4.0f);
-		style.ItemInnerSpacing = ImVec2(4.0f, 4.0f);
-		style.IndentSpacing    = 21.0f;
-		style.ScrollbarSize    = 14.0f;
-		style.GrabMinSize      = 10.0f;
-
-		style.WindowBorderSize = 1.0f; style.ChildBorderSize = 1.0f;
-		style.PopupBorderSize  = 1.0f; style.FrameBorderSize = 0.0f;
-		style.TabBorderSize    = 0.0f;
 
 		const ImVec4 base      = HexToImVec4("#1e1e2e");
 		const ImVec4 mantle    = HexToImVec4("#181825");

@@ -10,7 +10,8 @@ namespace Kairos
 		SceneHierarchyPanel(const Ref<Scene>& context);
 		
 		void SetContext(const Ref<Scene>& context) { m_Context = context; }
-		
+		void DrawComponents(Entity entity);
+
 		void OnImGuiRender();
 	private:
 		void DrawEntityNode(Entity entity);
