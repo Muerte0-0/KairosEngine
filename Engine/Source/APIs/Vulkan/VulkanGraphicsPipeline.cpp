@@ -77,7 +77,7 @@ namespace Engine
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
 		pipelineLayoutInfo.setLayoutCount         = 1;
 		pipelineLayoutInfo.pSetLayouts            = &*m_DescriptorSetLayout;
-		const vk::PushConstantRange pushConstantRange(
+		constexpr vk::PushConstantRange pushConstantRange(
 			vk::ShaderStageFlagBits::eVertex,
 			0,
 			sizeof(PushConstantObject));
@@ -140,8 +140,8 @@ namespace Engine
 		msaaState.sampleShadingEnable  = vk::False;
 
 		vk::PipelineDepthStencilStateCreateInfo depthState;
-		depthState.depthTestEnable  = vk::False;
-		depthState.depthWriteEnable = vk::False;
+		depthState.depthTestEnable  = vk::True;
+		depthState.depthWriteEnable = vk::True;
 		depthState.depthCompareOp   = vk::CompareOp::eLess;
 
 		constexpr vk::PipelineColorBlendAttachmentState blendAttachment(

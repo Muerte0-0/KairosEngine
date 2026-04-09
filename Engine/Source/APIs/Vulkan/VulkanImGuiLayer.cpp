@@ -112,10 +112,8 @@ namespace Engine
 		vk::Format format = api->GetVulkanSwapchain()->GetSwapChainImageFormat();
 		VkFormat vkFormat = static_cast<VkFormat>(format);
 		iniInfo.PipelineInfoMain.PipelineRenderingCreateInfo.pColorAttachmentFormats = &vkFormat;
-		iniInfo.PipelineInfoMain.PipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_D32_SFLOAT;
-		vk::SampleCountFlagBits msaaSamples = api->GetVulkanSwapchain()->GetMSAASamples();
-		VkSampleCountFlagBits vkmsaaSamples = static_cast<VkSampleCountFlagBits>(msaaSamples);
-		iniInfo.PipelineInfoMain.MSAASamples = vkmsaaSamples;
+		iniInfo.PipelineInfoMain.PipelineRenderingCreateInfo.depthAttachmentFormat = VK_FORMAT_UNDEFINED;
+		iniInfo.PipelineInfoMain.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
 		ImGui_ImplVulkan_Init(&iniInfo);
 	}

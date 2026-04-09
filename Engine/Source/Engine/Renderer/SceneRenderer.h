@@ -19,7 +19,7 @@ namespace Engine
 		uint32_t        Height      = 720;
 		TextureFormat   ColorFormat = TextureFormat::Undefined;
 		TextureFormat   DepthFormat = TextureFormat::Undefined;
-		SampleCountBits SampleCount = SampleCountBits::s1;
+		SampleCountBits SampleCount = SampleCountBits::s4;
 	};
 
 	struct DrawCommand

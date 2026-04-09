@@ -66,9 +66,6 @@ namespace Engine
 		m_VulkanSwapchain = CreateScope<VulkanSwapchain>(*m_VulkanDevice, static_cast<GLFWwindow*>(windowHandle));
 		m_VulkanSwapchain->Create();
 		m_VulkanSwapchain->CreateImageViews();
-		m_VulkanSwapchain->CreateColorResources();
-		m_VulkanSwapchain->CreateDepthResources();
-		m_VulkanSwapchain->SetupDynamicRendering();
 
 		m_VulkanCommand = CreateScope<VulkanCommand>(*m_VulkanDevice);
 		m_VulkanCommand->CreateCommandPool();
@@ -133,11 +130,12 @@ namespace Engine
 
 		auto* framebuffer = dynamic_cast<VulkanFramebuffer*>(renderPass.TargetFramebuffer);
 		ASSERT(framebuffer, "VulkanRenderAPI::BeginPass expects a VulkanFramebuffer.");
-		m_ActiveFramebuffer = framebuffer;
+		m_ActiveFramebuffer   = framebuffer;
 		m_OffscreenPassActive = true;
 
 		vk::CommandBuffer commandBuffer = *GetActiveCommandBuffer();
 
+		// Transition the resolve target (always needed — this is what gets sampled by ImGui).
 		VulkanUtils::TransitionImageLayout(
 			commandBuffer,
 			framebuffer->GetImage(),
@@ -150,25 +148,38 @@ namespace Engine
 			vk::ImageAspectFlagBits::eColor);
 		framebuffer->SetCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
-		vk::RenderingAttachmentInfo colorAttachment;
-		colorAttachment.imageView   = framebuffer->GetImageView();
-		colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-		colorAttachment.loadOp      = vk::AttachmentLoadOp::eClear;
-		colorAttachment.storeOp     = vk::AttachmentStoreOp::eStore;
-		colorAttachment.clearValue  = vk::ClearColorValue(std::array<float, 4>{
-			renderPass.ClearColor.r,
-			renderPass.ClearColor.g,
-			renderPass.ClearColor.b,
-			renderPass.ClearColor.a
-		});
+		// When MSAA is active, the render target is the MSAA image, not the resolve image.
+		// It also starts in eUndefined each frame and must be transitioned before beginRendering.
+		if (framebuffer->HasMSAA())
+		{
+			VulkanUtils::TransitionImageLayout(
+				commandBuffer,
+				framebuffer->GetMSAAImage(),
+				vk::ImageLayout::eUndefined,
+				vk::ImageLayout::eColorAttachmentOptimal,
+				{},
+				vk::AccessFlagBits2::eColorAttachmentWrite,
+				vk::PipelineStageFlagBits2::eTopOfPipe,
+				vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+				vk::ImageAspectFlagBits::eColor);
+		}
 
-		vk::RenderingInfo renderInfo;
-		renderInfo.renderArea           = vk::Rect2D(vk::Offset2D(0, 0), framebuffer->GetExtent());
-		renderInfo.layerCount           = 1;
-		renderInfo.colorAttachmentCount = 1;
-		renderInfo.pColorAttachments    = &colorAttachment;
+		if (framebuffer->HasDepth())
+		{
+			VulkanUtils::TransitionImageLayout(
+				commandBuffer,
+				framebuffer->GetDepthImage(),
+				vk::ImageLayout::eUndefined,
+				vk::ImageLayout::eDepthStencilAttachmentOptimal,
+				{},
+				vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+				vk::PipelineStageFlagBits2::eTopOfPipe,
+				vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+				vk::ImageAspectFlagBits::eDepth);
+		}
 
-		commandBuffer.beginRendering(renderInfo);
+		vk::RenderingInfo renderingInfo = framebuffer->BuildRenderingInfo(renderPass.ClearColor);
+		commandBuffer.beginRendering(renderingInfo);
 	}
 
 	void VulkanRenderAPI::EndPass()
@@ -328,7 +339,12 @@ namespace Engine
 
 	TextureFormat VulkanRenderAPI::GetDefaultDepthFormat() const
 	{
-		return VulkanUtils::ToTextureFormat(m_VulkanSwapchain->GetDepthImageFormat());
+		const vk::Format fmt = VulkanUtils::FindSupportedFormat(
+			m_VulkanDevice->GetPhysicalDevice(),
+			{ vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint },
+			vk::ImageTiling::eOptimal,
+			vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+		return VulkanUtils::ToTextureFormat(fmt);
 	}
 
 	void VulkanRenderAPI::WaitIdle()
@@ -368,6 +384,7 @@ namespace Engine
 
 	void VulkanRenderAPI::BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const
 	{
+		// Transition the swapchain image to a color attachment for the ImGui pass.
 		VulkanUtils::TransitionImageLayout(
 			commandBuffer,
 			m_VulkanSwapchain->GetSwapChainImages()[m_CurrentImageIndex],
@@ -379,29 +396,22 @@ namespace Engine
 			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
 			vk::ImageAspectFlagBits::eColor);
 
-		VulkanUtils::TransitionImageLayout(
-			commandBuffer,
-			*m_VulkanSwapchain->GetColorImage(),
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eColorAttachmentOptimal,
-			{},
-			vk::AccessFlagBits2::eColorAttachmentWrite,
-			vk::PipelineStageFlagBits2::eTopOfPipe,
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-			vk::ImageAspectFlagBits::eColor);
+		// Simple color-only attachment — ImGui needs no depth and no MSAA.
+		vk::RenderingAttachmentInfo colorAttachment;
+		colorAttachment.imageView   = *m_VulkanSwapchain->GetSwapChainImageViews()[m_CurrentImageIndex];
+		colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		colorAttachment.loadOp      = vk::AttachmentLoadOp::eClear;
+		colorAttachment.storeOp     = vk::AttachmentStoreOp::eStore;
+		colorAttachment.clearValue  = vk::ClearColorValue(std::array<float, 4>{0.0f, 0.0f, 0.0f, 1.0f});
 
-		VulkanUtils::TransitionImageLayout(
-			commandBuffer,
-			*m_VulkanSwapchain->GetDepthImage(),
-			vk::ImageLayout::eUndefined,
-			vk::ImageLayout::eDepthAttachmentOptimal,
-			{},
-			vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-			vk::PipelineStageFlagBits2::eTopOfPipe,
-			vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-			vk::ImageAspectFlagBits::eDepth);
+		vk::RenderingInfo renderInfo;
+		renderInfo.renderArea           = vk::Rect2D(vk::Offset2D(0, 0), m_VulkanSwapchain->GetSwapChainExtent());
+		renderInfo.layerCount           = 1;
+		renderInfo.colorAttachmentCount = 1;
+		renderInfo.pColorAttachments    = &colorAttachment;
+		renderInfo.pDepthAttachment     = nullptr;
 
-		commandBuffer.beginRendering(m_VulkanSwapchain->GetRenderingInfo(m_CurrentImageIndex));
+		commandBuffer.beginRendering(renderInfo);
 	}
 
 	// -----------------------------------------------------------------------

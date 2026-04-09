@@ -37,6 +37,7 @@ namespace Kairos
 		CameraManager m_CameraManager;
 
 		Entity m_CubeEntity;
+		Entity m_CubeEntity2;
 		
 		// ----------- Panels ----------- //
 		
