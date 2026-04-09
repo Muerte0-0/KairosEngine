@@ -10,13 +10,18 @@
 #include <glm/glm.hpp>
 
 #include "Engine/ImGui/ImGuiLayer.h"
+#include "Engine/ImGui/ImGuiUtils.h"
 
 namespace Engine
 {
 	struct ApplicationSpecification
 	{
 		std::string Name = "Application";
+		
+		Theme Theme = Theme::Mocha;
+		
 		WindowSpecification WindowSpec;
+		
 		std::filesystem::path ShaderSourcePath;
 		bool CompileShadersOnStartup = false;
 	};

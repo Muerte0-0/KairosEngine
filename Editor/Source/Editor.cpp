@@ -21,6 +21,7 @@ namespace Kairos
 		{
 			Engine::ApplicationSpecification appSpec;
 			appSpec.Name = "KairosEditor";
+			appSpec.Theme = Theme::Mocha;
 			appSpec.ShaderSourcePath = "Editor/Resources/Shaders";
 			appSpec.CompileShadersOnStartup = true;
 
