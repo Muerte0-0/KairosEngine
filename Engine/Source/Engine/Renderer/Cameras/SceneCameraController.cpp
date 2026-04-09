@@ -56,8 +56,8 @@ namespace Engine
         		if (Input::IsKeyPressed(KeyBoard::S)) direction.z -= 1.0f;
         		if (Input::IsKeyPressed(KeyBoard::D)) direction.x += 1.0f;
         		if (Input::IsKeyPressed(KeyBoard::A)) direction.x -= 1.0f;
-        		if (Input::IsKeyPressed(KeyBoard::E)) direction.y -= 1.0f;
-        		if (Input::IsKeyPressed(KeyBoard::Q)) direction.y += 1.0f;
+        		if (Input::IsKeyPressed(KeyBoard::E)) direction.y += 1.0f;
+        		if (Input::IsKeyPressed(KeyBoard::Q)) direction.y -= 1.0f;
 
         		m_Camera.FreeFly_Move(direction, deltaTime);
         		break;

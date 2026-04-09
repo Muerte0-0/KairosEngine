@@ -91,6 +91,6 @@ namespace Engine
 			);
 		}
 		
-		m_Projection[1][1] *= -1.0f;
+		//m_Projection[1][1] *= -1.0f;
 	}
 }

@@ -16,7 +16,7 @@ namespace Engine::MeshRenderSystem
 			if (meshComponent.Mesh == nullptr)
 				continue;
 
-			renderer.SubmitMesh(meshComponent.Mesh, transformComponent.Transform);
+			renderer.SubmitMesh(meshComponent.Mesh, transformComponent.GetTransform());
 		}
 	}
 }

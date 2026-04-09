@@ -4,6 +4,7 @@
 #include "Engine/Scene/Components.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <ranges>
 
 namespace Kairos
 {
@@ -16,7 +17,7 @@ namespace Kairos
 	{
 		ImGui::Begin("Scene Hierarchy");
 		
-		for(auto entity: m_Context->m_Registry.view<entt::entity>())
+		for (auto entity : std::views::reverse(m_Context->m_Registry.view<entt::entity>()))
 			DrawEntityNode({ entity, m_Context.get() });
 		
 		if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
@@ -72,8 +73,10 @@ namespace Kairos
 			
 			if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), flags, "Transform"))
 			{
-				auto& transform = entity.GetComponent<TransformComponent>().Transform;
-				ImGui::DragFloat3("Position", glm::value_ptr(transform[3]), 0.1f);
+				auto& tc = entity.GetComponent<TransformComponent>();
+				ImGui::DragFloat3("Position", glm::value_ptr(tc.Translation), 0.1f);
+				ImGui::DragFloat3("Rotation", glm::value_ptr(tc.Rotation), 0.1f);
+				ImGui::DragFloat3("Scale", glm::value_ptr(tc.Scale), 0.1f);
 				
 				ImGui::TreePop();
 			}

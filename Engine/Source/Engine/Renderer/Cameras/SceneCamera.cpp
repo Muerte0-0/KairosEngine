@@ -13,7 +13,7 @@ namespace Engine
 	void SceneCamera::FreeFly_Rotate(glm::vec2 delta)
 	{
 		m_Yaw   += delta.x * m_Props.RotateSpeed;
-		m_Pitch += delta.y * m_Props.RotateSpeed;
+		m_Pitch -= delta.y * m_Props.RotateSpeed; // Flip the Y Axis
 
 		// Prevent upside-down chaos
 		m_Pitch = glm::clamp(m_Pitch, -89.0f, 89.0f);

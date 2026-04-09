@@ -132,7 +132,7 @@ namespace Engine
 		vk::PipelineRasterizationStateCreateInfo rasterState;
 		rasterState.polygonMode = vk::PolygonMode::eFill;
 		rasterState.cullMode    = vk::CullModeFlagBits::eBack;
-		rasterState.frontFace   = vk::FrontFace::eCounterClockwise;
+		rasterState.frontFace   = vk::FrontFace::eClockwise;
 		rasterState.lineWidth   = 1.0f;
 
 		vk::PipelineMultisampleStateCreateInfo msaaState;

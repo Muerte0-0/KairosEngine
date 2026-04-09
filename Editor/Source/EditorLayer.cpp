@@ -83,11 +83,11 @@ namespace Kairos
 
 		m_CubeEntity = m_ActiveScene->CreateEntity("Cube");
 		m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
-		m_CubeEntity.GetComponent<TransformComponent>().Transform = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		m_CubeEntity.GetComponent<TransformComponent>().Translation = glm::vec3(0.0f, 0.0f, 0.0f);
 		
 		m_CubeEntity2 = m_ActiveScene->CreateEntity("Cube 2");
 		m_CubeEntity2.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
-		m_CubeEntity2.GetComponent<TransformComponent>().Transform = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
+		m_CubeEntity2.GetComponent<TransformComponent>().Translation = glm::vec3(2.0f, 0.0f, 0.0f);
 	}
 
 	void EditorLayer::OnDetach()
