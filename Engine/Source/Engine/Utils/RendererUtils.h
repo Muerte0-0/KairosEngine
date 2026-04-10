@@ -9,15 +9,19 @@
 
 namespace Engine
 {
+	// -----------------------------------------------------------------------
+	// Vertex — Matches the final Mesh.slang input layout exactly.
+	// -----------------------------------------------------------------------
 	struct Vertex
 	{
-		glm::vec3 Position;
-		glm::vec3 Color;
+		glm::vec3 Position  { 0.f, 0.f, 0.f };
+		glm::vec3 Normal    { 0.f, 1.f, 0.f };
+		glm::vec3 Tangent   { 1.f, 0.f, 0.f };
+		glm::vec3 Bitangent { 0.f, 0.f, 1.f };
+		glm::vec2 TexCoord  { 0.f, 0.f };
 
-		bool operator==(const Vertex& other) const
-		{
-			return Position == other.Position && Color == other.Color;
-		}
+		// Binding / attribute descriptions are generated from this layout
+		// do not change member order without updating the pipeline's vertex input state.
 	};
 
 	struct UniformBufferObject

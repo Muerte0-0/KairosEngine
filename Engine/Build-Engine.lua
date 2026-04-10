@@ -35,6 +35,7 @@ includedirs {
 	"%{IncludeDir.stb_image}",
 	"%{IncludeDir.EnTT}",
 	"%{IncludeDir.Assimp}",
+	"%{IncludeDir.AssimpConfig}",
 	"%{IncludeDir.JSON}",
 	"%{IncludeDir.mINI}",
 }

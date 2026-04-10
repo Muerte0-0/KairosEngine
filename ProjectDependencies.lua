@@ -60,6 +60,7 @@ IncludeDir["ImGui"] = "%{ThirdParty}/ocornut/ImGui"
 IncludeDir["spdlog"] = "%{ThirdParty}/spdlog/include"
 IncludeDir["EnTT"] = "%{ThirdParty}/EnTT/single_include"
 IncludeDir["Assimp"] = "%{ThirdParty}/Assimp/include"
+IncludeDir["AssimpConfig"] = "%{ThirdParty}/Assimp/_config_headers"
 IncludeDir["JSON"] = "%{ThirdParty}/json/single_include"
 IncludeDir["mINI"] = "%{ThirdParty}/mINI/src"
 

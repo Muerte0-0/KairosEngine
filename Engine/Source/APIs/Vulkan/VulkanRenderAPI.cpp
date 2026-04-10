@@ -1,6 +1,7 @@
 #include "kepch.h"
 #include "VulkanRenderAPI.h"
 #include "Engine/Renderer/RHI/Shader.h"
+#include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "VulkanBuffer.h"
 #include "VulkanFramebuffer.h"
 #include "VulkanGraphicsPipeline.h"
@@ -261,7 +262,26 @@ namespace Engine
 			0,
 			*vkPipeline->GetDescriptorSets()[m_CurrentFrameIndex],
 			nullptr);
-		commandBuffer.drawIndexed(indexBuffer->GetCount(), 1, 0, 0, 0);
+
+		// Draw each SubMesh using its base offsets into the shared VB/IB
+		const auto& subMeshes = mesh.GetSubMeshes();
+		if (subMeshes.empty())
+		{
+			// Fallback: no submesh info — draw the entire index buffer as one call
+			commandBuffer.drawIndexed(indexBuffer->GetCount(), 1, 0, 0, 0);
+		}
+		else
+		{
+			for (const SubMesh& sub : subMeshes)
+			{
+				commandBuffer.drawIndexed(
+					sub.IndexCount,               // indexCount
+					1,                            // instanceCount
+					sub.BaseIndex,                // firstIndex  (offset into IB)
+					static_cast<int32_t>(sub.BaseVertex), // vertexOffset (offset into VB)
+					0);                           // firstInstance
+			}
+		}
 	}
 
 	void VulkanRenderAPI::EndScene()
