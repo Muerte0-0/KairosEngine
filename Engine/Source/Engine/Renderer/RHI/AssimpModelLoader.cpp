@@ -18,11 +18,14 @@ namespace Engine
         ModelImportResult result;
 
         // --- Build Assimp post-process flags ---
+        // NOTE: aiProcess_ValidateDataStructure is intentionally excluded.
+        // It incorrectly rejects valid FBX files whose UV transform properties
+        // are stored as matrices (40 bytes) rather than the 5-float vector (20 bytes)
+        // that the validator expects. This is an Assimp quirk, not a broken file.
         uint32_t flags =
             aiProcess_Triangulate           |   // all faces → triangles
             aiProcess_JoinIdenticalVertices |   // deduplicate verts
-            aiProcess_ImproveCacheLocality  |   // reorder for GPU cache
-            aiProcess_ValidateDataStructure;    // catch malformed files early
+            aiProcess_ImproveCacheLocality;     // reorder for GPU cache
 
         if (options.FlipUVs)
             flags |= aiProcess_FlipUVs;
