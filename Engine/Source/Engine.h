@@ -22,12 +22,7 @@
 #include "Engine/Scene/Scene.h"
 #include "Engine/Scene/Components.h"
 #include "Engine/Scene/Entity.h"
-
-// Cameras
-#include "Engine/Renderer/Cameras/SceneCamera.h"
-#include "Engine/Renderer/Cameras/SceneCameraController.h"
-#include "Engine/Renderer/Cameras/CameraManager.h"
-// ------------------------------- //
+// --------------------------------- //
 
 // ---------- Renderer ----------- //
 #include "Engine/Renderer/Renderer.h"
@@ -35,6 +30,16 @@
 
 #include "Engine/Renderer/RHI/Buffer.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
+// ------------------------------- //
+
+// ---------- Factories ----------- //
+#include "Engine/Renderer/RHI/ModelFactory.h"
+// ------------------------------- //
+
+// ---------- Cameras ----------- //
+#include "Engine/Renderer/Cameras/SceneCamera.h"
+#include "Engine/Renderer/Cameras/SceneCameraController.h"
+#include "Engine/Renderer/Cameras/CameraManager.h"
 // ------------------------------- //
 
 // ------------ Utils ------------ //

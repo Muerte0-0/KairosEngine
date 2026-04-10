@@ -79,11 +79,25 @@ namespace Kairos
 
 		m_CubeEntity = m_ActiveScene->CreateEntity("Cube");
 		m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
-		m_CubeEntity.GetComponent<TransformComponent>().Translation = glm::vec3(0.0f, 0.0f, 0.0f);
+		m_CubeEntity.GetComponent<TransformComponent>().Translation = glm::vec3(-2.0f, 0.0f, 0.0f);
 		
 		m_CubeEntity2 = m_ActiveScene->CreateEntity("Cube 2");
 		m_CubeEntity2.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
 		m_CubeEntity2.GetComponent<TransformComponent>().Translation = glm::vec3(2.0f, 0.0f, 0.0f);
+		
+		// Load a model from disk
+		Model loadedModel = ModelFactory::Load("D:/Dev/Projects/KairosEngine/Editor/Resources/Models/Prop_Crate.fbx");
+
+		if (loadedModel.MeshData)
+		{
+			m_TestModelEntity = m_ActiveScene->CreateEntity(loadedModel.Name);
+			m_TestModelEntity.AddComponent<MeshComponent>().Mesh = loadedModel.MeshData;
+			m_TestModelEntity.GetComponent<TransformComponent>().Translation = glm::vec3(0.0f, 0.0f, 0.0f);
+		}
+		else
+		{
+			LOG(LogLevel::Error, "Failed to load model!");
+		}
 	}
 
 	void EditorLayer::OnDetach()

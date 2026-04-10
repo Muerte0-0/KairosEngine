@@ -38,6 +38,7 @@ namespace Kairos
 
 		Entity m_CubeEntity;
 		Entity m_CubeEntity2;
+		Entity m_TestModelEntity;
 		
 		// ----------- Panels ----------- //
 		

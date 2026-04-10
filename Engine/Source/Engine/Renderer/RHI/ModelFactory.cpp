@@ -25,9 +25,7 @@ namespace Engine
     // -----------------------------------------------------------------------
     // ModelFactory::Load — convenience one-liner
     // -----------------------------------------------------------------------
-    Model ModelFactory::Load(
-        const std::string&      filepath,
-        const ModelLoadOptions& options)
+    Model ModelFactory::Load(const std::string& filepath, const ModelLoadOptions& options)
     {
         ModelImportResult result = AssimpModelLoader::Load(filepath, options);
 

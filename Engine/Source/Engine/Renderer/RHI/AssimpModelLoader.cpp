@@ -223,7 +223,7 @@ namespace Engine
             return "";
 
         // Assimp may give us an absolute path, a relative path, or an embedded
-        // texture token (*0, *1, …).  For now just resolve relative paths.
+        // texture token (*0, *1, …). For now just resolve relative paths.
         std::filesystem::path texPath(path.C_Str());
 
         if (texPath.is_absolute())
