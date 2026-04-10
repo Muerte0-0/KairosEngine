@@ -5,15 +5,20 @@
 [submodule "Vendor/ocornut/ImGuizmo"]
 	path = Vendor/ocornut/ImGuizmo
 	url = https://github.com/ocornut/ImGuizmo.git
+	branch = master
 [submodule "Vendor/GLFW"]
 	path = Vendor/GLFW
 	url = https://github.com/Muerte0-0/glfw-premake.git
+	branch = master
 [submodule "Vendor/GLM"]
 	path = Vendor/GLM
 	url = https://github.com/g-truc/glm.git
+	branch = master
 [submodule "Vendor/Assimp"]
 	path = Vendor/Assimp
 	url = https://github.com/Muerte0-0/assimp-premake.git
+	branch = master
 [submodule "Vendor/spdlog"]
 	path = Vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
+	branch = master

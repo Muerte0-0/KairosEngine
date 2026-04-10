@@ -86,7 +86,7 @@ namespace Kairos
 		m_CubeEntity2.GetComponent<TransformComponent>().Translation = glm::vec3(2.0f, 0.0f, 0.0f);
 		
 		// Load a model from disk
-		Model loadedModel = ModelFactory::Load("D:/Dev/Projects/KairosEngine/Editor/Resources/Models/Prop_Crate.fbx");
+		Model loadedModel = ModelFactory::Load("D:/Dev/Projects/KairosEngine/Editor/Resources/Models/Prop_Crate.obj");
 
 		if (loadedModel.MeshData)
 		{
