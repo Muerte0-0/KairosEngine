@@ -13,7 +13,6 @@
 [submodule "Vendor/GLM"]
 	path = Vendor/GLM
 	url = https://github.com/g-truc/glm.git
-	branch = master
 [submodule "Vendor/Assimp"]
 	path = Vendor/Assimp
 	url = https://github.com/Muerte0-0/assimp-premake.git
@@ -21,4 +20,3 @@
 [submodule "Vendor/spdlog"]
 	path = Vendor/spdlog
 	url = https://github.com/gabime/spdlog.git
-	branch = master
