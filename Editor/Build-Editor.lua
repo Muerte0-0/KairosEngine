@@ -2,8 +2,8 @@ project "Editor"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++20"
-	staticruntime "off"
-	linkgroups "On"
+	staticruntime "on"
+	linkgroups "on"
 
 targetdir (ProjectBinDir)
 objdir (ProjectIntDir)

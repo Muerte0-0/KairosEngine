@@ -2,7 +2,8 @@ project "ImGui"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++20"
-	staticruntime "off"
+	staticruntime "on"
+	warnings "off"
 
 targetdir (ThirdPartyBinDir)
 objdir (ThirdPartyIntDir)

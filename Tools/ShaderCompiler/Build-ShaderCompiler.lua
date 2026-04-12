@@ -2,7 +2,7 @@ project "ShaderCompiler"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++20"
-	staticruntime "off"
+	staticruntime "on"
 
 targetdir (ToolsBinDir)
 objdir (ToolsIntDir)

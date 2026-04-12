@@ -2,7 +2,7 @@ project "Engine"
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++20"
-	staticruntime "off"
+	staticruntime "on"
 
 targetdir (ProjectBinDir)
 objdir (ProjectIntDir)
@@ -45,7 +45,7 @@ links {
 	"GLFW",
 	"ImGui",
 	"Assimp",
-	"YAML",
+	"YAML-CPP",
 }
 
 filter "files:**.c"
