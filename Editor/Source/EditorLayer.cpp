@@ -108,9 +108,7 @@ namespace Kairos
 	void EditorLayer::OnUpdate(float DeltaTime)
 	{
 		Layer::OnUpdate(DeltaTime);
-	
-		m_SceneCameraController->SetViewportFocused(m_ViewportFocused);
-		m_SceneCameraController->SetViewportHovered(m_ViewportHovered);
+		
 		m_SceneCameraController->OnUpdate(DeltaTime);
 	
 		if (m_SceneCameraController->GetMode() != SceneCameraMode::None)
@@ -304,9 +302,21 @@ namespace Kairos
 
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
-	
+		
 		if (m_ViewportHovered && !m_ViewportFocused)
+		{
 			ImGui::SetWindowFocus();
+			m_ViewportFocused = true;
+		}
+		
+		if (!m_ViewportHovered && m_ViewportFocused)
+		{
+			ImGui::SetWindowFocus(nullptr);
+			m_ViewportFocused = false;
+		}
+		
+		m_SceneCameraController->SetViewportFocused(m_ViewportFocused);
+		m_SceneCameraController->SetViewportHovered(m_ViewportHovered);
 
 		ImGui::End();
 	}

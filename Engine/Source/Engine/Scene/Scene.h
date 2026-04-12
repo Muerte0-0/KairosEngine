@@ -19,6 +19,7 @@ namespace Engine
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = "Empty Entity");
+		void DestroyEntity(Entity entity);
 
 		void OnUpdate(float deltaTime);
 

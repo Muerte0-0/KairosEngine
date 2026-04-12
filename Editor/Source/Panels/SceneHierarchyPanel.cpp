@@ -25,6 +25,17 @@ namespace Kairos
 		if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
 			m_SelectionContext = {};
 		
+		ImGuiPopupFlags flags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight;
+		
+		// Right-Click on a Blank Space
+		if (ImGui::BeginPopupContextWindow(nullptr, flags))
+		{
+			if (ImGui::MenuItem("Create Empty Entity"))
+				m_Context->CreateEntity();
+			
+			ImGui::EndPopup();
+		}
+		
 		ImGui::End();
 		
 		ImGui::Begin("Properties");
@@ -44,12 +55,30 @@ namespace Kairos
 		bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
 		
 		if (ImGui::IsItemClicked())
-		{
 			m_SelectionContext = entity;
+		
+		bool entityDeleted = false;
+		
+		ImGuiPopupFlags popupFlags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight;
+		
+		if (ImGui::BeginPopupContextItem(nullptr, popupFlags))
+		{
+			if (ImGui::MenuItem("Delete"))
+				entityDeleted = true;
+			
+			ImGui::EndPopup();
 		}
 		
 		if (opened)
 			ImGui::TreePop();
+		
+		if (entityDeleted)
+		{
+			if (m_SelectionContext == entity)
+				m_SelectionContext = {};
+			
+			m_Context->DestroyEntity(entity);
+		}
 	}
 	
 	static void DrawVec3Control(const std::string& label, glm::vec3& values, float defaultValue = 0.0f, float columnWidth = 100.0f)
