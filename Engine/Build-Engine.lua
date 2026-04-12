@@ -38,12 +38,14 @@ includedirs {
 	"%{IncludeDir.AssimpConfig}",
 	"%{IncludeDir.JSON}",
 	"%{IncludeDir.mINI}",
+	"%{IncludeDir.YAML}",
 }
 
 links {
 	"GLFW",
 	"ImGui",
 	"Assimp",
+	"YAML",
 }
 
 filter "files:**.c"

@@ -63,6 +63,7 @@ IncludeDir["Assimp"] = "%{ThirdParty}/Assimp/include"
 IncludeDir["AssimpConfig"] = "%{ThirdParty}/Assimp/_config_headers"
 IncludeDir["JSON"] = "%{ThirdParty}/json/single_include"
 IncludeDir["mINI"] = "%{ThirdParty}/mINI/src"
+IncludeDir["YAML"] = "%{ThirdParty}/YAML/include"
 
 LibraryDir = {}
 LibraryDir["VulkanSDK"] = "%{VULKAN_SDK}/Lib"
