@@ -10,6 +10,7 @@ namespace Kairos
 namespace Engine
 {
 	class Entity;
+	class SceneSerializer;
 	class SceneRenderer;
 
 	class Scene
@@ -37,6 +38,7 @@ namespace Engine
 		void OnComponentAdded(Entity entity, T& component);
 
 		friend class Entity;
+		friend class SceneSerializer;
 		friend class Kairos::SceneHierarchyPanel;
 	};
 }

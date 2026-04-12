@@ -38,7 +38,6 @@ namespace Engine
 		SceneCamera&		m_Camera;
 		SceneCameraMode		m_Mode				= SceneCameraMode::None;
 		
-		bool				m_FirstFrame		= true;
 		glm::vec2			m_LastMousePos		{ 0.0f };
 		
 		bool				m_ViewportFocused	= false;

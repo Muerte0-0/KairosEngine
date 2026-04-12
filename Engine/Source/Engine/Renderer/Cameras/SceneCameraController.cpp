@@ -9,19 +9,18 @@ namespace Engine
 
 	void SceneCameraController::OnUpdate(float deltaTime)
 	{
-		if (!m_ViewportFocused)
-			return;
+		glm::vec2 mousePos = Input::GetMousePos();
 
-        glm::vec2 mousePos = Input::GetMousePos();
-		
-		if (m_FirstFrame)
+		// While a mode is active the cursor is locked — ImGui's hovered/focused
+		// flags become unreliable (cursor sits at lock pos, may read as outside
+		// viewport). Keep running so the camera doesn't freeze mid-flight.
+		// Only bail out when no mode is active AND focus/hover are lost.
+		bool modeActive = (m_Mode != SceneCameraMode::None);
+		if (!modeActive && (!m_ViewportFocused || !m_ViewportHovered))
 		{
 			m_LastMousePos = mousePos;
-			m_FirstFrame = false;
+			return;
 		}
-		
-        glm::vec2 delta = mousePos - m_LastMousePos;
-        m_LastMousePos = mousePos;
 
         bool alt = Input::IsKeyPressed(KeyBoard::LeftAlt);
 
@@ -29,14 +28,27 @@ namespace Engine
         // Mode Detection
         // --------------------------------------------------------
 
+        SceneCameraMode newMode;
         if (alt && Input::IsMouseButtonPressed(Mouse::ButtonLeft))
-            m_Mode = SceneCameraMode::Orbit;
+            newMode = SceneCameraMode::Orbit;
         else if (alt && Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
-            m_Mode = SceneCameraMode::Pan;
+            newMode = SceneCameraMode::Pan;
         else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
-            m_Mode = SceneCameraMode::FreeFly;
+            newMode = SceneCameraMode::FreeFly;
         else
-            m_Mode = SceneCameraMode::None;
+            newMode = SceneCameraMode::None;
+
+        // Seed m_LastMousePos on the frame a mode first becomes active so the
+        // very first delta is always zero — prevents camera snapping when
+        // re-entering the viewport after clicking elsewhere.
+        if (newMode != SceneCameraMode::None && m_Mode == SceneCameraMode::None)
+            m_LastMousePos = mousePos;
+
+        m_Mode = newMode;
+
+        // Compute delta AFTER seeding so the first frame of any mode is zero.
+        glm::vec2 delta = mousePos - m_LastMousePos;
+        m_LastMousePos = mousePos;
 
         // --------------------------------------------------------
         // Mode Execution

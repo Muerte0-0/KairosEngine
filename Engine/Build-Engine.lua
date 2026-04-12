@@ -10,6 +10,20 @@ objdir (ProjectIntDir)
 pchheader "kepch.h"
 pchsource "Source/kepch.cpp"
 
+-- Default: enable PCH
+filter {}
+    enablepch "on"
+
+-- Disable PCH for C files
+filter "files:**.c"
+    enablepch "off"
+    compileas "C"
+
+-- Disable PCH for ImGuizmo
+filter "files:**/Vendor/ocornut/ImGuizmo/*.cpp"
+    enablepch "off"
+
+filter {}
 defines {
 	"_CRT_SECURE_NO_WARNINGS",
 	"VK_NO_PROTOTYPES",
@@ -18,11 +32,16 @@ defines {
 	"GLM_FORCE_RADIANS",
 	"GLM_FORCE_DEPTH_ZERO_TO_ONE",
 	"GLM_ENABLE_EXPERIMENTAL",
+	"YAML_CPP_STATIC_DEFINE",
 }
 
 files {
 	"Source/**.h",
 	"Source/**.cpp",
+	
+	-- ImGuizmo
+	"%{wks.location}/Vendor/ocornut/ImGuizmo/*.cpp",
+	"%{wks.location}/Vendor/ocornut/ImGuizmo/*.h",
 }
 
 includedirs {
@@ -31,6 +50,7 @@ includedirs {
 	"%{IncludeDir.GLFW}",
 	"%{IncludeDir.Vulkan}",
 	"%{IncludeDir.ImGui}",
+	"%{IncludeDir.ImGuizmo}",
 	"%{IncludeDir.GLM}",
 	"%{IncludeDir.stb_image}",
 	"%{IncludeDir.EnTT}",
@@ -47,13 +67,6 @@ links {
 	"Assimp",
 	"YAML-CPP",
 }
-
-filter "files:**.c"
-    enablepch = "OFF"  -- Skip PCH for C files
-	compileas "C"
-	
-filter "files:Vendor/ocornut/ImGuizmo/**.cpp"
-	enablepch = "OFF"  -- Skip PCH for ImGuizmo files
 
 filter "system:windows"
 	systemversion "latest"

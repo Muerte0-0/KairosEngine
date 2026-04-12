@@ -6,6 +6,8 @@
 
 #include "Engine/Debugging/Log.h"
 #include "Engine/Debugging/Assert.h"
+
+#include "Engine/Math/Math.h"
 // ------------------------------- //
 
 // ------------ Input ------------ //

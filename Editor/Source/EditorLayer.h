@@ -24,8 +24,7 @@ namespace Kairos
 		void OnImGuiRender() override;
 
 		void OnEvent(Engine::Event& event) override;
-		private
-		:
+	private:
 		bool m_ViewportFocused = false, m_ViewportHovered = false;
 		glm::vec2 m_ViewportSize = {1280, 720};
 		glm::vec2 m_ViewportBounds[2];
@@ -39,6 +38,8 @@ namespace Kairos
 		Entity m_CubeEntity;
 		Entity m_CubeEntity2;
 		Entity m_TestModelEntity;
+		
+		int m_GizmoType = -1;
 		
 		// ----------- Panels ----------- //
 		
@@ -56,5 +57,10 @@ namespace Kairos
 		bool m_ShowConsole = true;
 		void DrawConsole();
 		// ----------------------------- //
+		
+		bool OnKeyPressedEvent(KeyPressedEvent& event);
+		
+		void SaveScene() const;
+		void SaveSceneAs();
 	};
 }

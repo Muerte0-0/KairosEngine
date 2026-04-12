@@ -1,8 +1,13 @@
 #include "EditorLayer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.inl>
 
 #include "Panels/SceneHierarchyPanel.h"
+
+#include "Engine/Scene/SceneSerializer.h"
+
+#include "ImGuizmo.h"
 
 namespace
 {
@@ -74,8 +79,6 @@ namespace Kairos
 		m_SceneCameraController = CreateScope<SceneCameraController>(*m_SceneCamera);
 		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
 		m_CameraManager.SetMode(CameraManagerMode::Editor);
-		
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 		m_CubeEntity = m_ActiveScene->CreateEntity("Cube");
 		m_CubeEntity.AddComponent<MeshComponent>().Mesh = CreateDefaultCubeMesh();
@@ -98,6 +101,8 @@ namespace Kairos
 		{
 			LOG(LogLevel::Error, "Failed to load model!");
 		}
+		
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 	}
 
 	void EditorLayer::OnDetach()
@@ -108,6 +113,9 @@ namespace Kairos
 	void EditorLayer::OnUpdate(float DeltaTime)
 	{
 		Layer::OnUpdate(DeltaTime);
+		
+		m_SceneCameraController->SetViewportFocused(m_ViewportFocused);
+		m_SceneCameraController->SetViewportHovered(m_ViewportHovered);
 		
 		m_SceneCameraController->OnUpdate(DeltaTime);
 	
@@ -195,6 +203,9 @@ namespace Kairos
 		Layer::OnEvent(event);
 	
 		m_SceneCameraController->OnEvent(event);
+		
+		EventDispatcher dispatcher(event);
+		dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(&EditorLayer::OnKeyPressedEvent));
 	}
 
 	void EditorLayer::DrawMenuBar()
@@ -211,14 +222,15 @@ namespace Kairos
 				{
 				}
 
-				if (ImGui::MenuItem("Save Project", "Ctrl+S"))
+				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+				{
+					SaveScene();
+				}
+				
+				if (ImGui::MenuItem("Save All", "Ctrl+Shift+S"))
 				{
 				}
-
-				if (ImGui::MenuItem("Save Project As", "Ctrl+Shift+S"))
-				{
-				}
-
+				
 				if (ImGui::MenuItem("Exit"))
 				{
 					Engine::Application::Get().Stop();
@@ -276,6 +288,7 @@ namespace Kairos
 	void EditorLayer::DrawViewport()
 	{
 		ImGui::Begin("Viewport");
+		
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
 
@@ -303,21 +316,53 @@ namespace Kairos
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 		
-		if (m_ViewportHovered && !m_ViewportFocused)
+		if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && m_ViewportHovered && !m_ViewportFocused)
 		{
 			ImGui::SetWindowFocus();
 			m_ViewportFocused = true;
 		}
 		
-		if (!m_ViewportHovered && m_ViewportFocused)
+		// Gizmos
+		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		
+		if (selectedEntity && m_GizmoType != -1)
 		{
-			ImGui::SetWindowFocus(nullptr);
-			m_ViewportFocused = false;
+			ImGuizmo::SetOrthographic(false);
+			ImGuizmo::SetDrawlist();
+			
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
+			
+			// Entity Transform
+			auto& tc = selectedEntity.GetComponent<TransformComponent>();
+			glm::mat4 transform = tc.GetTransform();
+			
+			// Snapping
+			bool snap = Input::IsKeyPressed(KeyBoard::LeftControl);
+			float snapValue = 0.5f;
+			// Snap to 5 Degrees for Rotation
+			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
+				snapValue = 5.0f;
+			
+			float snapValues[3] = { snapValue, snapValue, snapValue };
+			
+			ImGuizmo::Manipulate(glm::value_ptr(m_CameraManager.GetActiveCamera()->GetView()),
+				glm::value_ptr(m_CameraManager.GetActiveCamera()->GetProjection()), 
+				static_cast<ImGuizmo::OPERATION>(m_GizmoType), ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr,
+				snap ? snapValues : nullptr);
+			
+			if (ImGuizmo::IsUsing())
+			{
+				glm::vec3 translation, rotation, scale;
+				Math::DecomposeTransform(transform, translation, rotation, scale);
+				
+				glm::vec3 deltaRotation = rotation - tc.Rotation;
+				
+				tc.Translation = translation;
+				tc.Rotation += deltaRotation;
+				tc.Scale = scale;
+			}
 		}
 		
-		m_SceneCameraController->SetViewportFocused(m_ViewportFocused);
-		m_SceneCameraController->SetViewportHovered(m_ViewportHovered);
-
 		ImGui::End();
 	}
 
@@ -346,5 +391,58 @@ namespace Kairos
 
 	void EditorLayer::DrawConsole()
 	{
+	}
+
+	bool EditorLayer::OnKeyPressedEvent(KeyPressedEvent& event)
+	{
+		if (event.IsRepeat())
+			return false;
+		
+		if (m_SceneCameraController->GetMode() != SceneCameraMode::None)
+			return false;
+		
+		bool control = Input::IsKeyPressed(KeyBoard::LeftControl) || Input::IsKeyPressed(KeyBoard::RightControl);
+		bool shift = Input::IsKeyPressed(KeyBoard::LeftShift) || Input::IsKeyPressed(KeyBoard::RightShift);
+
+		switch (event.GetKeyCode())
+		{
+		case KeyBoard::S:
+			if (control)
+			{
+				if (shift)
+					SaveSceneAs();
+				else
+					SaveScene();
+			}
+			break;
+		case KeyBoard::Q:
+			m_GizmoType = -1;
+			break;
+		case KeyBoard::W:
+			m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		case KeyBoard::E:
+			m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+			break;
+		case KeyBoard::R:
+			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			break;
+		default: break;
+		}
+		
+		return true;
+	}
+
+	void EditorLayer::SaveScene() const
+	{
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Serialize("Content/Scenes/Example.kairos");
+		
+		LOG(LogLevel::Info, "Saving Scene");
+	}
+
+	void EditorLayer::SaveSceneAs()
+	{
+		// To-DO
 	}
 }

@@ -9,6 +9,8 @@
 #include "Engine/Core/Application.h"
 #include "Engine/Renderer/Renderer.h"
 
+#include <ImGuizmo.h>
+
 #include "Engine/ImGui/ImGuiUtils.h"
 
 namespace Engine
@@ -68,6 +70,7 @@ namespace Engine
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
 	}
 
 	void VulkanImGuiLayer::End()

@@ -3,10 +3,13 @@ project "Editor"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "on"
-	linkgroups "on"
 
 targetdir (ProjectBinDir)
 objdir (ProjectIntDir)
+
+defines {
+	"GLM_ENABLE_EXPERIMENTAL",
+}
 
 files {
 	"Source/**.h",
@@ -21,6 +24,7 @@ externalincludedirs {
 	"%{wks.location}/ThirdParty/",
 	"%{IncludeDir.GLFW}",
 	"%{IncludeDir.ImGui}",
+	"%{IncludeDir.ImGuizmo}",
 	"%{IncludeDir.GLM}",
 	"%{IncludeDir.EnTT}",
 }
@@ -28,6 +32,9 @@ externalincludedirs {
 links {
 	"Engine",
 	"GLFW",
+	"ImGui",
+	"Assimp",
+	"YAML-CPP",
 }
 
 filter "system:windows"
