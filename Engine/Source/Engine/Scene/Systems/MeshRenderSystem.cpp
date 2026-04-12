@@ -13,10 +13,9 @@ namespace Engine::MeshRenderSystem
 		for (auto entity : view)
 		{
 			const auto& [meshComponent, transformComponent] = view.get<MeshComponent, TransformComponent>(entity);
-			if (meshComponent.Mesh == nullptr)
-				continue;
-
-			renderer.SubmitMesh(meshComponent.Mesh, transformComponent.GetTransform());
+			
+			if (meshComponent.HasMesh())
+				renderer.SubmitMesh(meshComponent.Mesh, transformComponent.GetTransform());
 		}
 	}
 }

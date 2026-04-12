@@ -41,7 +41,29 @@ namespace Kairos
 		ImGui::Begin("Properties");
 		
 		if (m_SelectionContext)
+		{
 			DrawComponents(m_SelectionContext);
+			
+			if (ImGui::Button("Add Component"))
+				ImGui::OpenPopup("AddComponent");
+		
+			if (ImGui::BeginPopup("AddComponent"))
+			{
+				if (ImGui::MenuItem("Camera Component"))
+				{
+					m_SelectionContext.AddComponent<CameraComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			
+				if (ImGui::MenuItem("Mesh Component"))
+				{
+					m_SelectionContext.AddComponent<MeshComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+			
+				ImGui::EndPopup();
+			}
+		}
 		
 		ImGui::End();
 	}
@@ -163,11 +185,11 @@ namespace Kairos
 		
 		ImGui::Separator();
 		
+		ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowOverlap;
+		
 		if (entity.HasComponent<TransformComponent>())
-		{
-			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow;
-			
-			if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), flags, "Transform"))
+		{			
+			if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), treeNodeFlags, "Transform"))
 			{
 				auto& tc = entity.GetComponent<TransformComponent>();
 				DrawVec3Control("Translation", tc.Translation);
@@ -179,6 +201,76 @@ namespace Kairos
 				ImGui::TreePop();
 			}
 			
+		}
+		
+		ImGui::Separator();
+		
+		if (entity.HasComponent<MeshComponent>())
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4.0f, 4.0f});
+			
+			bool open = ImGui::TreeNodeEx((void*)typeid(MeshComponent).hash_code(), treeNodeFlags, "Mesh");
+			
+			ImGui::SameLine(ImGui::GetWindowWidth() - 25.f);
+			if (ImGui::Button(":", ImVec2{20.0f, 20.0f}))
+			{
+				ImGui::OpenPopup("ComponentSettings");
+			}
+			ImGui::PopStyleVar();
+			
+			bool removeComponent = false;
+			if (ImGui::BeginPopup("ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove Component"))
+					removeComponent = true;
+				
+				ImGui::EndPopup();
+			}
+			
+			if (open)
+			{
+				//auto& mc = entity.GetComponent<MeshComponent>();
+				
+				ImGui::TreePop();
+			}
+			
+			if (removeComponent)
+				entity.RemoveComponent<MeshComponent>();
+		}
+		
+		ImGui::Separator();
+		
+		if (entity.HasComponent<CameraComponent>())
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4.0f, 4.0f});
+			
+			bool open = ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), treeNodeFlags, "Camera");
+			
+			ImGui::SameLine(ImGui::GetWindowWidth() - 25.f);
+			if (ImGui::Button(":", ImVec2{20.0f, 20.0f}))
+			{
+				ImGui::OpenPopup("ComponentSettings");
+			}
+			ImGui::PopStyleVar();
+			
+			bool removeComponent = false;
+			if (ImGui::BeginPopup("ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove Component"))
+					removeComponent = true;
+				
+				ImGui::EndPopup();
+			}
+			
+			if (open)
+			{
+				//auto& mc = entity.GetComponent<CameraComponent>();
+				
+				ImGui::TreePop();
+			}
+			
+			if (removeComponent)
+				entity.RemoveComponent<CameraComponent>();
 		}
 	}
 }

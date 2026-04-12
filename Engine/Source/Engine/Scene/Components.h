@@ -40,24 +40,29 @@ namespace Engine
 
 	struct TickableComponent
 	{
+		virtual ~TickableComponent() = default;
 		float DeltaTime = 0.0f;
 		
-		void OnUpdate(float deltaTime)
+		virtual void OnUpdate(float deltaTime)
 		{
 			DeltaTime = deltaTime;
 		}
 	};
 
-	struct CameraComponent
+	struct CameraComponent : public TickableComponent
 	{
 		Engine::GameCamera Camera;
 		bool Primary = false;
 		
 		CameraComponent() = default;
+		
+		//void OnUpdate(float deltaTime) override;
 	};
 
 	struct MeshComponent
 	{
 		Ref<Mesh> Mesh;
+		
+		bool HasMesh() const { return Mesh != nullptr; }
 	};
 }

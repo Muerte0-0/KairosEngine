@@ -32,6 +32,9 @@ namespace Engine
 
 	private:
 		entt::registry m_Registry;
+		
+		template<typename T>
+		void OnComponentAdded(Entity entity, T& component);
 
 		friend class Entity;
 		friend class Kairos::SceneHierarchyPanel;
