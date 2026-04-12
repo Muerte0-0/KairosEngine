@@ -43,7 +43,7 @@ group "ThirdParty"
 	include "Vendor/GLFW/Build-GLFW.lua"
 	include "Vendor/ocornut/Build-ImGui.lua"
 	include "Vendor/Assimp/Build-Assimp.lua"
-	include "Vendor/YAML-CPP/Build-YAML-CPP.lua"
+	include "Vendor/YAML/Build-YAML.lua"
 group ""
 
 group "Misc"
