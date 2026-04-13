@@ -190,9 +190,7 @@ namespace Kairos
 		ImGui::PopStyleVar();
 
 		m_SceneHierarchyPanel.OnImGuiRender();
-
-		ImGui::Begin("Content Browser");
-		ImGui::End();
+		m_ContentBrowserPanel.OnImGuiRender();
 
 		if (m_ShowConsole)
 			DrawConsole();

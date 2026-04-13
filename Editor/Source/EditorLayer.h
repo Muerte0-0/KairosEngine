@@ -1,7 +1,9 @@
 ﻿#pragma once
 #include "Engine.h"
 
+// Panels
 #include "Panels/SceneHierarchyPanel.h"
+#include "Panels/ContentBrowserPanel.h"
 
 namespace Kairos
 {
@@ -44,6 +46,7 @@ namespace Kairos
 		// ----------- Panels ----------- //
 		
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+		ContentBrowserPanel m_ContentBrowserPanel;
 		
 		// ------------------------------ //
 		

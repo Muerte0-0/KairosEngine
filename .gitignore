@@ -409,3 +409,4 @@ Makefile
 *.sln
 *.kdev4
 /.ai
+/.aiassistant
