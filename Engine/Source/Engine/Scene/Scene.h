@@ -1,10 +1,12 @@
 #pragma once
 
 #include "entt.hpp"
+#include <functional>
 
 namespace Kairos
 {
 	class SceneHierarchyPanel;
+	class EditorLayer;
 }
 
 namespace Engine
@@ -31,6 +33,12 @@ namespace Engine
 		 */
 		void OnRender(SceneRenderer& renderer);
 
+		/**
+		 * @brief Invoke fn(entity) for every living entity in the scene.
+		 *        Provides iteration without exposing entt to callers.
+		 */
+		void EachEntity(const std::function<void(Entity)>& fn);
+
 	private:
 		entt::registry m_Registry;
 		
@@ -40,5 +48,6 @@ namespace Engine
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class Kairos::SceneHierarchyPanel;
+		friend class Kairos::EditorLayer;
 	};
 }

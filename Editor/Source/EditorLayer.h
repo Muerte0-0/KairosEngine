@@ -59,7 +59,12 @@ namespace Kairos
 		// ----------------------------- //
 		
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
-		
+		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
+
+		// Returns the entity under the viewport mouse cursor, or an invalid Entity.
+		// Cycles through overlapping hits if current selection is the front-most.
+		Entity PickEntityAtMouse();
+
 		void SaveScene() const;
 		void SaveSceneAs();
 	};

@@ -19,8 +19,8 @@ namespace Kairos
 	{
 		ImGui::Begin("Scene Hierarchy");
 		
-		for (auto entity : std::views::reverse(m_Context->m_Registry.view<entt::entity>()))
-			DrawEntityNode({ entity, m_Context.get() });
+		m_Context->EachEntity([&](Entity entity)
+		{ DrawEntityNode({ entity, m_Context.get() }); });
 		
 		if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
 			m_SelectionContext = {};

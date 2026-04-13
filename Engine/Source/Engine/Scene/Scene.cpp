@@ -40,6 +40,12 @@ namespace Engine
 		MeshRenderSystem::Render(m_Registry, renderer);
 	}
 
+	void Scene::EachEntity(const std::function<void(Entity)>& fn)
+	{
+		for (auto entity : std::views::reverse(m_Registry.view<entt::entity>()))
+			fn(Entity{ entity, this });
+	}
+
 	template <typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{

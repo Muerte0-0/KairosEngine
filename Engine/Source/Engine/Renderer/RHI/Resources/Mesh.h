@@ -95,6 +95,26 @@ namespace Engine
 
         [[nodiscard]] bool IsUploaded() const { return m_VertexBuffer && m_IndexBuffer; }
 
+        // ---- AABB (local space) ------------------------------------------
+        // Computed from CPU vertex data — valid after Populate() / Create().
+        struct AABB
+        {
+            glm::vec3 Min{  FLT_MAX,  FLT_MAX,  FLT_MAX };
+            glm::vec3 Max{ -FLT_MAX, -FLT_MAX, -FLT_MAX };
+            bool IsValid() const { return Min.x <= Max.x; }
+        };
+
+        [[nodiscard]] AABB ComputeAABB() const
+        {
+            AABB aabb;
+            for (const Vertex& v : m_Vertices)
+            {
+                aabb.Min = glm::min(aabb.Min, v.Position);
+                aabb.Max = glm::max(aabb.Max, v.Position);
+            }
+            return aabb;
+        }
+
     private:
         std::vector<Vertex>   m_Vertices;
         std::vector<uint32_t> m_Indices;

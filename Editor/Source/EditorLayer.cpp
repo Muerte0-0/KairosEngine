@@ -103,6 +103,8 @@ namespace Kairos
 		}
 		
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+		
+		m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 	}
 
 	void EditorLayer::OnDetach()
@@ -206,6 +208,7 @@ namespace Kairos
 		
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(&EditorLayer::OnKeyPressedEvent));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(BIND_EVENT_FN(&EditorLayer::OnMouseButtonPressedEvent));
 	}
 
 	void EditorLayer::DrawMenuBar()
@@ -306,6 +309,12 @@ namespace Kairos
 			if (void* textureID = framebuffer->GetImGuiTextureID())
 			{
 				ImGui::Image(textureID, viewportPanelSize, ImVec2(0, 1), ImVec2(1, 0));
+
+				// Record actual bounds after image is placed (used by mouse picking).
+				ImVec2 minBound = ImGui::GetItemRectMin();
+				ImVec2 maxBound = ImGui::GetItemRectMax();
+				m_ViewportBounds[0] = { minBound.x, minBound.y };
+				m_ViewportBounds[1] = { maxBound.x, maxBound.y };
 			}
 		}
 		else
@@ -444,5 +453,154 @@ namespace Kairos
 	void EditorLayer::SaveSceneAs()
 	{
 		// To-DO
+	}
+
+	bool EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
+	{
+		// Only pick on LMB when viewport is hovered.
+		if (event.GetMouseButton() != Mouse::ButtonLeft)
+			return false;
+
+		if (!m_ViewportHovered)
+			return false;
+
+		// Don't steal click while camera is flying or gizmo is being dragged.
+		if (m_SceneCameraController->GetMode() != SceneCameraMode::None)
+			return false;
+
+		if (ImGuizmo::IsOver() || ImGuizmo::IsUsing())
+			return false;
+
+		Entity picked = PickEntityAtMouse();
+		m_SceneHierarchyPanel.SetSelectedEntity(picked);
+
+		return false; // Don't consume — let ImGui focus the Window.
+	}
+
+	Entity EditorLayer::PickEntityAtMouse()
+	{
+		// ---- 1. Mouse → NDC relative to viewport -------------------------
+		glm::vec2 mousePos = { ImGui::GetMousePos().x, ImGui::GetMousePos().y };
+		glm::vec2 vpMin    = m_ViewportBounds[0];
+		glm::vec2 vpMax    = m_ViewportBounds[1];
+		glm::vec2 vpSize   = vpMax - vpMin;
+
+		if (vpSize.x <= 0.0f || vpSize.y <= 0.0f)
+			return {};
+
+		if (mousePos.x < vpMin.x || mousePos.x > vpMax.x ||
+			mousePos.y < vpMin.y || mousePos.y > vpMax.y)
+			return {};
+
+		float ndcX = ((mousePos.x - vpMin.x) / vpSize.x) * 2.0f - 1.0f;
+		float ndcY = 1.0f - ((mousePos.y - vpMin.y) / vpSize.y) * 2.0f;
+
+		// ---------- Build ray ------------------
+		const Camera* cam = m_CameraManager.GetActiveCamera();
+		if (!cam) return {};
+
+		const glm::mat4& view = cam->GetView();
+		const glm::mat4& proj = cam->GetProjection();
+
+		glm::mat4 invView   = glm::inverse(view);
+		glm::vec3 rayOrigin = glm::vec3(invView * glm::vec4(0, 0, 0, 1));
+
+		// Unproject NDC point on the near plane to get a view-space direction.
+		glm::mat4 invProj  = glm::inverse(proj);
+		glm::vec4 viewPos  = invProj * glm::vec4(ndcX, ndcY, 0.0f, 1.0f);
+		viewPos /= viewPos.w;
+
+		glm::vec4 viewDir  = glm::vec4(glm::vec3(viewPos), 0.0f);
+
+		glm::vec4 nearPoint = invProj * glm::vec4(ndcX, ndcY, 0.0f, 1.0f);
+		glm::vec4 farPoint  = invProj * glm::vec4(ndcX, ndcY, 1.0f, 1.0f);
+
+		nearPoint /= nearPoint.w;
+		farPoint  /= farPoint.w;
+
+		glm::vec3 rayDir = glm::normalize(glm::vec3(invView * (farPoint - nearPoint)));
+
+		// Safe inverse — guards divide-by-zero
+		// ray component is exactly 0 (axis-aligned views: top, front, etc.).
+		auto safeInv = [](float v) -> float
+		{
+			constexpr float eps = 1e-6f;
+			return (glm::abs(v) > eps) ? (1.0f / v) : std::copysign(FLT_MAX, v == 0.0f ? 1.0f : v);
+		};
+		
+		glm::vec3 invDir{ safeInv(rayDir.x), safeInv(rayDir.y), safeInv(rayDir.z) };
+
+		// ---- 3. Collect all hits, sorted front→back ----------------------
+		struct Hit { Entity Ent; float T; };
+		std::vector<Hit> hits;
+
+		m_ActiveScene->EachEntity([&](Entity entity)
+		{
+			if (!entity.HasComponent<MeshComponent>() || !entity.HasComponent<TransformComponent>())
+				return;
+
+			const auto& mc = entity.GetComponent<MeshComponent>();
+			const auto& tc = entity.GetComponent<TransformComponent>();
+			if (!mc.HasMesh()) return;
+
+			Mesh::AABB local = mc.Mesh->ComputeAABB();
+			if (!local.IsValid()) return;
+
+			// Transform 8 corners → world-space AABB.
+			glm::mat4 model = tc.GetTransform();
+			glm::vec3 wMin{  FLT_MAX }, wMax{ -FLT_MAX };
+			const glm::vec3 corners[8] = {
+				{ local.Min.x, local.Min.y, local.Min.z },
+				{ local.Max.x, local.Min.y, local.Min.z },
+				{ local.Min.x, local.Max.y, local.Min.z },
+				{ local.Max.x, local.Max.y, local.Min.z },
+				{ local.Min.x, local.Min.y, local.Max.z },
+				{ local.Max.x, local.Min.y, local.Max.z },
+				{ local.Min.x, local.Max.y, local.Max.z },
+				{ local.Max.x, local.Max.y, local.Max.z },
+			};
+			for (const auto& c : corners)
+			{
+				glm::vec3 wc = glm::vec3(model * glm::vec4(c, 1.0f));
+				wMin = glm::min(wMin, wc);
+				wMax = glm::max(wMax, wc);
+			}
+
+			// Slab ray-AABB — safe because invDir has no NaN.
+			glm::vec3 t0   = (wMin - rayOrigin) * invDir;
+			glm::vec3 t1   = (wMax - rayOrigin) * invDir;
+			glm::vec3 tMin = glm::min(t0, t1);
+			glm::vec3 tMax = glm::max(t0, t1);
+
+			float tNear = glm::max(glm::max(tMin.x, tMin.y), tMin.z);
+			float tFar  = glm::min(glm::min(tMax.x, tMax.y), tMax.z);
+
+			if (tNear > tFar || tFar < 0.0f) return; // miss
+
+			float t = (tNear >= 0.0f) ? tNear : tFar;
+			hits.push_back({ entity, t });
+		});
+
+		if (hits.empty()) return {};
+
+		// Sort front → back.
+		std::sort(hits.begin(), hits.end(), [](const Hit& a, const Hit& b){ return a.T < b.T; });
+
+		// ---- 4. Cycle through overlapping hits ---------------------------
+		// If the currently selected entity is the front hit, return the next
+		// one behind it so repeated clicks cycle through overlapping objects.
+		Entity currentSelection = m_SceneHierarchyPanel.GetSelectedEntity();
+
+		if (currentSelection && hits.size() > 1)
+		{
+			// Find selected entity in the hit list.
+			for (size_t i = 0; i < hits.size(); ++i)
+			{
+				if (hits[i].Ent == currentSelection)
+					return hits[(i + 1) % hits.size()].Ent; // cycle
+			}
+		}
+
+		return hits.front().Ent; // default: closest
 	}
 }
