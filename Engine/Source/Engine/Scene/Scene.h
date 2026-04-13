@@ -6,7 +6,6 @@
 namespace Kairos
 {
 	class SceneHierarchyPanel;
-	class EditorLayer;
 }
 
 namespace Engine
@@ -48,6 +47,5 @@ namespace Engine
 		friend class Entity;
 		friend class SceneSerializer;
 		friend class Kairos::SceneHierarchyPanel;
-		friend class Kairos::EditorLayer;
 	};
 }
