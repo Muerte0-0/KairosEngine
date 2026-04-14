@@ -5,13 +5,13 @@
 
 #ifdef KE_DEBUG
 
-#define ASSERT(check, ...) \
+#define ASSERT(check, ...)\
 { \
-if (!(check)) \
-{ \
-LOG(::Engine::LogLevel::Error, "Assertion Failed: {0}", fmt::format(__VA_ARGS__)); \
-DEBUGBREAK(); \
-} \
+	if (!(check)) \
+	{ \
+		LOG(::Engine::LogLevel::Error, "Assertion Failed: {0}", fmt::format(__VA_ARGS__)); \
+		DEBUGBREAK(); \
+	} \
 }
 
 #else

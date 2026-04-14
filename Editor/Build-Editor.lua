@@ -12,10 +12,10 @@ defines {
 }
 
 files {
+	"Resources/**.**",
+	
 	"Source/**.h",
 	"Source/**.cpp",
-	"Resources/Shaders/**.slang",
-	"Resources/Shaders/**.spv",
 }
 
 externalincludedirs {
@@ -39,6 +39,10 @@ links {
 
 filter "system:windows"
 	systemversion "latest"
+
+defines {
+	"WIN32_LEAN_AND_MEAN",
+}
 
 links {
 	"Ws2_32.lib",

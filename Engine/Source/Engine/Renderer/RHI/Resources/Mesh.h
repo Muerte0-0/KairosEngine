@@ -7,7 +7,6 @@ namespace Engine
 {
     // -----------------------------------------------------------------------
     // Canonical vertex layout — must match Mesh.slang input struct exactly.
-    // Used by VulkanGraphicsPipeline to build vertex input state.
     // -----------------------------------------------------------------------
     inline BufferLayout GetVertexLayout()
     {
@@ -36,11 +35,11 @@ namespace Engine
     // -----------------------------------------------------------------------
     // Mesh — CPU geometry + GPU buffers.
     //
-    // Lifecycle:
+    // Life cycle:
     //   Option A (procedural / hand-built):
-    //     auto mesh = Mesh::Create(vertices, indices);   // single submesh
+    //     auto mesh = Mesh::Create(vertices, indices); // single SubMesh
     //
-    //   Option B (multi-submesh via ModelFactory):
+    //   Option B (Multi-SubMesh via Model Factory):
     //     auto mesh = CreateRef<Mesh>();
     //     mesh->Populate(vertices, indices, subMeshes);
     //     mesh->UploadToGPU();
@@ -57,30 +56,15 @@ namespace Engine
         Mesh& operator=(const Mesh&) = delete;
         Mesh(Mesh&&)                 = default;
         Mesh& operator=(Mesh&&)      = default;
-
-        // ---- Factory (single submesh shortcut) ----------------------------
-
+        
         // Creates a Mesh from raw arrays, sets up a single SubMesh covering
         // all geometry, calls UploadToGPU(), and returns a Ref<Mesh>.
-        [[nodiscard]] static Ref<Mesh> Create(
-            std::vector<Vertex>   vertices,
-            std::vector<uint32_t> indices);
-
-        // ---- Multi-submesh population (used by ModelFactory) --------------
-
+        [[nodiscard]] static Ref<Mesh> Create(std::vector<Vertex> vertices, std::vector<uint32_t> indices);
+        
         // Replaces all CPU-side data and builds SubMeshes list.
-        // Call UploadToGPU() afterwards.
-        void Populate(
-            std::vector<Vertex>   vertices,
-            std::vector<uint32_t> indices,
-            std::vector<SubMesh>  subMeshes);
-
-        // ---- GPU upload ---------------------------------------------------
-
-        // Uploads Vertices + Indices to GPU VertexBuffer / IndexBuffer.
-        // Sets layout on the VertexBuffer to GetVertexLayout().
-        // Safe to call more than once — re-creates buffers each time.
-        // Must be called after Populate() or Create().
+        // Call UploadToGPU() afterwords.
+        void Populate(std::vector<Vertex> vertices, std::vector<uint32_t> indices, std::vector<SubMesh> subMeshes);
+        
         void UploadToGPU();
 
         // ---- Const accessors ----------------------------------------------

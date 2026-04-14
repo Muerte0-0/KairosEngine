@@ -23,9 +23,9 @@ namespace Engine
 
 	VulkanGraphicsPipeline::VulkanGraphicsPipeline(const GraphicsPipelineCreateInfo& createInfo) : m_CreateInfo(createInfo)
 	{
-		ASSERT(m_CreateInfo.Shader, "VulkanGraphicsPipeline: Shader is null.");
-		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Vertex), "VulkanGraphicsPipeline: shader '{}' has no Vertex stage.", m_CreateInfo.Shader->GetName());
-		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Fragment), "VulkanGraphicsPipeline: shader '{}' has no Fragment stage.", m_CreateInfo.Shader->GetName());
+		ASSERT(m_CreateInfo.Shader, "VulkanGraphicsPipeline: Shader is null.")
+		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Vertex), "VulkanGraphicsPipeline: shader '{}' has no Vertex stage.", m_CreateInfo.Shader->GetName())
+		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Fragment), "VulkanGraphicsPipeline: shader '{}' has no Fragment stage.", m_CreateInfo.Shader->GetName())
 
 		CreatePipelineCache();
 		CreatePipelineLayout();

@@ -36,6 +36,9 @@ defines {
 }
 
 files {
+	"Config/**.**",
+	"Resources/**.**",
+	
 	"Source/**.h",
 	"Source/**.cpp",
 	

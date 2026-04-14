@@ -410,3 +410,4 @@ Makefile
 *.kdev4
 /.ai
 /.aiassistant
+/.continue

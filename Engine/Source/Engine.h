@@ -31,7 +31,10 @@
 #include "Engine/Renderer/SceneRenderer.h"
 
 #include "Engine/Renderer/RHI/Buffer.h"
+
+// Resources
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
+#include "Engine/Renderer/RHI/Resources/Texture.h"
 // ------------------------------- //
 
 // ---------- Factories ----------- //
