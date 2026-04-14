@@ -9,7 +9,6 @@ namespace Engine
 	public:
 		ContentBrowserPanel() = default;
 
-		// Call once after Renderer::Init() — e.g. from EditorLayer::OnAttach()
 		void Init();
 
 		void OnImGuiRender();

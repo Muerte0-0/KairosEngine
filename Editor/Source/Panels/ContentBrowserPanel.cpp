@@ -36,16 +36,14 @@ namespace Engine
 		ImGui::Columns(columnCount, nullptr, false);
 
 		if (std::filesystem::exists(m_CurrentDirectory))
-		{	
-			int i = 0;
-			
+		{
 			for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
 			{
-				ImGui::PushID(i++);
-				
-				const auto& path           = directoryEntry.path();
-				auto        relativePath   = std::filesystem::relative(path, g_ContentDirectory);
+				const auto& path = directoryEntry.path();
+				auto relativePath = std::filesystem::relative(path, g_ContentDirectory);
 				std::string filenameString = relativePath.filename().string();
+				
+				ImGui::PushID(filenameString.c_str());
 
 				Ref<Texture> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
 
