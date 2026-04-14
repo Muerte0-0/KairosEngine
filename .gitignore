@@ -411,3 +411,5 @@ Makefile
 /.ai
 /.aiassistant
 /.continue
+mempalace.yaml
+entities.json
