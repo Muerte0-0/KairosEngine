@@ -119,8 +119,8 @@ namespace Engine
 		style.TabRounding       	= 4.0f;
 
 		style.WindowPadding			= ImVec2(8.0f, 8.0f);
-		style.FramePadding			= ImVec2(8.0f, 4.0f);
-		style.ItemSpacing			= ImVec2(8.0f, 4.0f);
+		style.FramePadding			= ImVec2(4.0f, 4.0f);
+		style.ItemSpacing			= ImVec2(4.0f, 4.0f);
 		style.ItemInnerSpacing		= ImVec2(4.0f, 4.0f);
 		style.IndentSpacing			= 21.0f;
 		style.ScrollbarSize			= 14.0f;
@@ -281,9 +281,9 @@ namespace Engine
 	colors[ImGuiCol_FrameBg]					= surface0;												\
 	colors[ImGuiCol_FrameBgHovered]				= surface1;												\
 	colors[ImGuiCol_FrameBgActive]				= surface2;												\
-	colors[ImGuiCol_Button]						= ImVec4(blue.x, blue.y, blue.z, 0.10f);				\
-	colors[ImGuiCol_ButtonHovered]				= ImVec4(blue.x, blue.y, blue.z, 0.22f);				\
-	colors[ImGuiCol_ButtonActive]				= ImVec4(blue.x, blue.y, blue.z, 0.35f);				\
+	colors[ImGuiCol_Button]						= ImVec4(blue.x, blue.y, blue.z, 0.05f);				\
+	colors[ImGuiCol_ButtonHovered]				= ImVec4(blue.x, blue.y, blue.z, 0.07f);				\
+	colors[ImGuiCol_ButtonActive]				= ImVec4(blue.x, blue.y, blue.z, 0.1f);					\
 	colors[ImGuiCol_Header]						= surface0;												\
 	colors[ImGuiCol_HeaderHovered]				= surface1;												\
 	colors[ImGuiCol_HeaderActive]				= surface2;												\

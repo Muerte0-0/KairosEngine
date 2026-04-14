@@ -89,7 +89,7 @@ namespace Kairos
 		m_CubeEntity2.GetComponent<TransformComponent>().Translation = glm::vec3(2.0f, 0.0f, 0.0f);
 		
 		// Load a model from disk
-		Model loadedModel = ModelFactory::Load("D:/Dev/Projects/KairosEngine/Editor/Resources/Models/Prop_Crate.fbx");
+		Model loadedModel = ModelFactory::Load("D:/Dev/Projects/KairosEngine/Editor/Content/Assets/Models/Prop_Crate.fbx");
 
 		if (loadedModel.MeshData)
 		{
@@ -103,7 +103,8 @@ namespace Kairos
 		}
 		
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-		
+		m_ContentBrowserPanel.Init();
+
 		m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 	}
 

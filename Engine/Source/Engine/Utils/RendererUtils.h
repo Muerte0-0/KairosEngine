@@ -7,6 +7,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Engine/Debugging/Log.h"
+
 namespace Engine
 {
 	// -----------------------------------------------------------------------

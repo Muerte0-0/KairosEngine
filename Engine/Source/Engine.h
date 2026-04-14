@@ -1,11 +1,11 @@
 ﻿#pragma once
 
+#include "Engine/Debugging/Log.h"
+#include "Engine/Debugging/Assert.h"
+
 // -------- Application ---------- //
 #include "Engine/Core/Application.h"
 #include "Engine/Core/Layer.h"
-
-#include "Engine/Debugging/Log.h"
-#include "Engine/Debugging/Assert.h"
 
 #include "Engine/Math/Math.h"
 // ------------------------------- //
