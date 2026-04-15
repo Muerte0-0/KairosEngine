@@ -28,5 +28,27 @@ namespace Engine
 		 * @return The workspace root path, or std::nullopt if not found.
 		 */
 		[[nodiscard]] static std::optional<std::filesystem::path> ResolveWorkspaceRoot();
+
+		/**
+		 * @brief Opens a native "Open File" dialog.
+		 * @param filter Null-separated filter pairs: "Display\0*.ext\0All Files\0*.*\0\0"
+		 * @param initialDir Starting directory. Empty = last used.
+		 * @return Selected path, or std::nullopt if cancelled.
+		 */
+		[[nodiscard]] static std::optional<std::filesystem::path> OpenFileDialog(
+			const char* filter = "All Files\0*.*\0\0",
+			const std::filesystem::path& initialDir = {});
+
+		/**
+		 * @brief Opens a native "Save File" dialog.
+		 * @param filter Null-separated filter pairs.
+		 * @param defaultName Suggested filename.
+		 * @param initialDir Starting directory. Empty = last used.
+		 * @return Selected path, or std::nullopt if cancelled.
+		 */
+		[[nodiscard]] static std::optional<std::filesystem::path> SaveFileDialog(
+			const char* filter = "All Files\0*.*\0\0",
+			const std::filesystem::path& defaultName = {},
+			const std::filesystem::path& initialDir = {});
 	};
 }

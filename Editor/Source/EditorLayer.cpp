@@ -206,18 +206,18 @@ namespace Kairos
 				}
 
 				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
-				{
 					SaveScene();
-				}
 				
-				if (ImGui::MenuItem("Save All", "Ctrl+Shift+S"))
+				if (ImGui::MenuItem("Save Scene As", "Ctrl+Shift+S"))
+					SaveSceneAs();
+				
+				if (ImGui::MenuItem("Save All"))
 				{
 				}
 				
 				if (ImGui::MenuItem("Exit"))
-				{
 					Engine::Application::Get().Stop();
-				}
+				
 				ImGui::EndMenu();
 			}
 
@@ -405,16 +405,20 @@ namespace Kairos
 			}
 			break;
 		case KeyBoard::Q:
-			m_GizmoType = -1;
+			if (m_ViewportHovered)
+				m_GizmoType = -1;
 			break;
 		case KeyBoard::W:
-			m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			if (m_ViewportHovered)
+				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 			break;
 		case KeyBoard::E:
-			m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+			if (m_ViewportHovered)
+				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
 			break;
 		case KeyBoard::R:
-			m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			if (m_ViewportHovered)
+				m_GizmoType = ImGuizmo::OPERATION::SCALE;
 			break;
 		default: break;
 		}
@@ -432,7 +436,8 @@ namespace Kairos
 
 	void EditorLayer::SaveSceneAs()
 	{
-		// To-DO
+		if (auto path = PlatformUtils::SaveFileDialog("Kairos Scene\0*.kairos\0\0", "Untitled.kairos"))
+			SceneSerializer(m_ActiveScene).Serialize(path->string());
 	}
 
 	bool EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)

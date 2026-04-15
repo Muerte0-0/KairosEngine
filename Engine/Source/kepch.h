@@ -8,7 +8,8 @@
 #include "Engine/Core/PlatformDetection.h"
 
 #ifdef PLATFORM_WINDOWS
-#include <Windows.h>
+#include <windows.h>
+#include <commdlg.h>
 #undef APIENTRY
 #else
 #include <unistd.h>

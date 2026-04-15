@@ -1,0 +1,11 @@
+Scene: Untitled Scene
+Entities:
+  - Entity: 3014594580487303088
+    TagComponent:
+      Tag: Crate
+    TransformComponent:
+      Translation: [0, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshAssetPath: Assets/Models/Prop_Crate.fbx

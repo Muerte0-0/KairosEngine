@@ -9,3 +9,12 @@ Entities:
       Scale: [1, 1, 1]
     MeshComponent:
       MeshAssetPath: Assets/Models/Prop_Crate.fbx
+  - Entity: 8997048264795637701
+    TagComponent:
+      Tag: Empty Entity
+    TransformComponent:
+      Translation: [-2.47, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshAssetPath: Assets/Models/Prop_Crate.obj
