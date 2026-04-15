@@ -1,6 +1,6 @@
 Scene: Untitled Scene
 Entities:
-  - Entity: 19816326526587945
+  - Entity: 3014594580487303088
     TagComponent:
       Tag: Crate
     TransformComponent:

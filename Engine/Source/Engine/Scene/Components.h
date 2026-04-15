@@ -1,15 +1,25 @@
 ﻿#pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <filesystem>
+#include "Engine/Core/UUID.h"
 
 #include "Engine/Renderer/Cameras/GameCamera.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
+
+#include <filesystem>
+
 namespace Engine
 {
+	struct IDComponent
+	{
+		UUID ID;
+		
+		IDComponent() = default;
+		IDComponent(const UUID& id) : ID(id) {}
+	};
 	struct TagComponent
 	{
 		std::string Tag;

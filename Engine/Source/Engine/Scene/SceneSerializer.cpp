@@ -80,10 +80,12 @@ namespace Engine
 	
 	static void SerializeEntity(YAML::Emitter& emitter, Entity entity)
 	{
+		ASSERT(entity.HasComponent<IDComponent>(), "Entity does not have an ID Component!")
+		
 		emitter << YAML::BeginMap; // Entity map
 
 		// Entity ID
-		emitter << YAML::Key << "Entity" << YAML::Value << "19816326526587945"; // To-Do Entity ID Goes Here
+		emitter << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 
 		// Tag Component
 		if (entity.HasComponent<TagComponent>())
@@ -174,16 +176,16 @@ namespace Engine
 		{
 			for (auto entity : entities)
 			{
-				//uint16_t uuid = entity["Entity"].as<uint16_t>(); // To-Do
+				uint64_t uuid = entity["Entity"].as<uint64_t>();
 				
 				std::string name;
 
 				if (auto tagComponent = entity["TagComponent"])
 					name = tagComponent["Tag"].as<std::string>();
 				
-				LOG(LogLevel::Trace, "Deserializing Entity with ID: {0}, name:{1}", 123, name);
+				LOG(LogLevel::Trace, "Deserializing Entity with ID: {0}, name:{1}", uuid, name);
 				
-				Entity deserializedEntity = m_Scene->CreateEntity(name);
+				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
 
 				if (auto transformComponent = entity["TransformComponent"])
 				{

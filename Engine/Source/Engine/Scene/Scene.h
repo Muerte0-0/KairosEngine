@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Engine/Core/UUID.h"
+
 #include "entt.hpp"
 #include <functional>
 
@@ -21,6 +23,7 @@ namespace Engine
 		~Scene();
 
 		Entity CreateEntity(const std::string& name = "Empty Entity");
+		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Empty Entity");
 		void DestroyEntity(Entity entity);
 
 		void OnUpdate(float deltaTime);

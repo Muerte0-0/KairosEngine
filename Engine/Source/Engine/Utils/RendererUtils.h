@@ -122,12 +122,16 @@ namespace Engine
 	}
 }
 
-// std::unordered_map<ShaderStage, ...> requires a hash specialization.
-template<>
-struct std::hash<Engine::ShaderStage>
+namespace std
 {
-	size_t operator()(Engine::ShaderStage stage) const noexcept
+	// std::unordered_map<ShaderStage, ...> requires a hash specialization.
+	template<>
+	struct hash<Engine::ShaderStage>
 	{
-		return std::hash<int>{}(static_cast<int>(stage));
-	}
-};
+		size_t operator()(Engine::ShaderStage stage) const noexcept
+		{
+			return hash<int>{}(static_cast<int>(stage));
+		}
+	};
+	
+}
