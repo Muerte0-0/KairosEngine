@@ -2,22 +2,10 @@ Scene: Untitled Scene
 Entities:
   - Entity: 19816326526587945
     TagComponent:
-      Tag: Cube
-    TransformComponent:
-      Translation: [-3.2804708, 0, 0]
-      Rotation: [-0.6454892, 0, 0]
-      Scale: [5.4375105, 1, 1]
-  - Entity: 19816326526587945
-    TagComponent:
-      Tag: Cube 2
-    TransformComponent:
-      Translation: [2, 1.1517029, 0]
-      Rotation: [-1.119381, 0, 0]
-      Scale: [1, 0.99999994, 0.99999994]
-  - Entity: 19816326526587945
-    TagComponent:
-      Tag: Prop_Crate
+      Tag: Crate
     TransformComponent:
       Translation: [0, 0, 0]
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
+    MeshComponent:
+      MeshAssetPath: Assets/Models/Prop_Crate.fbx

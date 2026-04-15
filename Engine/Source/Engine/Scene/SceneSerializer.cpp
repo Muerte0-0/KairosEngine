@@ -3,6 +3,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "Engine/Assets/MeshAssetManager.h"
 #include "Components.h"
 #include "Entity.h"
 
@@ -111,6 +112,18 @@ namespace Engine
 			emitter << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<MeshComponent>())
+		{
+			emitter << YAML::Key << "MeshComponent";
+			emitter << YAML::BeginMap;
+
+			auto& mc = entity.GetComponent<MeshComponent>();
+			if (mc.HasMeshAsset())
+				emitter << YAML::Key << "MeshAssetPath" << YAML::Value << mc.MeshAssetPath.generic_string();
+
+			emitter << YAML::EndMap;
+		}
+
 		emitter << YAML::EndMap; // End Entity map
 	}
 
@@ -161,14 +174,14 @@ namespace Engine
 		{
 			for (auto entity : entities)
 			{
-				uint16_t uuid = entity["Entity"].as<uint16_t>(); // To-Do
+				//uint16_t uuid = entity["Entity"].as<uint16_t>(); // To-Do
 				
 				std::string name;
 
 				if (auto tagComponent = entity["TagComponent"])
-					name = entity["Tag"].as<std::string>();
+					name = tagComponent["Tag"].as<std::string>();
 				
-				LOG(LogLevel::Trace, "Deserializing Entity with ID: {0}, name:{1}", uuid, name);
+				LOG(LogLevel::Trace, "Deserializing Entity with ID: {0}, name:{1}", 123, name);
 				
 				Entity deserializedEntity = m_Scene->CreateEntity(name);
 
@@ -178,6 +191,17 @@ namespace Engine
 					tc.Translation = transformComponent["Translation"].as<glm::vec3>();
 					tc.Rotation = transformComponent["Rotation"].as<glm::vec3>();
 					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
+				}
+
+				if (auto meshComponent = entity["MeshComponent"])
+				{
+					auto& mc = deserializedEntity.AddComponent<MeshComponent>();
+					if (auto meshAssetPath = meshComponent["MeshAssetPath"])
+					{
+						std::filesystem::path assetPath = meshAssetPath.as<std::string>();
+						Ref<Mesh> mesh = MeshAssetManager::GetMesh(assetPath);
+						mc.SetMeshAsset(assetPath, mesh);
+					}
 				}
 			}
 		}

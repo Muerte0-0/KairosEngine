@@ -1,8 +1,11 @@
 ﻿#include "SceneHierarchyPanel.h"
 
 #include "imgui.h"
+#include "Engine/Assets/MeshAssetManager.h"
 #include "Engine/Scene/Components.h"
 
+#include <algorithm>
+#include <cstring>
 #include <glm/gtc/type_ptr.hpp>
 #include <ranges>
 
@@ -10,6 +13,54 @@
 
 namespace Kairos
 {
+	static bool DrawMeshAssetField(Engine::MeshComponent& meshComponent)
+	{
+		const std::string meshDisplayName = MeshAssetManager::GetDisplayName(meshComponent.MeshAssetPath);
+		const float clearButtonWidth = 28.0f;
+		const float fieldWidth = (std::max)(ImGui::CalcItemWidth() - clearButtonWidth - ImGui::GetStyle().ItemSpacing.x, 1.0f);
+
+		ImGui::PushID("MeshAssetField");
+		ImGui::Button(meshDisplayName.c_str(), ImVec2(fieldWidth, 0.0f));
+
+		bool componentChanged = false;
+		if (const ImGuiPayload* dragPayload = ImGui::GetDragDropPayload())
+		{
+			if (std::strcmp(dragPayload->DataType, "CONTENT_BROWSER_ITEM") == 0 && ImGui::IsItemHovered())
+			{
+				ImDrawList* drawList = ImGui::GetWindowDrawList();
+				drawList->AddRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+					ImGui::GetColorU32(ImGuiCol_DragDropTarget), 4.0f, 0, 2.0f);
+			}
+		}
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			{
+				const wchar_t* payloadPath = static_cast<const wchar_t*>(payload->Data);
+				if (payloadPath != nullptr)
+				{
+					const std::filesystem::path meshAssetPath = MeshAssetManager::NormalizeAssetPath(payloadPath);
+					if (!meshAssetPath.empty() && meshAssetPath != meshComponent.MeshAssetPath)
+					{
+						Ref<Mesh> mesh = MeshAssetManager::GetMesh(meshAssetPath);
+						if (mesh)
+							componentChanged = meshComponent.SetMeshAsset(meshAssetPath, mesh);
+					}
+				}
+			}
+
+			ImGui::EndDragDropTarget();
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("X", ImVec2(clearButtonWidth, 0.0f)))
+			componentChanged = meshComponent.ClearMesh() || componentChanged;
+
+		ImGui::PopID();
+		return componentChanged;
+	}
+
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
 	{
 		SetContext(context);
@@ -229,7 +280,14 @@ namespace Kairos
 			
 			if (open)
 			{
-				//auto& mc = entity.GetComponent<MeshComponent>();
+				auto& mc = entity.GetComponent<MeshComponent>();
+
+				ImGui::Columns(2);
+				ImGui::SetColumnWidth(0, 100.0f);
+				ImGui::Text("Asset");
+				ImGui::NextColumn();
+				DrawMeshAssetField(mc);
+				ImGui::Columns(1);
 				
 				ImGui::TreePop();
 			}

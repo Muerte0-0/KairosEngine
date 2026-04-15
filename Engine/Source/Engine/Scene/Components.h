@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <filesystem>
 
 #include "Engine/Renderer/Cameras/GameCamera.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
@@ -59,8 +60,31 @@ namespace Engine
 
 	struct MeshComponent
 	{
-		Ref<Mesh> Mesh;
-		
-		bool HasMesh() const { return Mesh != nullptr; }
+		std::filesystem::path MeshAssetPath;
+		Ref<Mesh> MeshRef;
+
+		bool SetMeshAsset(const std::filesystem::path& assetPath, const Ref<Mesh>& mesh)
+		{
+			std::filesystem::path normalizedPath = assetPath.lexically_normal();
+			if (MeshAssetPath == normalizedPath && MeshRef == mesh)
+				return false;
+
+			MeshAssetPath = normalizedPath;
+			MeshRef = mesh;
+			return true;
+		}
+
+		bool ClearMesh()
+		{
+			if (MeshAssetPath.empty() && MeshRef == nullptr)
+				return false;
+
+			MeshAssetPath.clear();
+			MeshRef.reset();
+			return true;
+		}
+
+		bool HasMesh() const { return MeshRef != nullptr; }
+		bool HasMeshAsset() const { return !MeshAssetPath.empty(); }
 	};
 }

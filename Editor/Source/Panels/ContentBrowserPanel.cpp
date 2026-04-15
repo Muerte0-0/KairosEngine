@@ -54,7 +54,8 @@ namespace Engine
 				{
 					const wchar_t* itemPath = relativePath.c_str();
 					
-					ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, wcslen(itemPath) * sizeof(wchar_t), ImGuiCond_Once);
+					ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
+					ImGui::TextUnformatted(filenameString.c_str());
 					ImGui::EndDragDropSource();
 				}
 				
