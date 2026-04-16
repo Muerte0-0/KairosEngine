@@ -12,6 +12,8 @@ namespace Engine
 		void OnImGuiRender();
 		
 	private:
+		void RenderFolderTree(const std::filesystem::path& directory);
+
 		std::filesystem::path m_BaseDirectory;
 		std::filesystem::path m_CurrentDirectory;
 		
