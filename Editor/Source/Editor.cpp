@@ -2,8 +2,6 @@
 #include "Engine/Core/EntryPoint.h"
 // ----------------------------- //
 
-#include "Engine.h"
-
 #include "EditorLayer.h"
 
 namespace Kairos

@@ -62,79 +62,79 @@ namespace YAML
 
 namespace Engine
 {
-	YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::vec3& v)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec3& v)
 	{
-		emitter << YAML::Flow;
-		emitter << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
-		return emitter;
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << v.z << YAML::EndSeq;
+		return out;
 	}
 	
-	YAML::Emitter& operator<<(YAML::Emitter& emitter, const glm::vec4& v)
+	YAML::Emitter& operator<<(YAML::Emitter& out, const glm::vec4& v)
 	{
-		emitter << YAML::Flow;
-		emitter << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
-		return emitter;
+		out << YAML::Flow;
+		out << YAML::BeginSeq << v.x << v.y << v.z << v.w << YAML::EndSeq;
+		return out;
 	}
 	
 	SceneSerializer::SceneSerializer(const Ref<Scene> scene) : m_Scene(scene) {}
 	
-	static void SerializeEntity(YAML::Emitter& emitter, Entity entity)
+	static void SerializeEntity(YAML::Emitter& out, Entity entity)
 	{
 		ASSERT(entity.HasComponent<IDComponent>(), "Entity does not have an ID Component!")
 		
-		emitter << YAML::BeginMap; // Entity map
+		out << YAML::BeginMap; // Entity map
 
 		// Entity ID
-		emitter << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
+		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 
 		// Tag Component
 		if (entity.HasComponent<TagComponent>())
 		{
-			emitter << YAML::Key << "TagComponent";
-			emitter << YAML::BeginMap;
+			out << YAML::Key << "TagComponent";
+			out << YAML::BeginMap;
 
 			auto& tag = entity.GetComponent<TagComponent>().Tag;
-			emitter << YAML::Key << "Tag" << YAML::Value << tag;
+			out << YAML::Key << "Tag" << YAML::Value << tag;
 
-			emitter << YAML::EndMap;
+			out << YAML::EndMap;
 		}
 
 		// Transform Component
 		if (entity.HasComponent<TransformComponent>())
 		{
-			emitter << YAML::Key << "TransformComponent";
-			emitter << YAML::BeginMap;
+			out << YAML::Key << "TransformComponent";
+			out << YAML::BeginMap;
 
 			auto& tc = entity.GetComponent<TransformComponent>();
 
-			emitter << YAML::Key << "Translation" << YAML::Value << tc.Translation;
-			emitter << YAML::Key << "Rotation" << YAML::Value << tc.Rotation;
-			emitter << YAML::Key << "Scale" << YAML::Value << tc.Scale;
+			out << YAML::Key << "Translation" << YAML::Value << tc.Translation;
+			out << YAML::Key << "Rotation" << YAML::Value << tc.Rotation;
+			out << YAML::Key << "Scale" << YAML::Value << tc.Scale;
 
-			emitter << YAML::EndMap;
+			out << YAML::EndMap;
 		}
 
 		if (entity.HasComponent<MeshComponent>())
 		{
-			emitter << YAML::Key << "MeshComponent";
-			emitter << YAML::BeginMap;
+			out << YAML::Key << "MeshComponent";
+			out << YAML::BeginMap;
 
 			auto& mc = entity.GetComponent<MeshComponent>();
 			if (mc.HasMeshAsset())
-				emitter << YAML::Key << "MeshAssetPath" << YAML::Value << mc.MeshAssetPath.generic_string();
+				out << YAML::Key << "MeshAssetPath" << YAML::Value << mc.MeshAssetPath.string();
 
-			emitter << YAML::EndMap;
+			out << YAML::EndMap;
 		}
 
-		emitter << YAML::EndMap; // End Entity map
+		out << YAML::EndMap; // End Entity map
 	}
 
 	void SceneSerializer::Serialize(const std::string& filepath)
 	{
-		YAML::Emitter emitter;
-		emitter << YAML::BeginMap; 
-		emitter << YAML::Key << "Scene" << YAML::Value << "Untitled Scene"; 
-		emitter << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
+		YAML::Emitter out;
+		out << YAML::BeginMap; 
+		out << YAML::Key << "Scene" << YAML::Value << "Untitled Scene"; 
+		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		
 		for (auto entt : std::views::reverse(m_Scene->m_Registry.view<entt::entity>()))
 		{
@@ -143,14 +143,14 @@ namespace Engine
 			if (!entity)
 				return;
 			
-			SerializeEntity(emitter, entity);
+			SerializeEntity(out, entity);
 		}
 		
-		emitter << YAML::EndSeq;
-		emitter << YAML::EndMap;
+		out << YAML::EndSeq;
+		out << YAML::EndMap;
 		
 		std::ofstream fout(filepath);
-		fout << emitter.c_str();
+		fout << out.c_str();
 	}
 
 	void SceneSerializer::SerializeRuntime(const std::string& filepath)
@@ -160,11 +160,17 @@ namespace Engine
 
 	bool SceneSerializer::Deserialize(const std::string& filepath)
 	{
-		std::ifstream stream(filepath);
-		std::stringstream strStream;
-		strStream << stream.rdbuf();
+		YAML::Node data;
 
-		YAML::Node data = YAML::Load(strStream.str());
+		try
+		{
+			data = YAML::LoadFile(filepath);
+		}
+		catch (YAML::ParserException e)
+		{
+			LOG(LogLevel::Error, "Failed to Load Project: '{0}'\n {1}", filepath, e.what());
+			return false;
+		}
 		
 		if (!data["Scene"])
 			return false;
@@ -200,7 +206,7 @@ namespace Engine
 					auto& mc = deserializedEntity.AddComponent<MeshComponent>();
 					if (auto meshAssetPath = meshComponent["MeshAssetPath"])
 					{
-						std::filesystem::path assetPath = meshAssetPath.as<std::string>();
+						std::filesystem::path assetPath(meshAssetPath.as<std::string>());
 						Ref<Mesh> mesh = MeshAssetManager::GetMesh(assetPath);
 						mc.SetMeshAsset(assetPath, mesh);
 					}

@@ -32,6 +32,7 @@ namespace Kairos
 		glm::vec2 m_ViewportBounds[2];
 
 		Ref<Scene> m_ActiveScene;
+		std::filesystem::path m_ActiveScenePath;
 		Scope<SceneRenderer> m_SceneRenderer;
 		Scope<SceneCamera> m_SceneCamera;
 		Scope<SceneCameraController> m_SceneCameraController;
@@ -45,8 +46,8 @@ namespace Kairos
 		
 		// ----------- Panels ----------- //
 		
-		SceneHierarchyPanel m_SceneHierarchyPanel;
-		ContentBrowserPanel m_ContentBrowserPanel;
+		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
+		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
 		
 		// ------------------------------ //
 		
@@ -68,7 +69,12 @@ namespace Kairos
 		// Cycles through overlapping hits if current selection is the front-most.
 		Entity PickEntityAtMouse();
 
-		void SaveScene() const;
+		void NewProject();
+		void OpenProject(const std::filesystem::path& path);
+		void SaveProject();
+		
+		void OpenScene(const std::filesystem::path& filepath);
+		void SaveScene();
 		void SaveSceneAs();
 	};
 }

@@ -80,11 +80,9 @@ namespace Kairos
 		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
 		m_CameraManager.SetMode(CameraManagerMode::Editor);
 		
-		SceneSerializer serializer(m_ActiveScene);
-		serializer.Deserialize("Content/Scenes/Example.kairos");
+		OpenProject("SandboxProject/Sandbox.kproj");
 		
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
-		m_ContentBrowserPanel.Init();
+		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
 		m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
 	}
@@ -171,8 +169,8 @@ namespace Kairos
 
 		ImGui::PopStyleVar();
 
-		m_SceneHierarchyPanel.OnImGuiRender();
-		m_ContentBrowserPanel.OnImGuiRender();
+		m_SceneHierarchyPanel->OnImGuiRender();
+		m_ContentBrowserPanel->OnImGuiRender();
 
 		if (m_ShowConsole)
 			DrawConsole();
@@ -312,7 +310,7 @@ namespace Kairos
 		}
 		
 		// Gizmos
-		Entity selectedEntity = m_SceneHierarchyPanel.GetSelectedEntity();
+		Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
 		
 		if (selectedEntity && m_GizmoType != -1)
 		{
@@ -426,20 +424,6 @@ namespace Kairos
 		return true;
 	}
 
-	void EditorLayer::SaveScene() const
-	{
-		SceneSerializer serializer(m_ActiveScene);
-		serializer.Serialize("Content/Scenes/Example.kairos");
-		
-		LOG(LogLevel::Info, "Saving Scene");
-	}
-
-	void EditorLayer::SaveSceneAs()
-	{
-		if (auto path = PlatformUtils::SaveFileDialog("Kairos Scene\0*.kairos\0\0", "Untitled.kairos"))
-			SceneSerializer(m_ActiveScene).Serialize(path->string());
-	}
-
 	bool EditorLayer::OnMouseButtonPressedEvent(MouseButtonPressedEvent& event)
 	{
 		// Only pick on LMB when viewport is hovered.
@@ -457,7 +441,7 @@ namespace Kairos
 			return false;
 
 		Entity picked = PickEntityAtMouse();
-		m_SceneHierarchyPanel.SetSelectedEntity(picked);
+		m_SceneHierarchyPanel->SetSelectedEntity(picked);
 
 		return false; // Don't consume — let ImGui focus the Window.
 	}
@@ -574,7 +558,7 @@ namespace Kairos
 		// ---- 4. Cycle through overlapping hits ---------------------------
 		// If the currently selected entity is the front hit, return the next
 		// one behind it so repeated clicks cycle through overlapping objects.
-		Entity currentSelection = m_SceneHierarchyPanel.GetSelectedEntity();
+		Entity currentSelection = m_SceneHierarchyPanel->GetSelectedEntity();
 
 		if (currentSelection && hits.size() > 1)
 		{
@@ -587,5 +571,47 @@ namespace Kairos
 		}
 
 		return hits.front().Ent; // default: closest
+	}
+
+	void EditorLayer::NewProject()
+	{
+		Project::New();
+	}
+
+	void EditorLayer::OpenProject(const std::filesystem::path& path)
+	{
+		if (Project::Load(path))
+		{
+			auto startScenePath = Project::GetAssetPath(Project::GetActive()->GetConfig().StartupScene);
+			OpenScene(startScenePath);
+			
+			m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>();
+			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
+		}
+	}
+
+	void EditorLayer::SaveProject()
+	{
+	}
+	
+	void EditorLayer::OpenScene(const std::filesystem::path& filepath)
+	{
+		SceneSerializer serializer(m_ActiveScene);
+		if (serializer.Deserialize(filepath.string()))
+			m_ActiveScenePath = filepath;
+	}
+	
+	void EditorLayer::SaveScene()
+	{
+		SceneSerializer serializer(m_ActiveScene);
+		serializer.Serialize(m_ActiveScenePath.string());
+		
+		LOG(LogLevel::Info, "Saving Scene");
+	}
+
+	void EditorLayer::SaveSceneAs()
+	{
+		if (auto path = PlatformUtils::SaveFileDialog("Kairos Scene\0*.kairos\0\0", "Untitled.kairos"))
+			SceneSerializer(m_ActiveScene).Serialize(path->string());
 	}
 }

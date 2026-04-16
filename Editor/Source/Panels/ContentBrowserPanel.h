@@ -7,13 +7,12 @@ namespace Engine
 	class ContentBrowserPanel
 	{
 	public:
-		ContentBrowserPanel() = default;
-
-		void Init();
+		ContentBrowserPanel();
 
 		void OnImGuiRender();
 		
 	private:
+		std::filesystem::path m_BaseDirectory;
 		std::filesystem::path m_CurrentDirectory;
 		
 		Ref<Texture> m_DirectoryIcon;

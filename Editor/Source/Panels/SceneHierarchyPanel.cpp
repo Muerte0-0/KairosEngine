@@ -23,6 +23,7 @@ namespace Kairos
 		ImGui::Button(meshDisplayName.c_str(), ImVec2(fieldWidth, 0.0f));
 
 		bool componentChanged = false;
+		
 		if (const ImGuiPayload* dragPayload = ImGui::GetDragDropPayload())
 		{
 			if (std::strcmp(dragPayload->DataType, "CONTENT_BROWSER_ITEM") == 0 && ImGui::IsItemHovered())
@@ -40,11 +41,11 @@ namespace Kairos
 				const wchar_t* payloadPath = static_cast<const wchar_t*>(payload->Data);
 				if (payloadPath != nullptr)
 				{
-					const std::filesystem::path meshAssetPath = MeshAssetManager::NormalizeAssetPath(payloadPath);
+					const std::filesystem::path meshAssetPath(payloadPath);
+					
 					if (!meshAssetPath.empty() && meshAssetPath != meshComponent.MeshAssetPath)
 					{
-						Ref<Mesh> mesh = MeshAssetManager::GetMesh(meshAssetPath);
-						if (mesh)
+						if (Ref<Mesh> mesh = MeshAssetManager::GetMesh(meshAssetPath))
 							componentChanged = meshComponent.SetMeshAsset(meshAssetPath, mesh);
 					}
 				}

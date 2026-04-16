@@ -8,7 +8,7 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      MeshAssetPath: Assets/Models/Prop_Crate.fbx
+      MeshAssetPath: SandboxProject\Content\Assets\Models\Prop_Crate.fbx
   - Entity: 8997048264795637701
     TagComponent:
       Tag: Empty Entity
@@ -17,4 +17,13 @@ Entities:
       Rotation: [0, 0, 0]
       Scale: [1, 1, 1]
     MeshComponent:
-      MeshAssetPath: Assets/Models/Prop_Crate.obj
+      MeshAssetPath: SandboxProject\Content\Assets\Models\Prop_Crate.obj
+  - Entity: 18169421568516356745
+    TagComponent:
+      Tag: Crate 3
+    TransformComponent:
+      Translation: [2.3157783, 0, 0]
+      Rotation: [0, 0, 0]
+      Scale: [1, 1, 1]
+    MeshComponent:
+      MeshAssetPath: SandboxProject\Content\Assets\Models\Prop_Crate.fbx

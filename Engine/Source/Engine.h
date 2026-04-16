@@ -26,6 +26,7 @@
 #include "Engine/Scene/Entity.h"
 // --------------------------------- //
 
+#include "Engine/Project/Project.h"
 // ---------- Renderer ----------- //
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/SceneRenderer.h"

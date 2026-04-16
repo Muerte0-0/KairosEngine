@@ -4,17 +4,8 @@
 
 namespace Engine
 {
-	// To-Do: Change to Project Content Directory once Projects are set up
-	extern const std::filesystem::path g_ContentDirectory = "Content";
-
-	void ContentBrowserPanel::Init()
+	ContentBrowserPanel::ContentBrowserPanel() : m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
 	{
-		m_CurrentDirectory = g_ContentDirectory;
-
-		// Create the Content directory if it doesn't exist yet
-		if (!std::filesystem::exists(g_ContentDirectory))
-			std::filesystem::create_directories(g_ContentDirectory);
-
 		m_DirectoryIcon	= Texture::Create("Resources/Icons/ContentBrowser/DirectoryIcon.png");
 		m_FileIcon		= Texture::Create("Resources/Icons/ContentBrowser/FileIcon.png");
 	}
@@ -23,7 +14,7 @@ namespace Engine
 	{
 		ImGui::Begin("Content Browser");
 
-		if (ImGui::ArrowButton("Back", ImGuiDir_Left) && m_CurrentDirectory != std::filesystem::path(g_ContentDirectory))
+		if (ImGui::ArrowButton("Back", ImGuiDir_Left) && m_CurrentDirectory != std::filesystem::path(m_BaseDirectory))
 			m_CurrentDirectory = m_CurrentDirectory.parent_path();
 
 		static float padding       = 8.f;
@@ -40,8 +31,7 @@ namespace Engine
 			for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
 			{
 				const auto& path = directoryEntry.path();
-				auto relativePath = std::filesystem::relative(path, g_ContentDirectory);
-				std::string filenameString = relativePath.filename().string();
+				std::string filenameString = path.filename().string();
 				
 				ImGui::PushID(filenameString.c_str());
 
@@ -52,7 +42,7 @@ namespace Engine
 				
 				if (ImGui::BeginDragDropSource())
 				{
-					const wchar_t* itemPath = relativePath.c_str();
+					const wchar_t* itemPath = path.c_str();
 					
 					ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 					ImGui::TextUnformatted(filenameString.c_str());

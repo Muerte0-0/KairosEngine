@@ -75,11 +75,10 @@ namespace Engine
 
 		bool SetMeshAsset(const std::filesystem::path& assetPath, const Ref<Mesh>& mesh)
 		{
-			std::filesystem::path normalizedPath = assetPath.lexically_normal();
-			if (MeshAssetPath == normalizedPath && MeshRef == mesh)
+			if (MeshAssetPath == assetPath && MeshRef == mesh)
 				return false;
 
-			MeshAssetPath = normalizedPath;
+			MeshAssetPath = assetPath;
 			MeshRef = mesh;
 			return true;
 		}
