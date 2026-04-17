@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/Core/Base.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
-#include "Engine/Renderer/RHI/AssimpModelLoader.h"
+#include "Engine/Assets/AssimpModelLoader.h"
 
 #include <string>
 #include <vector>

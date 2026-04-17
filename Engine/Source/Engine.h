@@ -24,9 +24,10 @@
 #include "Engine/Scene/Scene.h"
 #include "Engine/Scene/Components.h"
 #include "Engine/Scene/Entity.h"
-// --------------------------------- //
 
 #include "Engine/Project/Project.h"
+// --------------------------------- //
+
 // ---------- Renderer ----------- //
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Renderer/SceneRenderer.h"
@@ -39,7 +40,7 @@
 // ------------------------------- //
 
 // ---------- Factories ----------- //
-#include "Engine/Renderer/RHI/ModelFactory.h"
+#include "Engine/Renderer/RHI/Factories/ModelFactory.h"
 // ------------------------------- //
 
 // ---------- Cameras ----------- //

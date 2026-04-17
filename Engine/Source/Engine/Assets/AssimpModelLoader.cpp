@@ -1,5 +1,5 @@
 #include "kepch.h"
-#include "Engine/Renderer/RHI/AssimpModelLoader.h"
+#include "AssimpModelLoader.h"
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>

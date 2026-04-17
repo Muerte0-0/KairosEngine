@@ -1,5 +1,5 @@
 #include "kepch.h"
-#include "Engine/Renderer/RHI/ModelFactory.h"
+#include "ModelFactory.h"
 
 #include <filesystem>
 

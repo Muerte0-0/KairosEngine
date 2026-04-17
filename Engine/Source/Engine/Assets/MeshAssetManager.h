@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/Debugging/Log.h"
 #include "Engine/Project/Project.h"
-#include "Engine/Renderer/RHI/ModelFactory.h"
+#include "Engine/Renderer/RHI/Factories/ModelFactory.h"
 
 namespace Engine
 {
