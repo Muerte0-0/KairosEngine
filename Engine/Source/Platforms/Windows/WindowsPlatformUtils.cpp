@@ -1,12 +1,15 @@
 #include "kepch.h"
 
-#if defined(PLATFORM_WINDOWS)
+#ifdef PLATFORM_WINDOWS
+
+#include "Engine/Core/Application.h"
 
 #include "Engine/Utils/PlatformUtils.h"
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
+#include <commdlg.h>
+#include <GLFW/glfw3.h>
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
 
 namespace Engine
 {
@@ -64,71 +67,54 @@ namespace Engine
 		return FindWorkspaceRoot(std::filesystem::current_path());
 	}
 
-	std::optional<std::filesystem::path> PlatformUtils::OpenFileDialog(const char* filter, const std::filesystem::path& initialDir)
+	std::filesystem::path PlatformUtils::OpenFileDialog(const char* filter, const std::filesystem::path& initialDir)
 	{
-		OPENFILENAMEW ofn{};
-		wchar_t szFile[MAX_PATH] = {};
+		OPENFILENAMEA ofn{};
+		CHAR szFile[MAX_PATH] = {};
+		
+		ZeroMemory(&ofn, sizeof(OPENFILENAME));
+		ofn.lStructSize = sizeof(OPENFILENAMEA);
+		ofn.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow()->GetHandle());
+		ofn.lpstrFile = szFile;
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.lpstrFilter = filter;
+		ofn.nFilterIndex = 1;
+		
+		std::string initialDirStr = initialDir.string();
+		ofn.lpstrInitialDir = initialDir.empty() ? nullptr : initialDirStr.c_str();
+		
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
-		// Convert filter (char*) → wchar_t buffer
-		// filter uses null-separated pairs; count total bytes to convert properly
-		int filterLen = 0;
-		while (!(filter[filterLen] == '\0' && filter[filterLen + 1] == '\0'))
-			++filterLen;
-		filterLen += 2; // include double-null terminator
+		if (GetOpenFileNameA(&ofn) == true)
+			return { ofn.lpstrFile };
 
-		std::wstring wFilter(filterLen, L'\0');
-		MultiByteToWideChar(CP_UTF8, 0, filter, filterLen, wFilter.data(), filterLen);
-
-		const std::wstring wInitialDir = initialDir.empty() ? L"" : initialDir.wstring();
-
-		ofn.lStructSize			= sizeof(ofn);
-		ofn.hwndOwner			= nullptr;
-		ofn.lpstrFilter			= wFilter.data();
-		ofn.lpstrFile			= szFile;
-		ofn.nMaxFile			= MAX_PATH;
-		ofn.lpstrInitialDir		= wInitialDir.empty() ? nullptr : wInitialDir.c_str();
-		ofn.Flags				= OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
-
-		if (GetOpenFileNameW(&ofn))
-			return std::filesystem::path(szFile);
-
-		return std::nullopt;
+		return {};
 	}
 
-	std::optional<std::filesystem::path> PlatformUtils::SaveFileDialog(const char* filter, const std::filesystem::path& defaultName, const std::filesystem::path& initialDir)
+	std::filesystem::path PlatformUtils::SaveFileDialog(const char* filter, const std::filesystem::path& defaultName, const std::filesystem::path& initialDir)
 	{
-		OPENFILENAMEW ofn{};
-		wchar_t szFile[MAX_PATH] = {};
+		OPENFILENAMEA ofn{};
+		CHAR szFile[MAX_PATH] = {};
+		
+		ZeroMemory(&ofn, sizeof(OPENFILENAME));
+		ofn.lStructSize = sizeof(OPENFILENAMEA);
+		ofn.hwndOwner = glfwGetWin32Window(Application::Get().GetWindow()->GetHandle());
+		ofn.lpstrFile = szFile;
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.lpstrFilter = filter;
+		ofn.nFilterIndex = 1;
+		
+		std::string initialDirStr = initialDir.string();
+		ofn.lpstrInitialDir = initialDir.empty() ? nullptr : initialDirStr.c_str();
+		
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
-		if (!defaultName.empty())
-		{
-			const std::wstring wDefault = defaultName.wstring();
-			wcsncpy_s(szFile, wDefault.c_str(), MAX_PATH - 1);
-		}
+		if (GetSaveFileNameA(&ofn) == true)
+			return { ofn.lpstrFile };
 
-		int filterLen = 0;
-		while (!(filter[filterLen] == '\0' && filter[filterLen + 1] == '\0'))
-			++filterLen;
-		filterLen += 2;
-
-		std::wstring wFilter(filterLen, L'\0');
-		MultiByteToWideChar(CP_UTF8, 0, filter, filterLen, wFilter.data(), filterLen);
-
-		const std::wstring wInitialDir = initialDir.empty() ? L"" : initialDir.wstring();
-
-		ofn.lStructSize       = sizeof(ofn);
-		ofn.hwndOwner         = nullptr;
-		ofn.lpstrFilter       = wFilter.data();
-		ofn.lpstrFile         = szFile;
-		ofn.nMaxFile          = MAX_PATH;
-		ofn.lpstrInitialDir   = wInitialDir.empty() ? nullptr : wInitialDir.c_str();
-		ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_NOCHANGEDIR;
-
-		if (GetSaveFileNameW(&ofn))
-			return std::filesystem::path(szFile);
-
-		return std::nullopt;
+		return {};
 	}
+
 }
 
 #endif

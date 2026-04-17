@@ -9,6 +9,8 @@
 
 #include "ImGuizmo.h"
 
+constexpr const char* KPROJ_FILTER = "Kairos Project\0*.kproj\0\0";
+
 namespace
 {
 	Ref<Mesh> CreateDefaultCubeMesh()
@@ -80,7 +82,15 @@ namespace Kairos
 		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
 		m_CameraManager.SetMode(CameraManagerMode::Editor);
 		
-		OpenProject("SandboxProject/Sandbox.kproj");
+		auto projectPath = PlatformUtils::OpenFileDialog(KPROJ_FILTER);
+		
+		if (projectPath.empty())
+		{
+			Application::Get().Stop();
+			return;
+		}
+		
+		OpenProject(projectPath);
 		
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
@@ -611,7 +621,9 @@ namespace Kairos
 
 	void EditorLayer::SaveSceneAs()
 	{
-		if (auto path = PlatformUtils::SaveFileDialog("Kairos Scene\0*.kairos\0\0", "Untitled.kairos"))
-			SceneSerializer(m_ActiveScene).Serialize(path->string());
+		auto path = PlatformUtils::SaveFileDialog("Scene\0*.kscn\0\0", "Untitled.kscn");
+		
+		if (!path.empty())
+			SceneSerializer(m_ActiveScene).Serialize(path.string());
 	}
 }

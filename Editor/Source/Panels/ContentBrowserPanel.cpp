@@ -4,8 +4,7 @@
 
 namespace Engine
 {
-	ContentBrowserPanel::ContentBrowserPanel()
-		: m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
+	ContentBrowserPanel::ContentBrowserPanel() : m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
 	{
 		m_DirectoryIcon = Texture::Create("Resources/Icons/ContentBrowser/DirectoryIcon.png");
 		m_FileIcon      = Texture::Create("Resources/Icons/ContentBrowser/FileIcon.png");
@@ -108,8 +107,8 @@ namespace Engine
 
 				for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
 				{
-					const auto&  path           = directoryEntry.path();
-					std::string  filenameString  = path.filename().string();
+					const auto& path = directoryEntry.path();
+					std::string filenameString = path.filename().string();
 
 					ImGui::PushID(filenameString.c_str());
 
@@ -121,8 +120,7 @@ namespace Engine
 					if (ImGui::BeginDragDropSource())
 					{
 						const wchar_t* itemPath = path.c_str();
-						ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath,
-							(wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
+						ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 						ImGui::TextUnformatted(filenameString.c_str());
 						ImGui::EndDragDropSource();
 					}

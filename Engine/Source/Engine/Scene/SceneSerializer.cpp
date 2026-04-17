@@ -120,8 +120,9 @@ namespace Engine
 			out << YAML::BeginMap;
 
 			auto& mc = entity.GetComponent<MeshComponent>();
+			
 			if (mc.HasMeshAsset())
-				out << YAML::Key << "MeshAssetPath" << YAML::Value << mc.MeshAssetPath.string();
+				out << YAML::Key << "MeshAssetPath" << YAML::Value << mc.MeshAssetPath.lexically_relative(Project::GetAssetDirectory()).string();
 
 			out << YAML::EndMap;
 		}
@@ -206,7 +207,7 @@ namespace Engine
 					auto& mc = deserializedEntity.AddComponent<MeshComponent>();
 					if (auto meshAssetPath = meshComponent["MeshAssetPath"])
 					{
-						std::filesystem::path assetPath(meshAssetPath.as<std::string>());
+						std::filesystem::path assetPath(Project::GetAssetPath(meshAssetPath.as<std::string>()));
 						Ref<Mesh> mesh = MeshAssetManager::GetMesh(assetPath);
 						mc.SetMeshAsset(assetPath, mesh);
 					}

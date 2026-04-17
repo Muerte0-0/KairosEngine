@@ -1,6 +1,0 @@
-Project:
-  Name: Sandbox
-  StartupScene: "Scenes/Example.kairos"
-  AssetDirectory: "Content"
-  AssetRegistry: ""
-  SourceDirectory: "Source"

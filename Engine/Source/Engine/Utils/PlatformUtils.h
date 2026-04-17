@@ -35,9 +35,7 @@ namespace Engine
 		 * @param initialDir Starting directory. Empty = last used.
 		 * @return Selected path, or std::nullopt if cancelled.
 		 */
-		[[nodiscard]] static std::optional<std::filesystem::path> OpenFileDialog(
-			const char* filter = "All Files\0*.*\0\0",
-			const std::filesystem::path& initialDir = {});
+		[[nodiscard]] static std::filesystem::path OpenFileDialog(const char* filter = "All Files\0*.*\0\0", const std::filesystem::path& initialDir = {});
 
 		/**
 		 * @brief Opens a native "Save File" dialog.
@@ -46,7 +44,7 @@ namespace Engine
 		 * @param initialDir Starting directory. Empty = last used.
 		 * @return Selected path, or std::nullopt if cancelled.
 		 */
-		[[nodiscard]] static std::optional<std::filesystem::path> SaveFileDialog(
+		[[nodiscard]] static std::filesystem::path SaveFileDialog(
 			const char* filter = "All Files\0*.*\0\0",
 			const std::filesystem::path& defaultName = {},
 			const std::filesystem::path& initialDir = {});
