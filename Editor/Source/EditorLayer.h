@@ -70,7 +70,7 @@ namespace Kairos
 		Entity PickEntityAtMouse();
 
 		void NewProject();
-		void OpenProject(const std::filesystem::path& path);
+		void OpenProject();
 		void SaveProject();
 		
 		void OpenScene(const std::filesystem::path& filepath);

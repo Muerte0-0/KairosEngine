@@ -82,15 +82,7 @@ namespace Kairos
 		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
 		m_CameraManager.SetMode(CameraManagerMode::Editor);
 		
-		auto projectPath = PlatformUtils::OpenFileDialog(KPROJ_FILTER);
-		
-		if (projectPath.empty())
-		{
-			Application::Get().Stop();
-			return;
-		}
-		
-		OpenProject(projectPath);
+		OpenProject();
 		
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
@@ -206,22 +198,19 @@ namespace Kairos
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("New Project", "Ctrl+N"))
-				{
-				}
+					NewProject();
 
 				if (ImGui::MenuItem("Open Project", "Ctrl+O"))
-				{
-				}
+					OpenProject();
 
 				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
 					SaveScene();
 				
-				if (ImGui::MenuItem("Save Scene As", "Ctrl+Shift+S"))
+				if (ImGui::MenuItem("Save Scene As"))
 					SaveSceneAs();
 				
-				if (ImGui::MenuItem("Save All"))
-				{
-				}
+				if (ImGui::MenuItem("Save All", "Ctrl+Shift+S"))
+					SaveProject();
 				
 				if (ImGui::MenuItem("Exit"))
 					Engine::Application::Get().Stop();
@@ -407,7 +396,7 @@ namespace Kairos
 			if (control)
 			{
 				if (shift)
-					SaveSceneAs();
+					SaveProject();
 				else
 					SaveScene();
 			}
@@ -588,9 +577,17 @@ namespace Kairos
 		Project::New();
 	}
 
-	void EditorLayer::OpenProject(const std::filesystem::path& path)
+	void EditorLayer::OpenProject()
 	{
-		if (Project::Load(path))
+		auto projectPath = PlatformUtils::OpenFileDialog(KPROJ_FILTER);
+		
+		if (projectPath.empty())
+		{
+			Application::Get().Stop();
+			return;
+		}
+		
+		if (Project::Load(projectPath))
 		{
 			auto startScenePath = Project::GetAssetPath(Project::GetActive()->GetConfig().StartupScene);
 			OpenScene(startScenePath);
