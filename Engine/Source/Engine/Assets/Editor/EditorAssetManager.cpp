@@ -61,10 +61,10 @@ namespace Engine
 			++loaded;
 		}
 
-		LOG(LogLevel::Info, "EditorAssetManager: loaded {} .kasset file(s).", loaded);
+		LOG(LogLevel::Info, "EditorAssetManager: loaded {} Asset(s).", loaded);
 
 		// ------------------------------------------------------------------
-		// Pass 2: find source files with no .kasset sidecar, create them
+		// find source files with no Metadata, create the Metadata
 		// ------------------------------------------------------------------
 		size_t created = 0;
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
