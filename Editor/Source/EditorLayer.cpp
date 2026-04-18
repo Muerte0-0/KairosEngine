@@ -299,6 +299,17 @@ namespace Kairos
 			ImGui::TextColored(ImVec4(1, 0, 0, 1), "Not Implemented Yet! :)");
 		}
 
+		// ── Drag-drop: scene file onto viewport → open scene ──────────────
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_ITEM"))
+			{
+				const wchar_t* wpath = static_cast<const wchar_t*>(payload->Data);
+				OpenScene(std::filesystem::path(wpath));
+			}
+			ImGui::EndDragDropTarget();
+		}
+
 		m_ViewportFocused = ImGui::IsWindowFocused();
 		m_ViewportHovered = ImGui::IsWindowHovered();
 		

@@ -1,154 +1,127 @@
-﻿#include "kepch.h"
+#include "kepch.h"
 #include "EditorAssetManager.h"
 #include "AssetImporter.h"
+#include "KassetSerializer.h"
 #include "Engine/Project/Project.h"
-
-#include <yaml-cpp/yaml.h>
 
 namespace Engine
 {
-	// -----------------------------------------------------------------------
-	// Helpers
-	// -----------------------------------------------------------------------
-	static std::string AssetTypeToString(AssetType type)
-	{
-		switch (type)
-		{
-			case AssetType::Mesh:     return "Mesh";
-			case AssetType::Texture:  return "Texture";
-			case AssetType::Material: return "Material";
-			case AssetType::Scene:    return "Scene";
-			default:                  return "None";
-		}
-	}
-
-	static AssetType AssetTypeFromString(const std::string& str)
-	{
-		if (str == "Mesh")     return AssetType::Mesh;
-		if (str == "Texture")  return AssetType::Texture;
-		if (str == "Material") return AssetType::Material;
-		if (str == "Scene")    return AssetType::Scene;
-		return AssetType::None;
-	}
-
-	// -----------------------------------------------------------------------
-	// EditorAssetManager
-	// -----------------------------------------------------------------------
 	EditorAssetManager::EditorAssetManager()
 	{
-		LoadRegistry();
-		ScanAndRegisterDirectory(Project::GetAssetDirectory());
+		ScanAndValidateAssets(Project::GetAssetDirectory());
 	}
 
-	void EditorAssetManager::LoadRegistry()
-	{
-		auto& config       = Project::GetActive()->GetConfig();
-		std::filesystem::path registryPath = Project::GetProjectDirectory() / config.AssetRegistryPath;
-
-		if (!std::filesystem::exists(registryPath))
-		{
-			LOG(LogLevel::Info, "EditorAssetManager: no registry found at '{}', starting fresh.", registryPath.string());
-			return;
-		}
-
-		YAML::Node root;
-		try   { root = YAML::LoadFile(registryPath.string()); }
-		catch (const YAML::Exception& e)
-		{
-			LOG(LogLevel::Error, "EditorAssetManager: failed to parse registry: {}", e.what());
-			return;
-		}
-
-		auto assets = root["Assets"];
-		if (!assets) return;
-
-		for (auto entry : assets)
-		{
-			AssetMetadata metadata;
-			metadata.Handle   = AssetHandle(entry["Handle"].as<uint64_t>());
-			metadata.Type     = AssetTypeFromString(entry["Type"].as<std::string>());
-			metadata.FilePath = entry["Path"].as<std::string>();
-
-			if (!metadata.IsValid())
-				continue;
-
-			m_Registry.Add(metadata);
-		}
-
-		LOG(LogLevel::Info, "EditorAssetManager: loaded {} asset(s) from registry.", m_Registry.Count());
-	}
-
-	void EditorAssetManager::SaveRegistry() const
-	{
-		auto& config       = Project::GetActive()->GetConfig();
-		std::filesystem::path registryPath = Project::GetProjectDirectory() / config.AssetRegistryPath;
-
-		YAML::Emitter out;
-		out << YAML::BeginMap;
-		out << YAML::Key << "Assets" << YAML::Value << YAML::BeginSeq;
-
-		for (const auto& [handle, metadata] : m_Registry)
-		{
-			out << YAML::BeginMap;
-			out << YAML::Key << "Handle" << YAML::Value << static_cast<uint64_t>(metadata.Handle);
-			out << YAML::Key << "Type"   << YAML::Value << AssetTypeToString(metadata.Type);
-			out << YAML::Key << "Path"   << YAML::Value << metadata.FilePath.generic_string();
-			out << YAML::EndMap;
-		}
-
-		out << YAML::EndSeq << YAML::EndMap;
-
-		std::ofstream file(registryPath);
-		file << out.c_str();
-	}
-
-	void EditorAssetManager::ScanAndRegisterDirectory(const std::filesystem::path& directory)
+	// -----------------------------------------------------------------------
+	// ScanAndValidateAssets
+	//
+	// Two passes over the asset directory:
+	//   Pass 1 — collect all .kasset files, load into registry.
+	//   Pass 2 — walk source files; if a supported file has no .kasset,
+	//            create one (auto-assign handle + type).
+	// -----------------------------------------------------------------------
+	void EditorAssetManager::ScanAndValidateAssets(const std::filesystem::path& directory)
 	{
 		if (!std::filesystem::exists(directory))
 			return;
 
-		size_t countBefore = m_Registry.Count();
+		const std::filesystem::path& assetDir = Project::GetAssetDirectory();
 
+		// ------------------------------------------------------------------
+		// Pass 1: load existing .kasset files
+		// ------------------------------------------------------------------
+		size_t loaded = 0;
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
 		{
-			if (!entry.is_regular_file())
+			if (!entry.is_regular_file()) continue;
+			if (entry.path().extension() != ".kasset") continue;
+
+			AssetMetadata metadata = KassetSerializer::Read(entry.path());
+			if (!metadata.IsValid())
+			{
+				LOG(LogLevel::Warning, "EditorAssetManager: invalid .kasset skipped: '{}'.", entry.path().string());
 				continue;
+			}
+
+			// Derive source path: strip ".kasset" suffix
+			std::filesystem::path sourcePath = entry.path().parent_path() / entry.path().stem();
+			std::filesystem::path canonical  = std::filesystem::weakly_canonical(sourcePath);
+			std::filesystem::path relative   = std::filesystem::relative(canonical, assetDir);
+
+			metadata.FilePath = relative;
+
+			if (m_Registry.Contains(metadata.Handle))
+			{
+				LOG(LogLevel::Warning, "EditorAssetManager: duplicate handle {} in '{}', skipped.",
+					static_cast<uint64_t>(metadata.Handle), entry.path().string());
+				continue;
+			}
+
+			m_Registry.Add(metadata);
+			m_HandleToSourcePath[metadata.Handle] = canonical;
+			++loaded;
+		}
+
+		LOG(LogLevel::Info, "EditorAssetManager: loaded {} .kasset file(s).", loaded);
+
+		// ------------------------------------------------------------------
+		// Pass 2: find source files with no .kasset sidecar, create them
+		// ------------------------------------------------------------------
+		size_t created = 0;
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
+		{
+			if (!entry.is_regular_file()) continue;
+
+			// Skip .kasset files themselves
+			if (entry.path().extension() == ".kasset") continue;
 
 			AssetType type = AssetImporter::DeduceTypeFromPath(entry.path());
-			if (type == AssetType::None)
-				continue;
+			if (type == AssetType::None) continue;
 
-			// Normalize path — check registry directly to avoid per-file SaveRegistry calls
+			std::filesystem::path kassetPath = KassetSerializer::GetKassetPath(entry.path());
+			if (std::filesystem::exists(kassetPath)) continue; // already has sidecar
+
+			// Build metadata for the orphaned source file
 			std::filesystem::path canonical = std::filesystem::weakly_canonical(entry.path());
-			std::filesystem::path relative  = std::filesystem::relative(canonical, Project::GetAssetDirectory());
-
-			if (m_Registry.IsPathRegistered(relative))
-				continue;
+			std::filesystem::path relative  = std::filesystem::relative(canonical, assetDir);
 
 			AssetMetadata metadata;
-			metadata.Handle   = AssetHandle();
+			metadata.Handle   = AssetHandle(); // new UUID
 			metadata.Type     = type;
 			metadata.FilePath = relative;
-			m_Registry.Add(metadata);
 
-			LOG(LogLevel::Info, "EditorAssetManager: auto-registered '{}' as handle {}.",
-				relative.string(), static_cast<uint64_t>(metadata.Handle));
+			if (!KassetSerializer::Write(canonical, metadata))
+			{
+				LOG(LogLevel::Error, "EditorAssetManager: failed to create Metadata for '{}'.", relative.string());
+				continue;
+			}
+
+			// Re-read so SourceHash is populated from what was written
+			AssetMetadata written = KassetSerializer::Read(kassetPath);
+			written.FilePath      = relative;
+
+			if (m_Registry.Contains(written.Handle))
+				continue; // UUID collision (astronomically unlikely)
+
+			m_Registry.Add(written);
+			m_HandleToSourcePath[written.Handle] = canonical;
+			++created;
+
+			LOG(LogLevel::Info, "EditorAssetManager: Created Metadata for '{}' (handle {}).",
+				relative.string(), static_cast<uint64_t>(written.Handle));
 		}
 
-		if (m_Registry.Count() > countBefore)
-		{
-			SaveRegistry();
-			LOG(LogLevel::Info, "EditorAssetManager: registry has {} asset(s) after directory scan.", m_Registry.Count());
-		}
+		if (created > 0)
+			LOG(LogLevel::Info, "EditorAssetManager: Auto-Created {} Metadata file(s).", created);
 	}
 
+	// -----------------------------------------------------------------------
+	// ImportAsset
+	// -----------------------------------------------------------------------
 	AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& rawPath)
 	{
-		// Normalize: always store relative to asset directory
 		std::filesystem::path canonical = std::filesystem::weakly_canonical(rawPath);
 		std::filesystem::path relative  = std::filesystem::relative(canonical, Project::GetAssetDirectory());
 
-		// Already imported?
 		if (m_Registry.IsPathRegistered(relative))
 			return m_Registry.GetHandleForPath(relative);
 
@@ -160,17 +133,54 @@ namespace Engine
 		}
 
 		AssetMetadata metadata;
-		metadata.Handle   = AssetHandle(); // generate new UUID
+		metadata.Handle   = AssetHandle();
 		metadata.Type     = type;
 		metadata.FilePath = relative;
 
-		m_Registry.Add(metadata);
-		SaveRegistry();
+		if (!KassetSerializer::Write(canonical, metadata))
+			return AssetHandle(NullAssetHandle);
+
+		std::filesystem::path kassetPath = KassetSerializer::GetKassetPath(canonical);
+		AssetMetadata written = KassetSerializer::Read(kassetPath);
+		written.FilePath      = relative;
+
+		m_Registry.Add(written);
+		m_HandleToSourcePath[written.Handle] = canonical;
 
 		LOG(LogLevel::Info, "EditorAssetManager: imported '{}' as handle {}.",
-			relative.string(), static_cast<uint64_t>(metadata.Handle));
+			relative.string(), static_cast<uint64_t>(written.Handle));
 
-		return metadata.Handle;
+		return written.Handle;
+	}
+
+	// -----------------------------------------------------------------------
+	// ReimportAsset
+	// -----------------------------------------------------------------------
+	void EditorAssetManager::ReimportAsset(AssetHandle handle)
+	{
+		const AssetMetadata* metadata = m_Registry.Get(handle);
+		if (!metadata)
+		{
+			LOG(LogLevel::Warning, "EditorAssetManager::ReimportAsset — handle {} not in registry.",
+				static_cast<uint64_t>(handle));
+			return;
+		}
+
+		auto it = m_HandleToSourcePath.find(handle);
+		if (it == m_HandleToSourcePath.end())
+		{
+			LOG(LogLevel::Warning, "EditorAssetManager::ReimportAsset — no source path for handle {}.",
+				static_cast<uint64_t>(handle));
+			return;
+		}
+
+		// Rewrite .kasset (refreshes SourceHash)
+		KassetSerializer::Write(it->second, *metadata);
+
+		// Evict loaded asset — next GetAsset() call will re-run importer
+		m_LoadedAssets.erase(handle);
+
+		LOG(LogLevel::Info, "EditorAssetManager: reimport queued for handle {}.", static_cast<uint64_t>(handle));
 	}
 
 	// -----------------------------------------------------------------------
@@ -178,12 +188,10 @@ namespace Engine
 	// -----------------------------------------------------------------------
 	Ref<Asset> EditorAssetManager::GetAsset(AssetHandle handle)
 	{
-		// Return cached
 		auto it = m_LoadedAssets.find(handle);
 		if (it != m_LoadedAssets.end())
 			return it->second;
 
-		// Not loaded — check registry
 		const AssetMetadata* metadata = m_Registry.Get(handle);
 		if (!metadata || !metadata->IsValid())
 		{
@@ -194,7 +202,6 @@ namespace Engine
 		Ref<Asset> asset = LoadAsset(*metadata);
 		if (asset)
 			m_LoadedAssets[handle] = asset;
-
 		return asset;
 	}
 
@@ -203,20 +210,18 @@ namespace Engine
 		return AssetImporter::Import(metadata);
 	}
 
-	bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const
-	{
-		return m_LoadedAssets.contains(handle);
-	}
+	bool EditorAssetManager::IsAssetLoaded(AssetHandle handle) const  { return m_LoadedAssets.contains(handle); }
 
 	bool EditorAssetManager::IsAssetValid(AssetHandle handle) const
 	{
-		const AssetMetadata* metadata = m_Registry.Get(handle);
-		return metadata && metadata->IsValid();
+		const AssetMetadata* m = m_Registry.Get(handle);
+		return m && m->IsValid();
 	}
 
 	AssetType EditorAssetManager::GetAssetType(AssetHandle handle) const
 	{
-		const AssetMetadata* metadata = m_Registry.Get(handle);
-		return metadata ? metadata->Type : AssetType::None;
+		const AssetMetadata* m = m_Registry.Get(handle);
+		return m ? m->Type : AssetType::None;
 	}
-}
+
+} // namespace Engine

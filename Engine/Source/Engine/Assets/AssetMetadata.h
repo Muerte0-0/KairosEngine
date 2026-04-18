@@ -1,16 +1,21 @@
-﻿#pragma once
+#pragma once
 #include "Asset.h"
 #include <filesystem>
+#include <string>
 
 namespace Engine
 {
 	struct AssetMetadata
 	{
-		AssetHandle           Handle = AssetHandle(NullAssetHandle);
-		AssetType             Type   = AssetType::None;
+		AssetHandle           Handle          = AssetHandle(NullAssetHandle);
+		AssetType             Type            = AssetType::None;
 
-		// Relative to Project asset directory — never absolute, never with ./ or ../
+		// Relative to project asset directory — never absolute
 		std::filesystem::path FilePath;
+
+		// Populated from .kasset — used for reimport detection only
+		std::string           SourceHash;
+		uint32_t              ImporterVersion = 0;
 
 		bool IsValid() const { return Type != AssetType::None; }
 	};

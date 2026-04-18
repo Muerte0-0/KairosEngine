@@ -104,9 +104,29 @@ namespace Engine
 
 			if (std::filesystem::exists(m_CurrentDirectory))
 			{
+				// Sort: folders first, then files — alphabetical within each group
+				std::vector<std::filesystem::directory_entry> dirs, files;
+				for (auto& entry : std::filesystem::directory_iterator(m_CurrentDirectory))
+				{
+					if (!entry.is_directory() && entry.path().extension() == ".kasset")
+						continue;
+					(entry.is_directory() ? dirs : files).push_back(entry);
+				}
+				auto byName = [](const std::filesystem::directory_entry& a, const std::filesystem::directory_entry& b)
+				{
+					return a.path().filename() < b.path().filename();
+				};
+				std::sort(dirs.begin(),  dirs.end(),  byName);
+				std::sort(files.begin(), files.end(), byName);
+
+				std::vector<std::filesystem::directory_entry> sorted;
+				sorted.reserve(dirs.size() + files.size());
+				sorted.insert(sorted.end(), dirs.begin(),  dirs.end());
+				sorted.insert(sorted.end(), files.begin(), files.end());
+
 				ImGui::Columns(columnCount, nullptr, false);
 
-				for (auto& directoryEntry : std::filesystem::directory_iterator(m_CurrentDirectory))
+				for (auto& directoryEntry : sorted)
 				{
 					const auto& path = directoryEntry.path();
 					std::string filenameString = path.filename().string();
@@ -121,7 +141,12 @@ namespace Engine
 					if (ImGui::BeginDragDropSource())
 					{
 						const wchar_t* itemPath = path.c_str();
-						ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
+						// Specific payload per asset type so drop targets can filter precisely
+						const char* payloadType = "CONTENT_BROWSER_ITEM";
+						if (path.extension() == L".kscn")
+							payloadType = "SCENE_ITEM";
+
+						ImGui::SetDragDropPayload(payloadType, itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 						ImGui::TextUnformatted(filenameString.c_str());
 						ImGui::EndDragDropSource();
 					}
