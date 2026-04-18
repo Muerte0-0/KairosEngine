@@ -307,6 +307,45 @@ namespace Kairos
 				const wchar_t* wpath = static_cast<const wchar_t*>(payload->Data);
 				OpenScene(std::filesystem::path(wpath));
 			}
+
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MESH_ITEM"))
+			{
+				const wchar_t* wpath = static_cast<const wchar_t*>(payload->Data);
+				std::filesystem::path meshPath(wpath);
+
+				// Import (or retrieve existing handle) via EditorAssetManager
+				auto* editorAM = static_cast<EditorAssetManager*>(
+					Project::GetActive()->GetAssetManager().get());
+
+				AssetHandle handle = editorAM->ImportAsset(meshPath);
+
+				if (static_cast<uint64_t>(handle) != NullAssetHandle)
+				{
+					Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
+					if (mesh)
+					{
+						// Spawn entity named after the file stem
+						std::string name = meshPath.stem().string();
+						Entity entity    = m_ActiveScene->CreateEntity(name);
+						auto& mc         = entity.AddComponent<MeshComponent>();
+						mc.SetMeshAsset(handle, mesh, mesh->GetMaterials());
+
+						m_SceneHierarchyPanel->SetSelectedEntity(entity);
+
+						LOG(LogLevel::Info, "Spawned mesh entity '{}' from drag-drop.", name);
+					}
+					else
+					{
+						LOG(LogLevel::Warning, "Mesh drag-drop: asset loaded but Mesh cast failed for '{}'.",
+							meshPath.string());
+					}
+				}
+				else
+				{
+					LOG(LogLevel::Warning, "Mesh drag-drop: import failed for '{}'.", meshPath.string());
+				}
+			}
+
 			ImGui::EndDragDropTarget();
 		}
 
@@ -617,6 +656,11 @@ namespace Kairos
 	
 	void EditorLayer::OpenScene(const std::filesystem::path& filepath)
 	{
+		// Clear previous scene — reset registry by replacing with a fresh instance
+		m_ActiveScene = CreateRef<Scene>();
+		if (m_SceneHierarchyPanel)
+			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+
 		SceneSerializer serializer(m_ActiveScene);
 		if (serializer.Deserialize(filepath.string()))
 			m_ActiveScenePath = filepath;

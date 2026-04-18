@@ -141,10 +141,13 @@ namespace Engine
 					if (ImGui::BeginDragDropSource())
 					{
 						const wchar_t* itemPath = path.c_str();
-						// Specific payload per asset type so drop targets can filter precisely
+					// Specific payload per asset type so drop targets can filter precisely
 						const char* payloadType = "CONTENT_BROWSER_ITEM";
 						if (path.extension() == L".kscn")
 							payloadType = "SCENE_ITEM";
+						else if (path.extension() == L".obj"  || path.extension() == L".fbx" ||
+						         path.extension() == L".gltf" || path.extension() == L".glb")
+							payloadType = "MESH_ITEM";
 
 						ImGui::SetDragDropPayload(payloadType, itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 						ImGui::TextUnformatted(filenameString.c_str());

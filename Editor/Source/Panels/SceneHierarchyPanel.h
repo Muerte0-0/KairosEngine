@@ -9,7 +9,12 @@ namespace Kairos
 		SceneHierarchyPanel() = default;
 		SceneHierarchyPanel(const Ref<Scene>& context);
 		
-		void SetContext(const Ref<Scene>& context) { m_Context = context; }
+		void SetContext(const Ref<Scene>& context)
+		{
+			m_SelectionContext = {};
+			m_Context = context;
+		}
+		
 		void DrawComponents(Entity entity);
 
 		void OnImGuiRender();
