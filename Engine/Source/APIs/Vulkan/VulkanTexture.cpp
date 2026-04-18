@@ -36,12 +36,11 @@ namespace Engine
         LOG(LogLevel::Info, "VulkanTexture: loaded '{}' ({}x{})", path.filename().string(), w, h);
     }
 
-    VulkanTexture::VulkanTexture(const void* data, uint32_t size, const TextureSpecification& spec)
-        : m_Spec(spec)
+    VulkanTexture::VulkanTexture(const void* data, uint32_t size, const TextureSpecification& spec) : m_Spec(spec)
     {
         UploadToGPU(data, size);
         // m_Loaded set inside UploadToGPU
-        LOG(LogLevel::Info, "VulkanTexture: loaded from raw data ({}x{})", m_Spec.Width, m_Spec.Height);
+        // LOG(LogLevel::Info, "VulkanTexture: loaded from raw data ({}x{})", m_Spec.Width, m_Spec.Height);
     }
 
     VulkanTexture::~VulkanTexture()
@@ -56,7 +55,7 @@ namespace Engine
         auto& device   = api->GetVulkanDevice()->GetDevice();
         auto& physDev  = api->GetVulkanDevice()->GetPhysicalDevice();
 
-        // 1. Staging buffer
+        // Staging buffer
         vk::raii::Buffer       stagingBuf({});
         vk::raii::DeviceMemory stagingMem({});
         VulkanUtils::CreateBuffer(device, physDev, dataSize,
@@ -68,7 +67,7 @@ namespace Engine
         memcpy(mapped, pixelData, dataSize);
         stagingMem.unmapMemory();
 
-        // 2. Device-local image
+        // Device-local image
         VulkanUtils::CreateImage(device, physDev,
             m_Spec.Width, m_Spec.Height, 1,
             vk::SampleCountFlagBits::e1,
@@ -78,7 +77,7 @@ namespace Engine
             vk::MemoryPropertyFlagBits::eDeviceLocal,
             m_Image, m_ImageMemory);
 
-        // 3. Transition -> TransferDst, copy, transition -> ShaderReadOnly
+        // Transition -> TransferDst, copy, transition -> ShaderReadOnly
         auto cmdBuf = VulkanUtils::BeginSingleTimeCommands(device, api->GetVulkanCommand()->GetCommandPool());
 
         VulkanUtils::TransitionImageLayout(*cmdBuf, *m_Image,
@@ -105,7 +104,7 @@ namespace Engine
 
         VulkanUtils::EndSingleTimeCommands(*cmdBuf, api->GetVulkanDevice()->GetGraphicsQueue());
 
-        // 4. ImageView + Sampler
+        // ImageView + Sampler
         m_ImageView = VulkanUtils::CreateImageView(device, m_Image,
             VulkanUtils::ToVulkanFormat(m_Spec.Format),
             vk::ImageAspectFlagBits::eColor, 1);

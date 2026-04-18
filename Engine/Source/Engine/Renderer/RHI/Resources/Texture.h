@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Core/Base.h"
 #include "Engine/Utils/RendererUtils.h"
+#include "Engine/Assets/Asset.h"
 #include <filesystem>
 
 namespace Engine {
@@ -13,9 +14,12 @@ namespace Engine {
 		bool			GenerateMips	{ false };
 	};
 
-	class Texture
+	class Texture : public Asset
 	{
 	public:
+		static AssetType GetStaticType() { return AssetType::Texture; }
+		AssetType        GetType() const override { return GetStaticType(); }
+
 		virtual ~Texture() = default;
 
 		virtual uint32_t		GetWidth()     const = 0;

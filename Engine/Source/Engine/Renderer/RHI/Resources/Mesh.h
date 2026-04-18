@@ -2,6 +2,7 @@
 #include "Engine/Core/Base.h"
 #include "Engine/Renderer/RHI/Buffer.h"
 #include "Engine/Utils/RendererUtils.h"
+#include "Engine/Assets/Asset.h"
 
 namespace Engine
 {
@@ -46,9 +47,12 @@ namespace Engine
     //
     // Ownership: Ref<Mesh> (shared_ptr). GPU buffers destroyed with the Mesh.
     // -----------------------------------------------------------------------
-    class Mesh
+    class Mesh : public Asset
     {
     public:
+        static AssetType GetStaticType() { return AssetType::Mesh; }
+        AssetType        GetType() const override { return GetStaticType(); }
+
         Mesh() = default;
         ~Mesh() = default;
 

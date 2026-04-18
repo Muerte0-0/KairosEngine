@@ -74,7 +74,7 @@ namespace Kairos
 	void EditorLayer::OnAttach()
 	{
 		Layer::OnAttach();
-
+		
 		m_ActiveScene = CreateRef<Scene>();
 		m_SceneRenderer = CreateScope<SceneRenderer>();
 		m_SceneCamera = CreateScope<SceneCamera>();
@@ -589,6 +589,9 @@ namespace Kairos
 		
 		if (Project::Load(projectPath))
 		{
+			auto am= CreateRef<EditorAssetManager>();
+			Project::GetActive()->SetAssetManager(am);
+			
 			auto startScenePath = Project::GetAssetPath(Project::GetActive()->GetConfig().StartupScene);
 			OpenScene(startScenePath);
 			

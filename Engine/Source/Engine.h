@@ -20,6 +20,11 @@
 #include "Engine/ImGui/ImGuiLogSink.h"
 // ------------------------------- //
 
+// ------------- Asset Registry ------------------- //
+#include "Engine/Assets/Editor/EditorAssetManager.h"
+#include "Engine/Assets/AssetManager.h"
+// ------------------------------------------------ //
+
 // ------------- Scene ------------- //
 #include "Engine/Scene/Scene.h"
 #include "Engine/Scene/Components.h"

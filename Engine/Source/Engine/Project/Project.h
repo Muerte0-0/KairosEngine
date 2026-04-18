@@ -2,6 +2,9 @@
 
 #include <string>
 #include <filesystem>
+#include "Engine/Assets/AssetManagerBase.h"
+#include "Engine/Assets/Editor/EditorAssetManager.h"
+#include "Engine/Assets/Runtime/RuntimeAssetManager.h"
 
 namespace Engine
 {
@@ -37,6 +40,12 @@ namespace Engine
 		}
 		
 		ProjectConfig& GetConfig() { return m_Config; }
+
+		std::shared_ptr<AssetManagerBase>		GetAssetManager()			{ return m_AssetManager; }
+		std::shared_ptr<EditorAssetManager>		GetEditorAssetManager()		{ return std::static_pointer_cast<EditorAssetManager>(m_AssetManager); }
+		std::shared_ptr<RuntimeAssetManager>	GetRuntimeAssetManager()	{ return std::static_pointer_cast<RuntimeAssetManager>(m_AssetManager); }
+
+		void SetAssetManager(Ref<AssetManagerBase> manager) { m_AssetManager = std::move(manager); }
 		
 		static Ref<Project> GetActive() { return s_ActiveProject; }
 		
@@ -47,7 +56,8 @@ namespace Engine
 	private:
 		ProjectConfig m_Config;
 		std::filesystem::path m_ProjectDirectory;
-		
+		Ref<AssetManagerBase> m_AssetManager;
+
 		inline static Ref<Project> s_ActiveProject;
 	};
 }
