@@ -22,44 +22,53 @@ namespace Engine
     }
 
     // -----------------------------------------------------------------------
-    // Fallback textures (shared, lazy)
+    // Fallback textures — file-scope so ResetStaticResources() can null them
     // -----------------------------------------------------------------------
+    static Ref<Texture> s_FallbackAlbedo;
+    static Ref<Texture> s_FallbackNormal;
+    static Ref<Texture> s_FallbackBlack;
+
     Ref<Texture> VulkanMaterial::GetFallbackAlbedo()
     {
-        static Ref<Texture> s_Tex;
-        if (!s_Tex)
+        if (!s_FallbackAlbedo)
         {
-            // 1x1 opaque white RGBA
             constexpr uint8_t px[4] = { 255, 255, 255, 255 };
             TextureSpecification spec; spec.Width = 1; spec.Height = 1;
-            s_Tex = CreateRef<VulkanTexture>(px, sizeof(px), spec);
+            s_FallbackAlbedo = CreateRef<VulkanTexture>(px, sizeof(px), spec);
         }
-        return s_Tex;
+        return s_FallbackAlbedo;
     }
 
     Ref<Texture> VulkanMaterial::GetFallbackNormal()
     {
-        static Ref<Texture> s_Tex;
-        if (!s_Tex)
+        if (!s_FallbackNormal)
         {
-            // Flat normal (0.5, 0.5, 1.0, 1.0) in RGBA8
             constexpr uint8_t px[4] = { 128, 128, 255, 255 };
             TextureSpecification spec; spec.Width = 1; spec.Height = 1;
-            s_Tex = CreateRef<VulkanTexture>(px, sizeof(px), spec);
+            s_FallbackNormal = CreateRef<VulkanTexture>(px, sizeof(px), spec);
         }
-        return s_Tex;
+        return s_FallbackNormal;
     }
 
     Ref<Texture> VulkanMaterial::GetFallbackBlack()
     {
-        static Ref<Texture> s_Tex;
-        if (!s_Tex)
+        if (!s_FallbackBlack)
         {
             constexpr uint8_t px[4] = { 0, 0, 0, 255 };
             TextureSpecification spec; spec.Width = 1; spec.Height = 1;
-            s_Tex = CreateRef<VulkanTexture>(px, sizeof(px), spec);
+            s_FallbackBlack = CreateRef<VulkanTexture>(px, sizeof(px), spec);
         }
-        return s_Tex;
+        return s_FallbackBlack;
+    }
+
+    // -----------------------------------------------------------------------
+    // Static resource cleanup — call before vkDestroyDevice
+    // -----------------------------------------------------------------------
+    void VulkanMaterial::ResetStaticResources()
+    {
+        s_FallbackAlbedo.reset();
+        s_FallbackNormal.reset();
+        s_FallbackBlack.reset();
     }
 
     // -----------------------------------------------------------------------

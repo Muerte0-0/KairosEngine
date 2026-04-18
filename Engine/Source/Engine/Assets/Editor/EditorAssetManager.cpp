@@ -37,6 +37,7 @@ namespace Engine
 	EditorAssetManager::EditorAssetManager()
 	{
 		LoadRegistry();
+		ScanAndRegisterDirectory(Project::GetAssetDirectory());
 	}
 
 	void EditorAssetManager::LoadRegistry()
@@ -99,6 +100,46 @@ namespace Engine
 
 		std::ofstream file(registryPath);
 		file << out.c_str();
+	}
+
+	void EditorAssetManager::ScanAndRegisterDirectory(const std::filesystem::path& directory)
+	{
+		if (!std::filesystem::exists(directory))
+			return;
+
+		size_t countBefore = m_Registry.Count();
+
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
+		{
+			if (!entry.is_regular_file())
+				continue;
+
+			AssetType type = AssetImporter::DeduceTypeFromPath(entry.path());
+			if (type == AssetType::None)
+				continue;
+
+			// Normalize path — check registry directly to avoid per-file SaveRegistry calls
+			std::filesystem::path canonical = std::filesystem::weakly_canonical(entry.path());
+			std::filesystem::path relative  = std::filesystem::relative(canonical, Project::GetAssetDirectory());
+
+			if (m_Registry.IsPathRegistered(relative))
+				continue;
+
+			AssetMetadata metadata;
+			metadata.Handle   = AssetHandle();
+			metadata.Type     = type;
+			metadata.FilePath = relative;
+			m_Registry.Add(metadata);
+
+			LOG(LogLevel::Info, "EditorAssetManager: auto-registered '{}' as handle {}.",
+				relative.string(), static_cast<uint64_t>(metadata.Handle));
+		}
+
+		if (m_Registry.Count() > countBefore)
+		{
+			SaveRegistry();
+			LOG(LogLevel::Info, "EditorAssetManager: registry has {} asset(s) after directory scan.", m_Registry.Count());
+		}
 	}
 
 	AssetHandle EditorAssetManager::ImportAsset(const std::filesystem::path& rawPath)

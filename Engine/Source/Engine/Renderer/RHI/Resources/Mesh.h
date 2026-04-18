@@ -4,6 +4,9 @@
 #include "Engine/Utils/RendererUtils.h"
 #include "Engine/Assets/Asset.h"
 
+// Forward-declare to avoid circular include (Material.h → Texture.h → ... → Mesh.h)
+namespace Engine { class Material; }
+
 namespace Engine
 {
     // -----------------------------------------------------------------------
@@ -73,10 +76,12 @@ namespace Engine
 
         // ---- Const accessors ----------------------------------------------
 
-        [[nodiscard]] const std::vector<Vertex>&   GetVertices()    const { return m_Vertices;  }
-        [[nodiscard]] const std::vector<uint32_t>& GetIndices()     const { return m_Indices;   }
-        [[nodiscard]] const std::vector<SubMesh>&  GetSubMeshes()   const { return m_SubMeshes; }
-        [[nodiscard]] const BufferLayout&          GetLayout()      const { return m_Layout;    }
+        [[nodiscard]] const std::vector<Vertex>&        GetVertices()    const { return m_Vertices;  }
+        [[nodiscard]] const std::vector<uint32_t>&       GetIndices()     const { return m_Indices;   }
+        [[nodiscard]] const std::vector<SubMesh>&        GetSubMeshes()   const { return m_SubMeshes; }
+        [[nodiscard]] const BufferLayout&                GetLayout()      const { return m_Layout;    }
+        [[nodiscard]] const std::vector<Ref<Material>>&  GetMaterials()   const { return m_Materials; }
+        void SetMaterials(std::vector<Ref<Material>> materials) { m_Materials = std::move(materials); }
 
         [[nodiscard]] Ref<VertexBuffer>  GetVertexBuffer() const { return m_VertexBuffer; }
         [[nodiscard]] Ref<IndexBuffer>   GetIndexBuffer()  const { return m_IndexBuffer;  }
@@ -104,13 +109,17 @@ namespace Engine
         }
 
     private:
-        std::vector<Vertex>   m_Vertices;
-        std::vector<uint32_t> m_Indices;
-        std::vector<SubMesh>  m_SubMeshes;
-        BufferLayout          m_Layout;
+        std::vector<Vertex>        m_Vertices;
+        std::vector<uint32_t>      m_Indices;
+        std::vector<SubMesh>       m_SubMeshes;
+        BufferLayout               m_Layout;
 
-        Ref<VertexBuffer>     m_VertexBuffer;
-        Ref<IndexBuffer>      m_IndexBuffer;
+        // Imported materials — indexed by SubMesh::MaterialIndex.
+        // Set by AssetImporter after load; empty for procedural meshes.
+        std::vector<Ref<Material>> m_Materials;
+
+        Ref<VertexBuffer>          m_VertexBuffer;
+        Ref<IndexBuffer>           m_IndexBuffer;
     };
 
 } // namespace Engine

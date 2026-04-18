@@ -41,6 +41,7 @@ namespace Engine
 		TextureFormat GetDefaultColorFormat() const override;
 		TextureFormat GetDefaultDepthFormat() const override;
 		void WaitIdle() override;
+		void ReleaseStaticResources() override;
 		API GetType() override { return API::Vulkan; }
 
 		// Material factory + shared descriptor set layout for set 1

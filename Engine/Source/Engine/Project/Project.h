@@ -48,6 +48,7 @@ namespace Engine
 		void SetAssetManager(Ref<AssetManagerBase> manager) { m_AssetManager = std::move(manager); }
 		
 		static Ref<Project> GetActive() { return s_ActiveProject; }
+		static void         SetActive(Ref<Project> project) { s_ActiveProject = std::move(project); }
 		
 		static Ref<Project> New();
 		static Ref<Project> Load(const std::filesystem::path& projectPath);

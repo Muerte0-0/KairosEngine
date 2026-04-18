@@ -386,6 +386,13 @@ namespace Engine
 		m_VulkanDevice->WaitIdle();
 	}
 
+	void VulkanRenderAPI::ReleaseStaticResources()
+	{
+		// Drop all static/shared GPU objects that live outside the normal
+		// RAII member chain — must happen before WaitIdle() + device destroy.
+		VulkanMaterial::ResetStaticResources();
+	}
+
 	void VulkanRenderAPI::CreateUniformBuffers()
 	{
 		m_UniformBuffers.clear();

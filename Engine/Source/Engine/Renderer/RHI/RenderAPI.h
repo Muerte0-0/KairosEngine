@@ -48,6 +48,10 @@ namespace Engine
 		virtual TextureFormat GetDefaultDepthFormat() const = 0;
 		virtual void WaitIdle() = 0;
 
+		// Release backend-side static/shared GPU resources before device destroy.
+		// Called by Renderer::Shutdown() before WaitIdle().
+		virtual void ReleaseStaticResources() = 0;
+
 		virtual API GetType() = 0;
 
 		// Material factory — implemented by each backend.

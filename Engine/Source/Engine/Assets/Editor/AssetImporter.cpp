@@ -55,7 +55,8 @@ namespace Engine
 			return nullptr;
 		}
 
-		// Mesh IS the asset — assign handle and return directly
+		// Store materials on the mesh so consumers can retrieve them via GetMaterials().
+		model.MeshData->SetMaterials(std::move(model.Materials));
 		model.MeshData->Handle = metadata.Handle;
 		return model.MeshData;
 	}

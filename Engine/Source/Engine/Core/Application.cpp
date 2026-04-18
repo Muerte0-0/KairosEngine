@@ -6,6 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 
+#include "Engine/Project/Project.h"
+
 constexpr float MIN_DELTA_TIME  = 0.001f;
 constexpr float MAX_DELTA_TIME  = 0.1f;
 constexpr float FIXED_FRAME_TIME = 1.0f / 60.0f;
@@ -199,6 +201,17 @@ namespace Engine
 
 		for (auto& layer : views::reverse(m_LayerStack))
 			layer->OnDetach();
+
+		// Destroy layer objects now — they hold scene/mesh/material Vulkan resources.
+		// Must happen before Renderer::Shutdown() destroys the device.
+		m_LayerStack.clear();
+		m_ImGuiLayer.reset();
+
+		// Drop all loaded assets (Mesh VkBuffers held by EditorAssetManager).
+		Project::SetActive(nullptr);
+
+		// Drop default material + backend fallback textures, then destroy device.
+		Renderer::Shutdown();
 
 		m_Window->Destroy();
 		glfwTerminate();

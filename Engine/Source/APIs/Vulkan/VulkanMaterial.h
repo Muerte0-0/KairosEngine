@@ -33,6 +33,9 @@ namespace Engine
         // the base class Vulkan-free.
         void Bind(void* commandBuffer, void* pipelineLayout, uint32_t frameIndex) override;
 
+        // Release all static fallback textures — call before vkDestroyDevice.
+        static void ResetStaticResources();
+
     private:
         // Per-frame UBO for MaterialParams
         std::vector<vk::raii::Buffer>       m_ParamBuffers;

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "Engine/Core/UUID.h"
+#include "Engine/Assets/Asset.h"
 
 #include "Engine/Renderer/Cameras/GameCamera.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
@@ -9,8 +10,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
-
-#include <filesystem>
 
 namespace Engine
 {
@@ -71,36 +70,36 @@ namespace Engine
 
 	struct MeshComponent
 	{
-		std::filesystem::path      MeshAssetPath;
+		AssetHandle                MeshAssetHandle = AssetHandle(NullAssetHandle);
 		Ref<Mesh>                  MeshRef;
 		std::vector<Ref<Material>> Materials;   // indexed by SubMesh::MaterialIndex
 
-		// Set mesh + materials together from a loaded Model.
-		bool SetMeshAsset(const std::filesystem::path& assetPath,
+		// Set mesh + materials together from an already-loaded Mesh ref.
+		bool SetMeshAsset(AssetHandle handle,
 		                  const Ref<Mesh>& mesh,
 		                  std::vector<Ref<Material>> materials = {})
 		{
-			if (MeshAssetPath == assetPath && MeshRef == mesh)
+			if (MeshAssetHandle == handle && MeshRef == mesh)
 				return false;
 
-			MeshAssetPath = assetPath;
-			MeshRef       = mesh;
-			Materials     = std::move(materials);
+			MeshAssetHandle = handle;
+			MeshRef         = mesh;
+			Materials       = std::move(materials);
 			return true;
 		}
 
 		bool ClearMesh()
 		{
-			if (MeshAssetPath.empty() && MeshRef == nullptr)
+			if (static_cast<uint64_t>(MeshAssetHandle) == NullAssetHandle && MeshRef == nullptr)
 				return false;
 
-			MeshAssetPath.clear();
+			MeshAssetHandle = AssetHandle(NullAssetHandle);
 			MeshRef.reset();
 			Materials.clear();
 			return true;
 		}
 
 		bool HasMesh()      const { return MeshRef != nullptr; }
-		bool HasMeshAsset() const { return !MeshAssetPath.empty(); }
+		bool HasMeshAsset() const { return static_cast<uint64_t>(MeshAssetHandle) != NullAssetHandle; }
 	};
 }

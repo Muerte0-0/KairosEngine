@@ -18,6 +18,10 @@ namespace Engine
 		// Returns existing handle if already imported.
 		AssetHandle ImportAsset(const std::filesystem::path& rawPath);
 
+		// Walk the asset directory and register any files not yet in the registry.
+		// Called automatically on construction after LoadRegistry().
+		void ScanAndRegisterDirectory(const std::filesystem::path& directory);
+
 		// AssetManagerBase
 		Ref<Asset> GetAsset(AssetHandle handle) override;
 		bool       IsAssetLoaded(AssetHandle handle) const override;

@@ -8,6 +8,7 @@ namespace Engine
 	{
 	public:
 		static void Init(API api, void* windowHandle, const std::filesystem::path& shaderDirectory);
+		static void Shutdown(); // Must be called before Vulkan device destruction
 
 		static void BeginScene();
 		static void DrawFrame();

@@ -3,7 +3,9 @@
 
 #include <yaml-cpp/yaml.h>
 
-#include "Engine/Assets/MeshAssetManager.h"
+#include "Engine/Assets/AssetManager.h"
+#include "Engine/Project/Project.h"
+#include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "Components.h"
 #include "Entity.h"
 
@@ -82,35 +84,25 @@ namespace Engine
 	{
 		ASSERT(entity.HasComponent<IDComponent>(), "Entity does not have an ID Component!")
 		
-		out << YAML::BeginMap; // Entity map
-
-		// Entity ID
+		out << YAML::BeginMap;
 		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
 
-		// Tag Component
 		if (entity.HasComponent<TagComponent>())
 		{
 			out << YAML::Key << "TagComponent";
 			out << YAML::BeginMap;
-
-			auto& tag = entity.GetComponent<TagComponent>().Tag;
-			out << YAML::Key << "Tag" << YAML::Value << tag;
-
+			out << YAML::Key << "Tag" << YAML::Value << entity.GetComponent<TagComponent>().Tag;
 			out << YAML::EndMap;
 		}
 
-		// Transform Component
 		if (entity.HasComponent<TransformComponent>())
 		{
 			out << YAML::Key << "TransformComponent";
 			out << YAML::BeginMap;
-
 			auto& tc = entity.GetComponent<TransformComponent>();
-
 			out << YAML::Key << "Translation" << YAML::Value << tc.Translation;
-			out << YAML::Key << "Rotation" << YAML::Value << tc.Rotation;
-			out << YAML::Key << "Scale" << YAML::Value << tc.Scale;
-
+			out << YAML::Key << "Rotation"    << YAML::Value << tc.Rotation;
+			out << YAML::Key << "Scale"       << YAML::Value << tc.Scale;
 			out << YAML::EndMap;
 		}
 
@@ -118,32 +110,26 @@ namespace Engine
 		{
 			out << YAML::Key << "MeshComponent";
 			out << YAML::BeginMap;
-
 			auto& mc = entity.GetComponent<MeshComponent>();
-			
 			if (mc.HasMeshAsset())
-				out << YAML::Key << "MeshAssetPath" << YAML::Value << mc.MeshAssetPath.lexically_relative(Project::GetAssetDirectory()).string();
-
+				out << YAML::Key << "MeshAssetHandle" << YAML::Value << static_cast<uint64_t>(mc.MeshAssetHandle);
 			out << YAML::EndMap;
 		}
 
-		out << YAML::EndMap; // End Entity map
+		out << YAML::EndMap;
 	}
 
 	void SceneSerializer::Serialize(const std::string& filepath)
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap; 
-		out << YAML::Key << "Scene" << YAML::Value << "Untitled Scene"; 
+		out << YAML::Key << "Scene"    << YAML::Value << "Untitled Scene"; 
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		
 		for (auto entt : std::views::reverse(m_Scene->m_Registry.view<entt::entity>()))
 		{
 			Entity entity { entt, m_Scene.get() };
-			
-			if (!entity)
-				return;
-			
+			if (!entity) return;
 			SerializeEntity(out, entity);
 		}
 		
@@ -162,54 +148,47 @@ namespace Engine
 	bool SceneSerializer::Deserialize(const std::string& filepath)
 	{
 		YAML::Node data;
-
-		try
-		{
-			data = YAML::LoadFile(filepath);
-		}
+		try   { data = YAML::LoadFile(filepath); }
 		catch (YAML::ParserException e)
 		{
-			LOG(LogLevel::Error, "Failed to Load Project: '{0}'\n {1}", filepath, e.what());
+			LOG(LogLevel::Error, "Failed to Load Scene: '{0}'\n {1}", filepath, e.what());
 			return false;
 		}
 		
-		if (!data["Scene"])
-			return false;
+		if (!data["Scene"]) return false;
 
-		std::string sceneName = data["Scene"].as<std :: string>();
-		LOG(LogLevel::Trace, "Deserializing scene '{0}'", sceneName);
+		LOG(LogLevel::Trace, "Deserializing scene '{0}'", data["Scene"].as<std::string>());
 
 		if (auto entities = data["Entities"])
 		{
 			for (auto entity : entities)
 			{
 				uint64_t uuid = entity["Entity"].as<uint64_t>();
-				
 				std::string name;
+				if (auto tc = entity["TagComponent"]) name = tc["Tag"].as<std::string>();
 
-				if (auto tagComponent = entity["TagComponent"])
-					name = tagComponent["Tag"].as<std::string>();
-				
-				LOG(LogLevel::Trace, "Deserializing Entity with ID: {0}, name:{1}", uuid, name);
-				
-				Entity deserializedEntity = m_Scene->CreateEntityWithUUID(uuid, name);
+				LOG(LogLevel::Trace, "Deserializing Entity ID={0} name={1}", uuid, name);
+				Entity deserialized = m_Scene->CreateEntityWithUUID(uuid, name);
 
-				if (auto transformComponent = entity["TransformComponent"])
+				if (auto transformNode = entity["TransformComponent"])
 				{
-					auto& tc = deserializedEntity.GetComponent<TransformComponent>();
-					tc.Translation = transformComponent["Translation"].as<glm::vec3>();
-					tc.Rotation = transformComponent["Rotation"].as<glm::vec3>();
-					tc.Scale = transformComponent["Scale"].as<glm::vec3>();
+					auto& tc = deserialized.GetComponent<TransformComponent>();
+					tc.Translation = transformNode["Translation"].as<glm::vec3>();
+					tc.Rotation    = transformNode["Rotation"].as<glm::vec3>();
+					tc.Scale       = transformNode["Scale"].as<glm::vec3>();
 				}
 
-				if (auto meshComponent = entity["MeshComponent"])
+				if (auto meshNode = entity["MeshComponent"])
 				{
-					auto& mc = deserializedEntity.AddComponent<MeshComponent>();
-					if (auto meshAssetPath = meshComponent["MeshAssetPath"])
+					auto& mc = deserialized.AddComponent<MeshComponent>();
+					if (auto handleNode = meshNode["MeshAssetHandle"])
 					{
-						std::filesystem::path assetPath(Project::GetAssetPath(meshAssetPath.as<std::string>()));
-						if (const Engine::Model* model = MeshAssetManager::GetModel(assetPath))
-							mc.SetMeshAsset(assetPath, model->MeshData, model->Materials);
+						AssetHandle handle(handleNode.as<uint64_t>());
+						Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
+						if (mesh)
+							mc.SetMeshAsset(handle, mesh, mesh->GetMaterials());
+						else
+							LOG(LogLevel::Warning, "SceneSerializer: handle {} not resolvable — asset missing?", handleNode.as<uint64_t>());
 					}
 				}
 			}

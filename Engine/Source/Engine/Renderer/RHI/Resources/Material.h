@@ -67,9 +67,11 @@ namespace Engine
         // Dispatches to the active API backend (e.g. VulkanMaterial).
         [[nodiscard]] static Ref<Material> Create();
 
-        // Returns a shared default white/rough material.
-        // Never null — safe to use as a fallback in Flush().
+        // Returns a shared default white/rough material. Never null.
         [[nodiscard]] static Ref<Material> GetDefault();
+
+        // Call during Renderer::Shutdown() to drop Vulkan resources before vkDestroyDevice.
+        static void ResetDefault();
 
     protected:
         std::string m_Name;

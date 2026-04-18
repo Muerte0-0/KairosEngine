@@ -1,7 +1,10 @@
 ﻿#include "SceneHierarchyPanel.h"
 
 #include "imgui.h"
-#include "Engine/Assets/MeshAssetManager.h"
+#include "Engine/Assets/AssetManager.h"
+#include "Engine/Assets/Editor/EditorAssetManager.h"
+#include "Engine/Project/Project.h"
+#include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "Engine/Scene/Components.h"
 
 #include <algorithm>
@@ -15,12 +18,22 @@ namespace Kairos
 {
 	static bool DrawMeshAssetField(Engine::MeshComponent& meshComponent)
 	{
-		const std::string meshDisplayName = MeshAssetManager::GetDisplayName(meshComponent.MeshAssetPath);
+		using namespace Engine;
+
+		// Resolve display name from registry
+		std::string displayName = "None";
+		if (meshComponent.HasMeshAsset())
+		{
+			auto editorAM = Project::GetActive()->GetEditorAssetManager();
+			const AssetMetadata* meta = editorAM->GetRegistry().Get(meshComponent.MeshAssetHandle);
+			if (meta) displayName = meta->FilePath.filename().string();
+		}
+
 		const float clearButtonWidth = 28.0f;
 		const float fieldWidth = (std::max)(ImGui::CalcItemWidth() - clearButtonWidth - ImGui::GetStyle().ItemSpacing.x, 1.0f);
 
 		ImGui::PushID("MeshAssetField");
-		ImGui::Button(meshDisplayName.c_str(), ImVec2(fieldWidth, 0.0f));
+		ImGui::Button(displayName.c_str(), ImVec2(fieldWidth, 0.0f));
 
 		bool componentChanged = false;
 		
@@ -39,23 +52,22 @@ namespace Kairos
 			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 			{
 				const wchar_t* payloadPath = static_cast<const wchar_t*>(payload->Data);
-				if (payloadPath != nullptr)
+				if (payloadPath)
 				{
-					const std::filesystem::path meshAssetPath(payloadPath);
-					
-					if (!meshAssetPath.empty() && meshAssetPath != meshComponent.MeshAssetPath)
+					std::filesystem::path droppedPath(payloadPath);
+					auto editorAM = Project::GetActive()->GetEditorAssetManager();
+
+					// Import (idempotent — returns existing handle if already registered)
+					AssetHandle handle = editorAM->ImportAsset(droppedPath);
+
+					if (static_cast<uint64_t>(handle) != NullAssetHandle && handle != meshComponent.MeshAssetHandle)
 					{
-						if (const Engine::Model* model = MeshAssetManager::GetModel(meshAssetPath))
-						{
-							componentChanged = meshComponent.SetMeshAsset(
-								meshAssetPath,
-								model->MeshData,
-								model->Materials);
-						}
+						Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
+						if (mesh)
+							componentChanged = meshComponent.SetMeshAsset(handle, mesh, mesh->GetMaterials());
 					}
 				}
 			}
-
 			ImGui::EndDragDropTarget();
 		}
 
