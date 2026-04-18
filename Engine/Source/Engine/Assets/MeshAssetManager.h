@@ -18,52 +18,58 @@ namespace Engine
 			return std::find(SupportedExtensions.begin(), SupportedExtensions.end(), extension) != SupportedExtensions.end();
 		}
 
-		static Ref<Mesh> GetMesh(const std::filesystem::path& path)
+		// Returns the full Model (mesh + materials). Cached after first load.
+		static const Model* GetModel(const std::filesystem::path& path)
 		{
 			if (path.empty())
 				return nullptr;
 
 			if (!IsMeshAssetPath(path))
 			{
-				LOG(LogLevel::Warning, "MeshAssetManager: '{}' is not supported mesh asset.", path.string());
+				LOG(LogLevel::Warning, "MeshAssetManager: '{}' is not a supported mesh asset.", path.string());
 				return nullptr;
 			}
-			
+
 			if (!std::filesystem::exists(path))
 			{
-				LOG(LogLevel::Warning, "MeshAssetManager: Mesh asset '{}' does not exist.", path.string());
+				LOG(LogLevel::Warning, "MeshAssetManager: mesh asset '{}' does not exist.", path.string());
 				return nullptr;
 			}
 
 			std::string cacheKey = path.generic_string();
-			auto& cache = GetCache();
-			if (auto iterator = cache.find(cacheKey); iterator != cache.end())
-				return iterator->second;
+			auto& cache = GetModelCache();
+			auto it = cache.find(cacheKey);
+			if (it != cache.end())
+				return &it->second;
 
 			Model model = ModelFactory::Load(path.string());
 			if (!model.MeshData)
 			{
-				LOG(LogLevel::Error, "MeshAssetManager: Failed to load mesh asset '{}'.", path.string());
+				LOG(LogLevel::Error, "MeshAssetManager: failed to load mesh asset '{}'.", path.string());
 				return nullptr;
 			}
 
-			cache.emplace(cacheKey, model.MeshData);
-			return model.MeshData;
+			auto [inserted, ok] = cache.emplace(cacheKey, std::move(model));
+			return &inserted->second;
+		}
+
+		// Convenience — returns just the Mesh (no materials).
+		static Ref<Mesh> GetMesh(const std::filesystem::path& path)
+		{
+			const Model* model = GetModel(path);
+			return model ? model->MeshData : nullptr;
 		}
 
 		static std::string GetDisplayName(const std::filesystem::path& path)
 		{
-			if (path.empty())
-				return "None";
-
-			return path.filename().string();
+			return path.empty() ? "None" : path.filename().string();
 		}
 
 	private:
-		static std::unordered_map<std::string, Ref<Mesh>>& GetCache()
+		static std::unordered_map<std::string, Model>& GetModelCache()
 		{
-			static std::unordered_map<std::string, Ref<Mesh>> s_MeshCache;
-			return s_MeshCache;
+			static std::unordered_map<std::string, Model> s_Cache;
+			return s_Cache;
 		}
 	};
 }

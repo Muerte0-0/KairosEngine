@@ -19,6 +19,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 #include <vulkan/vulkan_raii.hpp>
 
 #include "VulkanUtils.h"
+#include "VulkanMaterial.h"
 #include "Engine/Utils/RendererUtils.h"
 
 namespace Engine
@@ -76,6 +77,7 @@ namespace Engine
 			MAX_FRAMES_IN_FLIGHT);
 
 		CreateUniformBuffers();
+		CreateMaterialDescriptorSetLayout();
 	}
 
 	// -----------------------------------------------------------------------
@@ -211,7 +213,8 @@ namespace Engine
 		const GraphicsPipeline& pipeline,
 		const Mesh& mesh,
 		const glm::mat4& modelTransform,
-		const UniformBufferObject& uniformBufferObject)
+		const UniformBufferObject& uniformBufferObject,
+		const std::vector<Ref<Material>>& materials)
 	{
 		if (!m_FrameValid)
 			return;
@@ -263,23 +266,34 @@ namespace Engine
 			*vkPipeline->GetDescriptorSets()[m_CurrentFrameIndex],
 			nullptr);
 
-		// Draw each SubMesh using its base offsets into the shared VB/IB
+		// Draw each SubMesh — bind its material (set 1) before the draw call.
 		const auto& subMeshes = mesh.GetSubMeshes();
 		if (subMeshes.empty())
 		{
-			// Fallback: no submesh info — draw the entire index buffer as one call
+			// Fallback: bind default material for the whole mesh
+			Ref<Material> mat = Material::GetDefault();
+			vk::PipelineLayout layout = *vkPipeline->GetPipelineLayout();
+			mat->Bind(&commandBuffer, &layout, m_CurrentFrameIndex);
 			commandBuffer.drawIndexed(indexBuffer->GetCount(), 1, 0, 0, 0);
 		}
 		else
 		{
 			for (const SubMesh& sub : subMeshes)
 			{
+				// Resolve material for this submesh
+				Ref<Material> mat = (sub.MaterialIndex < materials.size() && materials[sub.MaterialIndex])
+					? materials[sub.MaterialIndex]
+					: Material::GetDefault();
+
+				vk::PipelineLayout layout = *vkPipeline->GetPipelineLayout();
+				mat->Bind(&commandBuffer, &layout, m_CurrentFrameIndex);
+
 				commandBuffer.drawIndexed(
-					sub.IndexCount,               // indexCount
-					1,                            // instanceCount
-					sub.BaseIndex,                // firstIndex  (offset into IB)
-					static_cast<int32_t>(sub.BaseVertex), // vertexOffset (offset into VB)
-					0);                           // firstInstance
+					sub.IndexCount,
+					1,
+					sub.BaseIndex,
+					static_cast<int32_t>(sub.BaseVertex),
+					0);
 			}
 		}
 	}
@@ -514,6 +528,38 @@ namespace Engine
 		{
 			LOG(LogLevel::Error, "Debug messenger unavailable: {}", e.what());
 		}
+	}
+
+	void VulkanRenderAPI::CreateMaterialDescriptorSetLayout()
+	{
+		// Set 1 bindings — match Mesh.slang set(1) declarations:
+		//   binding 0 — albedo         (combinedImageSampler)
+		//   binding 1 — normal         (combinedImageSampler)
+		//   binding 2 — metallicRough  (combinedImageSampler)
+		//   binding 3 — ao             (combinedImageSampler)
+		//   binding 4 — emissive       (combinedImageSampler)
+		//   binding 5 — MaterialParams (uniformBuffer)
+		constexpr auto fragStage = vk::ShaderStageFlagBits::eFragment;
+		std::array bindings = {
+			vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eCombinedImageSampler, 1, fragStage),
+			vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eCombinedImageSampler, 1, fragStage),
+			vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eCombinedImageSampler, 1, fragStage),
+			vk::DescriptorSetLayoutBinding(3, vk::DescriptorType::eCombinedImageSampler, 1, fragStage),
+			vk::DescriptorSetLayoutBinding(4, vk::DescriptorType::eCombinedImageSampler, 1, fragStage),
+			vk::DescriptorSetLayoutBinding(5, vk::DescriptorType::eUniformBuffer,        1, fragStage),
+		};
+
+		vk::DescriptorSetLayoutCreateInfo info;
+		info.bindingCount = static_cast<uint32_t>(bindings.size());
+		info.pBindings    = bindings.data();
+		m_MaterialDescriptorSetLayout = vk::raii::DescriptorSetLayout(m_VulkanDevice->GetDevice(), info);
+
+		LOG(LogLevel::Info, "VulkanRenderAPI: material descriptor set layout created (set 1, 5 textures + UBO).");
+	}
+
+	Ref<Material> VulkanRenderAPI::CreateMaterial()
+	{
+		return CreateRef<VulkanMaterial>();
 	}
 
 	void VulkanRenderAPI::CreateSurface(void* windowHandle)

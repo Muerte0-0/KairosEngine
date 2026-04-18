@@ -208,8 +208,8 @@ namespace Engine
 					if (auto meshAssetPath = meshComponent["MeshAssetPath"])
 					{
 						std::filesystem::path assetPath(Project::GetAssetPath(meshAssetPath.as<std::string>()));
-						Ref<Mesh> mesh = MeshAssetManager::GetMesh(assetPath);
-						mc.SetMeshAsset(assetPath, mesh);
+						if (const Engine::Model* model = MeshAssetManager::GetModel(assetPath))
+							mc.SetMeshAsset(assetPath, model->MeshData, model->Materials);
 					}
 				}
 			}

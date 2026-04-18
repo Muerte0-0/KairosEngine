@@ -64,7 +64,9 @@ namespace Engine
 		m_SceneActive = true;
 	}
 
-	void SceneRenderer::SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform)
+	void SceneRenderer::SubmitMesh(const Ref<Mesh>& mesh,
+	                               const glm::mat4& transform,
+	                               std::vector<Ref<Material>> materials)
 	{
 		ASSERT(m_SceneActive, "SceneRenderer::SubmitMesh called outside BeginScene/EndScene.");
 		ASSERT(mesh, "SceneRenderer::SubmitMesh called with a null mesh.");
@@ -72,7 +74,7 @@ namespace Engine
 		if (!m_Pipeline)
 			CreatePipeline(mesh->GetLayout());
 
-		m_DrawQueue.push_back({ mesh, transform });
+		m_DrawQueue.push_back({ mesh, std::move(materials), transform });
 	}
 
 	void SceneRenderer::EndScene()
@@ -105,12 +107,13 @@ namespace Engine
 
 		if (m_Pipeline != nullptr && !m_DrawQueue.empty())
 		{
-			for (const DrawCommand& drawCommand : m_DrawQueue)
+			for (DrawCommand& cmd : m_DrawQueue)
 			{
 				UniformBufferObject ubo{};
-				ubo.View  = m_View;
-				ubo.Proj  = m_Projection;
-				api->DrawMesh(*m_Framebuffer, *m_Pipeline, *drawCommand.MeshRef, drawCommand.Transform, ubo);
+				ubo.View = m_View;
+				ubo.Proj = m_Projection;
+				api->DrawMesh(*m_Framebuffer, *m_Pipeline, *cmd.MeshRef,
+				              cmd.Transform, ubo, cmd.Materials);
 			}
 		}
 

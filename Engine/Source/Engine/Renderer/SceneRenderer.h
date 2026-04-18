@@ -4,6 +4,7 @@
 #include "RHI/Framebuffer.h"
 #include "RHI/GraphicsPipeline.h"
 #include "RHI/Resources/Mesh.h"
+#include "RHI/Resources/Material.h"
 
 #include "Engine/Core/Base.h"
 
@@ -24,8 +25,9 @@ namespace Engine
 
 	struct DrawCommand
 	{
-		Ref<Mesh> MeshRef;
-		glm::mat4 Transform{ 1.0f };
+		Ref<Mesh>                  MeshRef;
+		std::vector<Ref<Material>> Materials;   // indexed by SubMesh::MaterialIndex
+		glm::mat4                  Transform{ 1.0f };
 	};
 
 	class SceneRenderer
@@ -38,7 +40,9 @@ namespace Engine
 		SceneRenderer& operator=(const SceneRenderer&) = delete;
 
 		void BeginScene(const CameraManager& cameraManager);
-		void SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& transform = glm::mat4(1.0f));
+		void SubmitMesh(const Ref<Mesh>& mesh,
+		                const glm::mat4& transform = glm::mat4(1.0f),
+		                std::vector<Ref<Material>> materials = {});
 		void EndScene();
 
 		void Resize(uint32_t width, uint32_t height);

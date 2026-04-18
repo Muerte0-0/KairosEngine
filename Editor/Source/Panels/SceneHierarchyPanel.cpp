@@ -45,8 +45,13 @@ namespace Kairos
 					
 					if (!meshAssetPath.empty() && meshAssetPath != meshComponent.MeshAssetPath)
 					{
-						if (Ref<Mesh> mesh = MeshAssetManager::GetMesh(meshAssetPath))
-							componentChanged = meshComponent.SetMeshAsset(meshAssetPath, mesh);
+						if (const Engine::Model* model = MeshAssetManager::GetModel(meshAssetPath))
+						{
+							componentChanged = meshComponent.SetMeshAsset(
+								meshAssetPath,
+								model->MeshData,
+								model->Materials);
+						}
 					}
 				}
 			}

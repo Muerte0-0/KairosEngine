@@ -29,7 +29,8 @@ namespace Engine
 			const GraphicsPipeline& pipeline,
 			const Mesh& mesh,
 			const glm::mat4& modelTransform,
-			const UniformBufferObject& uniformBufferObject) override;
+			const UniformBufferObject& uniformBufferObject,
+			const std::vector<Ref<Material>>& materials = {}) override;
 		void DrawFrame()  override;
 		void EndScene()   override;
 
@@ -41,6 +42,16 @@ namespace Engine
 		TextureFormat GetDefaultDepthFormat() const override;
 		void WaitIdle() override;
 		API GetType() override { return API::Vulkan; }
+
+		// Material factory + shared descriptor set layout for set 1
+		Ref<Material> CreateMaterial() override;
+
+		// Shared set-1 DSL — created once in Init(), referenced by every VulkanMaterial
+		// and by VulkanGraphicsPipeline when building the pipeline layout.
+		const vk::raii::DescriptorSetLayout& GetMaterialDescriptorSetLayout() const
+		{
+			return m_MaterialDescriptorSetLayout;
+		}
 
 		// ------------------------------------------------------------------
 		// Accessors used by Vulkan-side helpers (Scene Renderer, Framebuffer)
@@ -74,6 +85,8 @@ namespace Engine
 
 		ShaderLibrary m_ShaderLibrary;
 
+		vk::raii::DescriptorSetLayout m_MaterialDescriptorSetLayout = nullptr;
+
 		std::vector<vk::raii::Buffer>       m_UniformBuffers;
 		std::vector<vk::raii::DeviceMemory> m_UniformBuffersMemory;
 		std::vector<void*>                  m_UniformBuffersMapped;
@@ -92,6 +105,7 @@ namespace Engine
 		void SetupDebugMessenger();
 		void CreateSurface(void* windowHandle);
 		void CreateUniformBuffers();
+		void CreateMaterialDescriptorSetLayout();
 
 		void BeginSwapchainRendering(vk::CommandBuffer commandBuffer) const;
 	};

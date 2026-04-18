@@ -4,10 +4,9 @@
 //   float3 Position, float3 Normal, float3 Tangent, float3 Bitangent, float2 TexCoord
 //
 // Set 0, Binding 0 — FrameData UBO (View, Projection) — one per frame
-// Push constant     — PushConstantObject (Model matrix) — one per draw call
-//
-// NOTE: Material textures (set=1) are intentionally absent until the
-// descriptor-set wiring in the Material system is implemented.
+// Set 1, Bindings 0-4 — Material textures (albedo, normal, metallicRough, ao, emissive)
+// Set 1, Binding 5    — MaterialParams UBO (albedoColor, metallic, roughness, emissiveScale)
+// Push constant       — PushConstantObject (Model matrix) — one per draw call
 // -----------------------------------------------------------------------
 
 // -----------------------------------------------------------------------
@@ -55,6 +54,22 @@ struct FrameData
 [[vk::binding(0, 0)]]
 ConstantBuffer<FrameData> u_FrameData;
 
+// set 1 — material
+[[vk::binding(0, 1)]] Sampler2D albedoTex;
+[[vk::binding(1, 1)]] Sampler2D normalTex;
+[[vk::binding(2, 1)]] Sampler2D metallicRoughTex;
+[[vk::binding(3, 1)]] Sampler2D aoTex;
+[[vk::binding(4, 1)]] Sampler2D emissiveTex;
+
+[[vk::binding(5, 1)]] cbuffer MaterialParams
+{
+    float4 albedoColor;
+    float  metallic;
+    float  roughness;
+    float  emissiveScale;
+    float  _pad;
+};
+
 // -----------------------------------------------------------------------
 // Vertex Shader
 // -----------------------------------------------------------------------
@@ -76,19 +91,30 @@ VSOutput vertMain(VSInput input)
 }
 
 // -----------------------------------------------------------------------
-// Fragment Shader — simple Lambertian shading from vertex normals.
-// No texture sampling until Material system descriptor sets are wired up.
+// Fragment Shader — albedo + AO + emissive + Lambertian diffuse.
+// Normal map decoded but TBN deferred to PBR pass (needs tangent in VSOutput).
 // -----------------------------------------------------------------------
 [shader("fragment")]
 float4 fragMain(VSOutput input) : SV_Target
 {
-    // Hardcoded directional light — placeholder until lights are in the UBO
+    // ---- Albedo ----------------------------------------------------------
+    float4 albedoSample = albedoTex.Sample(input.TexCoord);
+    float3 baseColor    = albedoSample.rgb * albedoColor.rgb;
+
+    // ---- AO --------------------------------------------------------------
+    float ao = aoTex.Sample(input.TexCoord).r;
+
+    // ---- Emissive --------------------------------------------------------
+    float3 emissive = emissiveTex.Sample(input.TexCoord).rgb * emissiveScale;
+
+    // ---- Lambertian light ------------------------------------------------
+    float3 N        = normalize(input.Normal);
     float3 lightDir = normalize(float3(1.0, 2.0, 1.0));
-    float3 normal   = normalize(input.Normal);
+    float  NdotL    = max(dot(N, lightDir), 0.0);
 
-    float  NdotL    = max(dot(normal, lightDir), 0.0);
-    float3 ambient  = float3(0.08, 0.08, 0.10);
-    float3 diffuse  = float3(0.85, 0.85, 0.85) * NdotL;
+    float3 ambient = float3(0.08, 0.08, 0.10) * baseColor * ao;
+    float3 diffuse = baseColor * float3(0.85, 0.85, 0.85) * NdotL;
 
-    return float4(ambient + diffuse, 1.0);
+    float3 color = ambient + diffuse + emissive;
+    return float4(color, albedoSample.a);
 }

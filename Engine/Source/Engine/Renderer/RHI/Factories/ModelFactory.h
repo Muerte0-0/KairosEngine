@@ -1,6 +1,7 @@
 #pragma once
 #include "Engine/Core/Base.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
+#include "Engine/Renderer/RHI/Resources/Material.h"
 #include "Engine/Assets/AssimpModelLoader.h"
 
 #include <string>
@@ -16,9 +17,9 @@ namespace Engine
     // -----------------------------------------------------------------------
     struct Model
     {
-        std::string                     Name;
-        Ref<Mesh>                       MeshData;
-        std::vector<MaterialImportData> Materials;   // consumed by Material Factory later
+        std::string              Name;
+        Ref<Mesh>                MeshData;
+        std::vector<Ref<Material>> Materials;   // indexed by SubMesh::MaterialIndex
     };
 
     // -----------------------------------------------------------------------

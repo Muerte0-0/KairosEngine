@@ -1,5 +1,6 @@
 #include "kepch.h"
 #include "ModelFactory.h"
+#include "MaterialFactory.h"
 
 #include <filesystem>
 
@@ -16,8 +17,8 @@ namespace Engine
 
         Model model;
         model.Name      = name;
-        model.Materials = importResult.Materials;
         model.MeshData  = MergeMeshImports(importResult.Meshes);
+        model.Materials = MaterialFactory::BuildAll(importResult.Materials);
 
         return model;
     }

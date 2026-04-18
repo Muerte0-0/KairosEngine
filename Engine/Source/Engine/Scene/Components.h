@@ -4,6 +4,7 @@
 
 #include "Engine/Renderer/Cameras/GameCamera.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
+#include "Engine/Renderer/RHI/Resources/Material.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -70,16 +71,21 @@ namespace Engine
 
 	struct MeshComponent
 	{
-		std::filesystem::path MeshAssetPath;
-		Ref<Mesh> MeshRef;
+		std::filesystem::path      MeshAssetPath;
+		Ref<Mesh>                  MeshRef;
+		std::vector<Ref<Material>> Materials;   // indexed by SubMesh::MaterialIndex
 
-		bool SetMeshAsset(const std::filesystem::path& assetPath, const Ref<Mesh>& mesh)
+		// Set mesh + materials together from a loaded Model.
+		bool SetMeshAsset(const std::filesystem::path& assetPath,
+		                  const Ref<Mesh>& mesh,
+		                  std::vector<Ref<Material>> materials = {})
 		{
 			if (MeshAssetPath == assetPath && MeshRef == mesh)
 				return false;
 
 			MeshAssetPath = assetPath;
-			MeshRef = mesh;
+			MeshRef       = mesh;
+			Materials     = std::move(materials);
 			return true;
 		}
 
@@ -90,10 +96,11 @@ namespace Engine
 
 			MeshAssetPath.clear();
 			MeshRef.reset();
+			Materials.clear();
 			return true;
 		}
 
-		bool HasMesh() const { return MeshRef != nullptr; }
+		bool HasMesh()      const { return MeshRef != nullptr; }
 		bool HasMeshAsset() const { return !MeshAssetPath.empty(); }
 	};
 }

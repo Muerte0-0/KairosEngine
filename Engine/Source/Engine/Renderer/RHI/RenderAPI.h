@@ -6,6 +6,7 @@
 #include "Framebuffer.h"
 #include "GraphicsPipeline.h"
 #include "Resources/Mesh.h"
+#include "Resources/Material.h"
 #include "Shader.h"
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Utils/RendererUtils.h"
@@ -34,7 +35,8 @@ namespace Engine
 			const GraphicsPipeline& pipeline,
 			const Mesh& mesh,
 			const glm::mat4& modelTransform,
-			const UniformBufferObject& uniformBufferObject) = 0;
+			const UniformBufferObject& uniformBufferObject,
+			const std::vector<Ref<Material>>& materials = {}) = 0;
 		virtual void DrawFrame()  = 0;
 		virtual void EndScene()   = 0;
 
@@ -47,5 +49,8 @@ namespace Engine
 		virtual void WaitIdle() = 0;
 
 		virtual API GetType() = 0;
+
+		// Material factory — implemented by each backend.
+		virtual Ref<Material> CreateMaterial() = 0;
 	};
 }

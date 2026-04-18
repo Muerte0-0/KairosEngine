@@ -225,15 +225,24 @@ namespace Engine
         if (mat->GetTexture(static_cast<aiTextureType>(textureType), 0, &path) != AI_SUCCESS)
             return "";
 
-        // Assimp may give us an absolute path, a relative path, or an embedded
-        // texture token (*0, *1, …). For now just resolve relative paths.
         std::filesystem::path texPath(path.C_Str());
 
-        if (texPath.is_absolute())
+        // Case 1: relative path — resolve against model directory
+        if (!texPath.is_absolute())
+            return (std::filesystem::path(modelDirectory) / texPath).lexically_normal().string();
+
+        // Case 2: absolute path that exists on this machine — use it
+        if (std::filesystem::exists(texPath))
             return texPath.string();
 
-        // Relative — join with the directory the model file lives in
-        return (std::filesystem::path(modelDirectory) / texPath).string();
+        // Case 3: absolute path baked on another machine (e.g. C:\Dropbox\... from artist).
+        // Strip to filename only and try to find it next to the model file.
+        std::filesystem::path local = std::filesystem::path(modelDirectory) / texPath.filename();
+        if (std::filesystem::exists(local))
+            return local.lexically_normal().string();
+
+        // Not found — return the original so MaterialFactory can log it meaningfully
+        return texPath.string();
     }
 
 }

@@ -63,15 +63,6 @@ namespace Engine
 
 		if (!canGoBack) ImGui::EndDisabled();
 
-		ImGui::SameLine();
-
-		// Build relative path from base for display
-		std::string displayPath = std::filesystem::relative(m_CurrentDirectory, m_BaseDirectory.parent_path()).string();
-		// Replace backslashes for consistency
-		for (auto& c : displayPath) if (c == '\\') c = '/';
-
-		ImGui::TextUnformatted(displayPath.c_str());
-
 		ImGui::Separator();
 
 		static float padding       = 8.f;
@@ -95,6 +86,16 @@ namespace Engine
 
 			// ── Right: icon grid ──
 			ImGui::TableSetColumnIndex(1);
+			
+			// Build relative path from base for display
+			std::string displayPath = std::filesystem::relative(m_CurrentDirectory, m_BaseDirectory.parent_path()).string();
+			// Replace backslashes for consistency
+			for (auto& c : displayPath) if (c == '\\') c = '/';
+			
+			ImGui::TextUnformatted(displayPath.c_str());
+			
+			ImGui::Separator();
+			
 			ImGui::BeginChild("##IconGridChild", ImVec2(0, 0), false);
 
 			float cellSize    = thumbnailSize + padding;

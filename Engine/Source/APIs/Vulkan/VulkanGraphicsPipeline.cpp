@@ -56,24 +56,30 @@ namespace Engine
 
 	void VulkanGraphicsPipeline::CreatePipelineLayout()
 	{
-		std::array bindings = {
+		// Set 0 — camera UBO (vertex stage)
+		std::array set0Bindings = {
 			vk::DescriptorSetLayoutBinding(
 				0, vk::DescriptorType::eUniformBuffer, 1,
 				vk::ShaderStageFlagBits::eVertex, nullptr),
 		};
+		vk::DescriptorSetLayoutCreateInfo set0Info;
+		set0Info.bindingCount = static_cast<uint32_t>(set0Bindings.size());
+		set0Info.pBindings    = set0Bindings.data();
+		m_DescriptorSetLayout = vk::raii::DescriptorSetLayout(GetDevice(), set0Info);
 
-		vk::DescriptorSetLayoutCreateInfo layoutInfo;
-		layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-		layoutInfo.pBindings    = bindings.data();
-		m_DescriptorSetLayout   = vk::raii::DescriptorSetLayout(GetDevice(), layoutInfo);
+		// Set 1 — material textures + params UBO (owned by VulkanRenderAPI, shared)
+		auto* api = dynamic_cast<VulkanRenderAPI*>(Renderer::GetAPI());
+		ASSERT(api, "VulkanGraphicsPipeline: active RenderAPI is not VulkanRenderAPI.");
+		const vk::DescriptorSetLayout set1Layout = *api->GetMaterialDescriptorSetLayout();
+
+		std::array setLayouts = { *m_DescriptorSetLayout, set1Layout };
+
+		constexpr vk::PushConstantRange pushConstantRange(
+			vk::ShaderStageFlagBits::eVertex, 0, sizeof(PushConstantObject));
 
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
-		pipelineLayoutInfo.setLayoutCount         = 1;
-		pipelineLayoutInfo.pSetLayouts            = &*m_DescriptorSetLayout;
-		constexpr vk::PushConstantRange pushConstantRange(
-			vk::ShaderStageFlagBits::eVertex,
-			0,
-			sizeof(PushConstantObject));
+		pipelineLayoutInfo.setLayoutCount         = static_cast<uint32_t>(setLayouts.size());
+		pipelineLayoutInfo.pSetLayouts            = setLayouts.data();
 		pipelineLayoutInfo.pushConstantRangeCount = 1;
 		pipelineLayoutInfo.pPushConstantRanges    = &pushConstantRange;
 		m_PipelineLayout = vk::raii::PipelineLayout(GetDevice(), pipelineLayoutInfo);
