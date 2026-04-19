@@ -60,7 +60,7 @@ namespace Engine
 		std::array set0Bindings = {
 			vk::DescriptorSetLayoutBinding(
 				0, vk::DescriptorType::eUniformBuffer, 1,
-				vk::ShaderStageFlagBits::eVertex, nullptr),
+				vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, nullptr),
 		};
 		vk::DescriptorSetLayoutCreateInfo set0Info;
 		set0Info.bindingCount = static_cast<uint32_t>(set0Bindings.size());

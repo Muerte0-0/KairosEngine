@@ -170,14 +170,15 @@ namespace Engine
 				ImGui::Columns(1);
 				
 				ImGui::Dummy({0, (ImGui::GetContentRegionAvail().y - 96)});
-				
+			
 				// ── Settings ────────────────────────────────────────────────────
 				ImGui::SeparatorText("Settings");
 				ImGui::SliderFloat("Thumbnail Size", &thumbnailSize, 16.f, 512.f);
 				ImGui::SliderFloat("Padding",        &padding,       0.f,  32.f);
 			}
-
+			
 			ImGui::EndChild(); // Icon Grid Child
+
 			ImGui::EndTable();
 		}
 		ImGui::End();

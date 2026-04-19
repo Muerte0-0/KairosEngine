@@ -6,7 +6,7 @@ namespace Engine
 {
 	struct SceneCameraProps
 	{
-		float MoveSpeed    = 5.0f;
+		float MoveSpeed    = 1.0f;
 		float RotateSpeed  = 0.1f;
 		float OrbitSpeed   = 0.5f;
 		float PanSpeed     = 0.01f;
@@ -47,7 +47,7 @@ namespace Engine
 
 		SceneCameraProps m_Props;
 
-		glm::vec3 m_Position   { 0.0f, 0.0f, 4.0f };
+		glm::vec3 m_Position   { 0.0f, 1.0f, 4.0f };
 		glm::vec3 m_FocalPoint { 0.0f };
 
 		float m_Yaw   = -90.0f;

@@ -61,6 +61,20 @@ namespace Engine
         return s_FallbackBlack;
     }
 
+    // MetallicRoughness fallback: R=0, G=255 (rough=1.0), B=0 (metallic=0).
+    // Prevents mirror-smooth artefact when no MR texture is assigned.
+    static Ref<Texture> s_FallbackMetallicRough;
+    Ref<Texture> VulkanMaterial::GetFallbackMetallicRough()
+    {
+        if (!s_FallbackMetallicRough)
+        {
+            constexpr uint8_t px[4] = { 0, 255, 0, 255 };   // G=255→rough=1, B=0→metal=0
+            TextureSpecification spec; spec.Width = 1; spec.Height = 1;
+            s_FallbackMetallicRough = CreateRef<VulkanTexture>(px, sizeof(px), spec);
+        }
+        return s_FallbackMetallicRough;
+    }
+
     // -----------------------------------------------------------------------
     // Static resource cleanup — call before vkDestroyDevice
     // -----------------------------------------------------------------------
@@ -69,6 +83,7 @@ namespace Engine
         s_FallbackAlbedo.reset();
         s_FallbackNormal.reset();
         s_FallbackBlack.reset();
+        s_FallbackMetallicRough.reset();
     }
 
     // -----------------------------------------------------------------------
@@ -147,11 +162,11 @@ namespace Engine
             return static_cast<const VulkanTexture*>(src);
         };
 
-        const VulkanTexture* albedo  = ResolveImg(Albedo,           GetFallbackAlbedo());
-        const VulkanTexture* normal  = ResolveImg(Normal,           GetFallbackNormal());
-        const VulkanTexture* mr      = ResolveImg(MetallicRoughness, GetFallbackBlack());
-        const VulkanTexture* ao      = ResolveImg(AO,               GetFallbackAlbedo()); // white AO
-        const VulkanTexture* emissive= ResolveImg(Emissive,         GetFallbackBlack());
+        const VulkanTexture* albedo  = ResolveImg(Albedo,            GetFallbackAlbedo());
+        const VulkanTexture* normal  = ResolveImg(Normal,            GetFallbackNormal());
+        const VulkanTexture* mr      = ResolveImg(MetallicRoughness, GetFallbackMetallicRough());
+        const VulkanTexture* ao      = ResolveImg(AO,                GetFallbackAlbedo()); // white AO
+        const VulkanTexture* emissive= ResolveImg(Emissive,          GetFallbackBlack());
 
         for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
         {

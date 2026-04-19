@@ -55,7 +55,8 @@ namespace Engine
         // Returns the fallback for a given slot (lazily created 1x1 white/normal textures).
         static Ref<Texture> GetFallbackAlbedo();
         static Ref<Texture> GetFallbackNormal();
-        static Ref<Texture> GetFallbackBlack();   // metallic, AO, emissive
+        static Ref<Texture> GetFallbackBlack();          // emissive
+        static Ref<Texture> GetFallbackMetallicRough();  // G=255(rough=1) B=0(metal=0)
     };
 
 } // namespace Engine
