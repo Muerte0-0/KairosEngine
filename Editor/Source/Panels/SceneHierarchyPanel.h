@@ -1,9 +1,10 @@
 ﻿#pragma once
 #include "Engine.h"
+#include "Panel.h"
 
 namespace Kairos
 {
-	class SceneHierarchyPanel
+	class SceneHierarchyPanel : public Panel
 	{
 	public:
 		SceneHierarchyPanel() = default;
@@ -15,9 +16,7 @@ namespace Kairos
 			m_Context = context;
 		}
 		
-		void DrawComponents(Entity entity);
-
-		void OnImGuiRender();
+		void OnImGuiRender() override;
 		
 		Entity GetSelectedEntity() const { return m_SelectionContext; }
 		void   SetSelectedEntity(Entity entity) { m_SelectionContext = entity; }

@@ -21,6 +21,7 @@
 // ------------------------------- //
 
 // ------------- Asset Registry ------------------- //
+#include "Engine/Assets/Editor/AssetImporter.h"
 #include "Engine/Assets/Editor/EditorAssetManager.h"
 #include "Engine/Assets/AssetManager.h"
 // ------------------------------------------------ //

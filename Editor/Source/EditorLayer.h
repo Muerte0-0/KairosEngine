@@ -4,6 +4,9 @@
 // Panels
 #include "Panels/SceneHierarchyPanel.h"
 #include "Panels/ContentBrowserPanel.h"
+#include "Panels/PropertiesPanel.h"
+#include "Panels/ViewportPanel.h"
+#include "EditorWindow.h"
 
 namespace Kairos
 {
@@ -27,10 +30,6 @@ namespace Kairos
 
 		void OnEvent(Engine::Event& event) override;
 	private:
-		bool m_ViewportFocused = false, m_ViewportHovered = false;
-		glm::vec2 m_ViewportSize = {1280, 720};
-		glm::vec2 m_ViewportBounds[2];
-
 		Ref<Scene> m_ActiveScene;
 		std::filesystem::path m_ActiveScenePath;
 		Scope<SceneRenderer> m_SceneRenderer;
@@ -42,18 +41,25 @@ namespace Kairos
 		Entity m_CubeEntity2;
 		Entity m_TestModelEntity;
 		
-		int m_GizmoType = -1;
-		
 		// ----------- Panels ----------- //
 		
 		Scope<SceneHierarchyPanel> m_SceneHierarchyPanel;
 		Scope<ContentBrowserPanel> m_ContentBrowserPanel;
+		Scope<PropertiesPanel>     m_PropertiesPanel;
+		Scope<ViewportPanel>       m_ViewportPanel;
+
+		std::vector<Ref<EditorWindow>> m_OpenWindows;
+
+		ImGuiID m_OuterDockID             = 0;
+		bool    m_LevelEditorLayoutBuilt  = false;
 		
 		// ------------------------------ //
 		
 		// ----------- ImGui ----------- //
+		void SetupOuterDockspace();
+		void DrawLevelEditorWindow();
+		void BuildLevelEditorLayout(ImGuiID innerID);
 		void DrawMenuBar();
-		void DrawViewport();
 
 		// Debug
 		void DrawImGuiDebug();
@@ -65,6 +71,8 @@ namespace Kairos
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
 
+		void OpenAssetEditor(const std::filesystem::path& path);
+		
 		// Returns the entity under the viewport mouse cursor, or an invalid Entity.
 		// Cycles through overlapping hits if current selection is the front-most.
 		Entity PickEntityAtMouse();

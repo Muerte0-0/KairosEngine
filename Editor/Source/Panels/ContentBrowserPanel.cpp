@@ -1,13 +1,46 @@
 ﻿#include "ContentBrowserPanel.h"
 
 #include "Engine.h"
+#include "Engine/Assets/Editor/AssetImporter.h"
 
-namespace Engine
+namespace Kairos
 {
-	ContentBrowserPanel::ContentBrowserPanel() : m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
+	static Ref<Texture> TryLoadIcon(const std::string& path)
+	{
+		if (std::filesystem::exists(path))
+			return Texture::Create(path);
+		return nullptr;
+	}
+
+	ContentBrowserPanel::ContentBrowserPanel()
+		: m_BaseDirectory(Project::GetAssetDirectory()), m_CurrentDirectory(m_BaseDirectory)
 	{
 		m_DirectoryIcon = Texture::Create("Resources/Icons/ContentBrowser/DirectoryIcon.png");
 		m_FileIcon      = Texture::Create("Resources/Icons/ContentBrowser/FileIcon.png");
+
+		// Per-type icons — fall back to m_FileIcon if not found yet
+		m_MeshIcon     = TryLoadIcon("Resources/Icons/ContentBrowser/MeshIcon.png");
+		m_TextureIcon  = TryLoadIcon("Resources/Icons/ContentBrowser/TextureIcon.png");
+		m_MaterialIcon = TryLoadIcon("Resources/Icons/ContentBrowser/MaterialIcon.png");
+		m_ShaderIcon   = TryLoadIcon("Resources/Icons/ContentBrowser/ShaderIcon.png");
+		m_SceneIcon    = TryLoadIcon("Resources/Icons/ContentBrowser/SceneIcon.png");
+	}
+
+	Ref<Texture> ContentBrowserPanel::GetIconForPath(const std::filesystem::path& path) const
+	{
+		using Engine::AssetImporter;
+		using Engine::AssetType;
+
+		AssetType type = AssetImporter::DeduceTypeFromPath(path);
+		switch (type)
+		{
+			case AssetType::Mesh:     return m_MeshIcon     ? m_MeshIcon     : m_FileIcon;
+			case AssetType::Texture:  return m_TextureIcon  ? m_TextureIcon  : m_FileIcon;
+			case AssetType::Material: return m_MaterialIcon ? m_MaterialIcon : m_FileIcon;
+			case AssetType::Shader:   return m_ShaderIcon   ? m_ShaderIcon   : m_FileIcon;
+			case AssetType::Scene:    return m_SceneIcon    ? m_SceneIcon    : m_FileIcon;
+			default:                  return m_FileIcon;
+		}
 	}
 
 	// Recursive folder tree for left panel
@@ -133,7 +166,7 @@ namespace Engine
 
 					ImGui::PushID(filenameString.c_str());
 
-					Ref<Texture> icon = directoryEntry.is_directory() ? m_DirectoryIcon : m_FileIcon;
+					Ref<Texture> icon = directoryEntry.is_directory() ? m_DirectoryIcon : GetIconForPath(path);
 
 					ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
 					ImGui::ImageButton(filenameString.c_str(), icon->GetTextureID(), { thumbnailSize, thumbnailSize });
@@ -160,6 +193,8 @@ namespace Engine
 					{
 						if (directoryEntry.is_directory())
 							m_CurrentDirectory = path;
+						else if (OnAssetDoubleClicked)
+							OnAssetDoubleClicked(path);
 					}
 
 					ImGui::TextUnformatted(filenameString.c_str());

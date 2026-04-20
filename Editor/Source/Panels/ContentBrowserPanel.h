@@ -1,23 +1,34 @@
-﻿#pragma once
-#include <filesystem>
-#include "Engine/Renderer/RHI/Resources/Texture.h"
+#pragma once
+#include "Engine.h"
+#include "Panel.h"
+#include <functional>
 
-namespace Engine
-{	
-	class ContentBrowserPanel
+namespace Kairos
+{
+	class ContentBrowserPanel : public Panel
 	{
 	public:
 		ContentBrowserPanel();
 
-		void OnImGuiRender();
-		
+		void OnImGuiRender() override;
+
+		// Set by EditorLayer — called when a non-directory asset is double-clicked
+		std::function<void(const std::filesystem::path&)> OnAssetDoubleClicked;
+
 	private:
 		void RenderFolderTree(const std::filesystem::path& directory);
+		Ref<Texture> GetIconForPath(const std::filesystem::path& path) const;
 
 		std::filesystem::path m_BaseDirectory;
 		std::filesystem::path m_CurrentDirectory;
-		
+
+		// Icons
 		Ref<Texture> m_DirectoryIcon;
-		Ref<Texture> m_FileIcon;
+		Ref<Texture> m_MeshIcon;
+		Ref<Texture> m_TextureIcon;
+		Ref<Texture> m_MaterialIcon;
+		Ref<Texture> m_ShaderIcon;
+		Ref<Texture> m_SceneIcon;
+		Ref<Texture> m_FileIcon;      // fallback
 	};
 }

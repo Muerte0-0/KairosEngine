@@ -17,6 +17,7 @@ namespace Engine
 			case AssetType::Mesh:     return "Mesh";
 			case AssetType::Texture:  return "Texture";
 			case AssetType::Material: return "Material";
+			case AssetType::Shader:   return "Shader";
 			case AssetType::Scene:    return "Scene";
 			default:                  return "None";
 		}
@@ -27,6 +28,7 @@ namespace Engine
 		if (s == "Mesh")     return AssetType::Mesh;
 		if (s == "Texture")  return AssetType::Texture;
 		if (s == "Material") return AssetType::Material;
+		if (s == "Shader")   return AssetType::Shader;
 		if (s == "Scene")    return AssetType::Scene;
 		return AssetType::None;
 	}

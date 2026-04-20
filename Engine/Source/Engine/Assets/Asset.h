@@ -13,6 +13,7 @@ namespace Engine
 		Mesh,
 		Texture,
 		Material,
+		Shader,
 		Scene,
 	};
 

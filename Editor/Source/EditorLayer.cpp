@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.inl>
 
+#include "imgui_internal.h"
 #include "Panels/SceneHierarchyPanel.h"
 
 #include "Engine/Scene/SceneSerializer.h"
@@ -86,7 +87,41 @@ namespace Kairos
 		
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 
-		m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+		m_ViewportPanel->Init(m_SceneRenderer.get(), m_SceneCamera.get(),
+		                      m_SceneCameraController.get(), &m_CameraManager,
+		                      m_SceneHierarchyPanel.get());
+
+		m_ViewportPanel->OnSceneDrop = [this](const std::filesystem::path& path)
+		{
+			OpenScene(path);
+		};
+
+		m_ViewportPanel->OnMeshDrop = [this](const std::filesystem::path& path)
+		{
+			auto* editorAM = static_cast<EditorAssetManager*>(
+				Project::GetActive()->GetAssetManager().get());
+
+			AssetHandle handle = editorAM->ImportAsset(path);
+			if (static_cast<uint64_t>(handle) == NullAssetHandle)
+			{
+				LOG(LogLevel::Warning, "Mesh drag-drop: import failed for '{}'.", path.string());
+				return;
+			}
+
+			Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
+			if (!mesh)
+			{
+				LOG(LogLevel::Warning, "Mesh drag-drop: asset loaded but Mesh cast failed for '{}'.", path.string());
+				return;
+			}
+
+			std::string name  = path.stem().string();
+			Entity entity     = m_ActiveScene->CreateEntity(name);
+			auto& mc          = entity.AddComponent<MeshComponent>();
+			mc.SetMeshAsset(handle, mesh, mesh->GetMaterials());
+			m_SceneHierarchyPanel->SetSelectedEntity(entity);
+			LOG(LogLevel::Info, "Spawned mesh entity '{}' from drag-drop.", name);
+		};
 	}
 
 	void EditorLayer::OnDetach()
@@ -98,8 +133,8 @@ namespace Kairos
 	{
 		Layer::OnUpdate(DeltaTime);
 		
-		m_SceneCameraController->SetViewportFocused(m_ViewportFocused);
-		m_SceneCameraController->SetViewportHovered(m_ViewportHovered);
+		m_SceneCameraController->SetViewportFocused(m_ViewportPanel->IsFocused());
+		m_SceneCameraController->SetViewportHovered(m_ViewportPanel->IsHovered());
 		
 		m_SceneCameraController->OnUpdate(DeltaTime);
 	
@@ -121,9 +156,6 @@ namespace Kairos
 		if (!m_SceneRenderer)
 			return;
 
-		const float width = (std::max)(m_ViewportSize.x, 1.0f);
-		const float height = (std::max)(m_ViewportSize.y, 1.0f);
-		
 		m_SceneRenderer->BeginScene(m_CameraManager);
 		m_ActiveScene->OnRender(*m_SceneRenderer);
 		m_SceneRenderer->EndScene();
@@ -131,53 +163,18 @@ namespace Kairos
 
 	void EditorLayer::OnImGuiRender()
 	{
-		static ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
+		SetupOuterDockspace();
+		DrawLevelEditorWindow();
 
-		ImGuiWindowFlags dockspaceWindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-
-		dockspaceWindowFlags |= ImGuiWindowFlags_NoTitleBar;
-		dockspaceWindowFlags |= ImGuiWindowFlags_NoCollapse;
-		dockspaceWindowFlags |= ImGuiWindowFlags_NoResize;
-		dockspaceWindowFlags |= ImGuiWindowFlags_NoMove;
-		dockspaceWindowFlags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
-		dockspaceWindowFlags |= ImGuiWindowFlags_NoNavFocus;
-		dockspaceWindowFlags |= ImGuiWindowFlags_NoBackground;
-
-		const ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(viewport->WorkPos);
-		ImGui::SetNextWindowSize(viewport->WorkSize);
-		ImGui::SetNextWindowViewport(viewport->ID);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
-		ImGui::Begin("Editor Dockspace", nullptr, dockspaceWindowFlags);
-
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar(2);
-
-		ImGuiIO& io = ImGui::GetIO();
-		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+		// Tool windows (Material Editor, Texture Editor, etc.)
+		for (auto it = m_OpenWindows.begin(); it != m_OpenWindows.end();)
 		{
-			ImGuiID dockspaceID = ImGui::GetID("Editor Dockspace");
-			ImGui::DockSpace(dockspaceID, ImVec2(0.0f, 0.0f), dockspaceFlags);
+			(*it)->OnImGuiRender();
+			if (!(*it)->IsOpen())
+				it = m_OpenWindows.erase(it);
+			else
+				++it;
 		}
-
-		DrawMenuBar();
-
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-
-		DrawViewport();
-
-		ImGui::PopStyleVar();
-
-		m_SceneHierarchyPanel->OnImGuiRender();
-		m_ContentBrowserPanel->OnImGuiRender();
-
-		if (m_ShowConsole)
-			DrawConsole();
-
-		ImGui::End();
 	}
 
 	void EditorLayer::OnEvent(Engine::Event& event)
@@ -189,6 +186,103 @@ namespace Kairos
 		EventDispatcher dispatcher(event);
 		dispatcher.Dispatch<KeyPressedEvent>(BIND_EVENT_FN(&EditorLayer::OnKeyPressedEvent));
 		dispatcher.Dispatch<MouseButtonPressedEvent>(BIND_EVENT_FN(&EditorLayer::OnMouseButtonPressedEvent));
+	}
+
+	void EditorLayer::SetupOuterDockspace()
+	{
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
+		ImGui::SetNextWindowPos(viewport->WorkPos);
+		ImGui::SetNextWindowSize(viewport->WorkSize);
+		ImGui::SetNextWindowViewport(viewport->ID);
+
+		ImGuiWindowFlags flags =
+			ImGuiWindowFlags_NoDocking   | ImGuiWindowFlags_NoTitleBar    |
+			ImGuiWindowFlags_NoCollapse  | ImGuiWindowFlags_NoResize      |
+			ImGuiWindowFlags_NoMove      | ImGuiWindowFlags_NoBringToFrontOnFocus |
+			ImGuiWindowFlags_NoNavFocus  | ImGuiWindowFlags_NoBackground  |
+			ImGuiWindowFlags_MenuBar;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::Begin("##OuterWindow", nullptr, flags);
+		ImGui::PopStyleVar(3);
+
+		m_OuterDockID = ImGui::GetID("##OuterDockspace");
+		ImGui::DockSpace(m_OuterDockID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+		DrawMenuBar();
+
+		ImGui::End();
+	}
+
+	void EditorLayer::DrawLevelEditorWindow()
+	{
+		// Fixed title — MUST NOT change, title change = new ImGui window = loses dock
+		// Scene name displayed inside the window instead
+		ImGuiCond dockCond = m_LevelEditorLayoutBuilt ? ImGuiCond_FirstUseEver : ImGuiCond_Always;
+		ImGui::SetNextWindowDockID(m_OuterDockID, dockCond);
+		ImGui::Begin("Level Editor", nullptr, ImGuiWindowFlags_NoCollapse);
+
+		// Show scene name as text inside the window
+		std::string sceneName = m_ActiveScenePath.empty()
+			? "Untitled"
+			: m_ActiveScenePath.stem().string();
+		ImGui::TextDisabled("Scene: %s", sceneName.c_str());
+		ImGui::Separator();
+
+		ImGuiID innerID = ImGui::GetID("##LevelEditorInner");
+		ImGui::DockSpace(innerID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+		if (!m_LevelEditorLayoutBuilt)
+		{
+			BuildLevelEditorLayout(innerID);
+			m_LevelEditorLayoutBuilt = true;
+		}
+
+		ImGui::End();
+
+		// Panels dock into inner slots — window names must match DockBuilderDockWindow strings
+		m_SceneHierarchyPanel->OnImGuiRender();   // "Scene Hierarchy"
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		m_ViewportPanel->OnImGuiRender();          // "Viewport"
+		ImGui::PopStyleVar();
+
+		m_PropertiesPanel->SetSelectedEntity(m_SceneHierarchyPanel->GetSelectedEntity());
+		m_PropertiesPanel->OnImGuiRender();        // "Properties"
+
+		m_ContentBrowserPanel->OnImGuiRender();    // "Content Browser"
+
+		if (m_ShowConsole)
+			DrawConsole();
+	}
+
+	void EditorLayer::BuildLevelEditorLayout(ImGuiID innerID)
+	{
+		ImGui::DockBuilderRemoveNode(innerID);
+		ImGui::DockBuilderAddNode(innerID, ImGuiDockNodeFlags_DockSpace);
+		ImGui::DockBuilderSetNodeSize(innerID, ImGui::GetMainViewport()->WorkSize);
+
+		// Split bottom first (full width) then work on the top half
+		ImGuiID top, bottom;
+		ImGui::DockBuilderSplitNode(innerID, ImGuiDir_Down, 0.45f, &bottom, &top);
+
+		ImGuiID left, center, right;
+		ImGui::DockBuilderSplitNode(top,    ImGuiDir_Left,  0.18f, &left,   &center);
+		ImGui::DockBuilderSplitNode(center, ImGuiDir_Right, 0.25f, &right,  &center);
+
+		ImGui::DockBuilderDockWindow("Scene Hierarchy", left);
+		ImGui::DockBuilderDockWindow("Viewport",        center);
+		ImGui::DockBuilderDockWindow("Properties",      right);
+		ImGui::DockBuilderDockWindow("Content Browser", bottom);
+
+		// Hide viewport tab bar
+		ImGuiDockNode* viewportNode = ImGui::DockBuilderGetNode(center);
+		if (viewportNode)
+			viewportNode->LocalFlags |= ImGuiDockNodeFlags_NoTabBar;
+
+		ImGui::DockBuilderFinish(innerID);
 	}
 
 	void EditorLayer::DrawMenuBar()
@@ -233,6 +327,11 @@ namespace Kairos
 					LOG(Engine::LogLevel::Info, "Console {}", m_ShowConsole ? "Shown" : "Hidden");
 				}
 
+				ImGui::Separator();
+
+				if (ImGui::MenuItem("Reset Layout"))
+					m_LevelEditorLayoutBuilt = false;
+
 				ImGui::EndMenu();
 			}
 
@@ -263,143 +362,6 @@ namespace Kairos
 
 			ImGui::EndMenuBar();
 		}
-	}
-
-	void EditorLayer::DrawViewport()
-	{
-		ImGui::Begin("Viewport");
-		
-		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-		m_ViewportSize = glm::vec2(viewportPanelSize.x, viewportPanelSize.y);
-
-		Engine::Framebuffer* framebuffer = m_SceneRenderer ? m_SceneRenderer->GetFramebuffer() : nullptr;
-		if (framebuffer != nullptr && viewportPanelSize.x > 0.0f && viewportPanelSize.y > 0.0f)
-		{
-			m_SceneRenderer->Resize(
-				static_cast<uint32_t>(viewportPanelSize.x),
-				static_cast<uint32_t>(viewportPanelSize.y));
-    	
-			m_SceneCamera->OnViewportResize(
-				static_cast<uint32_t>(viewportPanelSize.x),
-				 static_cast<uint32_t>(viewportPanelSize.y));
-
-			if (void* textureID = framebuffer->GetImGuiTextureID())
-			{
-				ImGui::Image(textureID, viewportPanelSize, ImVec2(0, 1), ImVec2(1, 0));
-
-				// Record actual bounds after image is placed (used by mouse picking).
-				ImVec2 minBound = ImGui::GetItemRectMin();
-				ImVec2 maxBound = ImGui::GetItemRectMax();
-				m_ViewportBounds[0] = { minBound.x, minBound.y };
-				m_ViewportBounds[1] = { maxBound.x, maxBound.y };
-			}
-		}
-		else
-		{
-			ImGui::TextColored(ImVec4(1, 0, 0, 1), "Not Implemented Yet! :)");
-		}
-
-		// ── Drag-drop: scene file onto viewport → open scene ──────────────
-		if (ImGui::BeginDragDropTarget())
-		{
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_ITEM"))
-			{
-				const wchar_t* wpath = static_cast<const wchar_t*>(payload->Data);
-				OpenScene(std::filesystem::path(wpath));
-			}
-
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MESH_ITEM"))
-			{
-				const wchar_t* wpath = static_cast<const wchar_t*>(payload->Data);
-				std::filesystem::path meshPath(wpath);
-
-				// Import (or retrieve existing handle) via EditorAssetManager
-				auto* editorAM = static_cast<EditorAssetManager*>(
-					Project::GetActive()->GetAssetManager().get());
-
-				AssetHandle handle = editorAM->ImportAsset(meshPath);
-
-				if (static_cast<uint64_t>(handle) != NullAssetHandle)
-				{
-					Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
-					if (mesh)
-					{
-						// Spawn entity named after the file stem
-						std::string name = meshPath.stem().string();
-						Entity entity    = m_ActiveScene->CreateEntity(name);
-						auto& mc         = entity.AddComponent<MeshComponent>();
-						mc.SetMeshAsset(handle, mesh, mesh->GetMaterials());
-
-						m_SceneHierarchyPanel->SetSelectedEntity(entity);
-
-						LOG(LogLevel::Info, "Spawned mesh entity '{}' from drag-drop.", name);
-					}
-					else
-					{
-						LOG(LogLevel::Warning, "Mesh drag-drop: asset loaded but Mesh cast failed for '{}'.",
-							meshPath.string());
-					}
-				}
-				else
-				{
-					LOG(LogLevel::Warning, "Mesh drag-drop: import failed for '{}'.", meshPath.string());
-				}
-			}
-
-			ImGui::EndDragDropTarget();
-		}
-
-		m_ViewportFocused = ImGui::IsWindowFocused();
-		m_ViewportHovered = ImGui::IsWindowHovered();
-		
-		if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && m_ViewportHovered && !m_ViewportFocused)
-		{
-			ImGui::SetWindowFocus();
-			m_ViewportFocused = true;
-		}
-		
-		// Gizmos
-		Entity selectedEntity = m_SceneHierarchyPanel->GetSelectedEntity();
-		
-		if (selectedEntity && m_GizmoType != -1)
-		{
-			ImGuizmo::SetOrthographic(false);
-			ImGuizmo::SetDrawlist();
-			
-			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
-			
-			// Entity Transform
-			auto& tc = selectedEntity.GetComponent<TransformComponent>();
-			glm::mat4 transform = tc.GetTransform();
-			
-			// Snapping
-			bool snap = Input::IsKeyPressed(KeyBoard::LeftControl);
-			float snapValue = 0.5f;
-			// Snap to 5 Degrees for Rotation
-			if (m_GizmoType == ImGuizmo::OPERATION::ROTATE)
-				snapValue = 5.0f;
-			
-			float snapValues[3] = { snapValue, snapValue, snapValue };
-			
-			ImGuizmo::Manipulate(glm::value_ptr(m_CameraManager.GetActiveCamera()->GetView()),
-				glm::value_ptr(m_CameraManager.GetActiveCamera()->GetProjection()), 
-				static_cast<ImGuizmo::OPERATION>(m_GizmoType), ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr,
-				snap ? snapValues : nullptr);
-			
-			if (ImGuizmo::IsUsing())
-			{
-				glm::vec3 translation, rotation, scale;
-				Math::DecomposeTransform(transform, translation, rotation, scale);
-				
-				glm::vec3 deltaRotation = rotation - tc.Rotation;
-				
-				tc.Translation = translation;
-				tc.Rotation += deltaRotation;
-				tc.Scale = scale;
-			}
-		}
-		
-		ImGui::End();
 	}
 
 	void EditorLayer::DrawImGuiDebug()
@@ -452,20 +414,20 @@ namespace Kairos
 			}
 			break;
 		case KeyBoard::Q:
-			if (m_ViewportHovered)
-				m_GizmoType = -1;
+			if (m_ViewportPanel->IsHovered())
+				m_ViewportPanel->SetGizmoType(-1);
 			break;
 		case KeyBoard::W:
-			if (m_ViewportHovered)
-				m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+			if (m_ViewportPanel->IsHovered())
+				m_ViewportPanel->SetGizmoType(ImGuizmo::OPERATION::TRANSLATE);
 			break;
 		case KeyBoard::E:
-			if (m_ViewportHovered)
-				m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+			if (m_ViewportPanel->IsHovered())
+				m_ViewportPanel->SetGizmoType(ImGuizmo::OPERATION::ROTATE);
 			break;
 		case KeyBoard::R:
-			if (m_ViewportHovered)
-				m_GizmoType = ImGuizmo::OPERATION::SCALE;
+			if (m_ViewportPanel->IsHovered())
+				m_ViewportPanel->SetGizmoType(ImGuizmo::OPERATION::SCALE);
 			break;
 		default: break;
 		}
@@ -479,7 +441,7 @@ namespace Kairos
 		if (event.GetMouseButton() != Mouse::ButtonLeft)
 			return false;
 
-		if (!m_ViewportHovered)
+		if (!m_ViewportPanel->IsHovered())
 			return false;
 
 		// Don't steal click while camera is flying or gizmo is being dragged.
@@ -495,12 +457,48 @@ namespace Kairos
 		return false; // Don't consume — let ImGui focus the Window.
 	}
 
+	void EditorLayer::OpenAssetEditor(const std::filesystem::path& path)
+	{
+		// Scene — load directly, no tab
+		if (path.extension() == ".kscn")
+		{
+			OpenScene(path);
+			return;
+		}
+
+		// Check if already open — focus it
+		std::string title = path.stem().string();
+		for (auto& win : m_OpenWindows)
+		{
+			if (win->GetTitle() == title)
+			{
+				ImGui::SetWindowFocus(title.c_str());
+				return;
+			}
+		}
+
+		// Dispatch stub by type
+		AssetType type = AssetImporter::DeduceTypeFromPath(path);
+		
+		switch (type)
+		{
+			// Stubs for now — replace with real windows as they're built
+		case AssetType::Material:
+		case AssetType::Texture:
+		case AssetType::Mesh:
+		case AssetType::Shader:
+		default:
+			LOG(LogLevel::Info, "OpenAssetEditor: no editor yet for '{}'.", path.string());
+			break;
+		}
+	}
+
 	Entity EditorLayer::PickEntityAtMouse()
 	{
 		// ---- 1. Mouse → NDC relative to viewport -------------------------
 		glm::vec2 mousePos = { ImGui::GetMousePos().x, ImGui::GetMousePos().y };
-		glm::vec2 vpMin    = m_ViewportBounds[0];
-		glm::vec2 vpMax    = m_ViewportBounds[1];
+		glm::vec2 vpMin    = m_ViewportPanel->GetBounds()[0];
+		glm::vec2 vpMax    = m_ViewportPanel->GetBounds()[1];
 		glm::vec2 vpSize   = vpMax - vpMin;
 
 		if (vpSize.x <= 0.0f || vpSize.y <= 0.0f)
@@ -647,6 +645,13 @@ namespace Kairos
 			
 			m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>();
 			m_ContentBrowserPanel = CreateScope<ContentBrowserPanel>();
+			m_PropertiesPanel     = CreateScope<PropertiesPanel>();
+			m_ViewportPanel       = CreateScope<ViewportPanel>();
+
+			m_ContentBrowserPanel->OnAssetDoubleClicked = [this](const std::filesystem::path& path)
+			{
+				OpenAssetEditor(path);
+			};
 		}
 	}
 
