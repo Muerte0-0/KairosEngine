@@ -1,7 +1,7 @@
 #include "kepch.h"
 #include "EditorAssetManager.h"
 #include "AssetImporter.h"
-#include "KassetSerializer.h"
+#include "AssetSerializer.h"
 #include "Engine/Project/Project.h"
 
 namespace Engine
@@ -35,7 +35,7 @@ namespace Engine
 			if (!entry.is_regular_file()) continue;
 			if (entry.path().extension() != ".kasset") continue;
 
-			AssetMetadata metadata = KassetSerializer::Read(entry.path());
+			AssetMetadata metadata = AssetSerializer::Read(entry.path());
 			if (!metadata.IsValid())
 			{
 				LOG(LogLevel::Warning, "EditorAssetManager: invalid .kasset skipped: '{}'.", entry.path().string());
@@ -77,7 +77,7 @@ namespace Engine
 			AssetType type = AssetImporter::DeduceTypeFromPath(entry.path());
 			if (type == AssetType::None) continue;
 
-			std::filesystem::path kassetPath = KassetSerializer::GetKassetPath(entry.path());
+			std::filesystem::path kassetPath = AssetSerializer::GetKassetPath(entry.path());
 			if (std::filesystem::exists(kassetPath)) continue; // already has sidecar
 
 			// Build metadata for the orphaned source file
@@ -89,14 +89,14 @@ namespace Engine
 			metadata.Type     = type;
 			metadata.FilePath = relative;
 
-			if (!KassetSerializer::Write(canonical, metadata))
+			if (!AssetSerializer::Write(canonical, metadata))
 			{
 				LOG(LogLevel::Error, "EditorAssetManager: failed to create Metadata for '{}'.", relative.string());
 				continue;
 			}
 
 			// Re-read so SourceHash is populated from what was written
-			AssetMetadata written = KassetSerializer::Read(kassetPath);
+			AssetMetadata written = AssetSerializer::Read(kassetPath);
 			written.FilePath      = relative;
 
 			if (m_Registry.Contains(written.Handle))
@@ -137,11 +137,11 @@ namespace Engine
 		metadata.Type     = type;
 		metadata.FilePath = relative;
 
-		if (!KassetSerializer::Write(canonical, metadata))
+		if (!AssetSerializer::Write(canonical, metadata))
 			return AssetHandle(NullAssetHandle);
 
-		std::filesystem::path kassetPath = KassetSerializer::GetKassetPath(canonical);
-		AssetMetadata written = KassetSerializer::Read(kassetPath);
+		std::filesystem::path kassetPath = AssetSerializer::GetKassetPath(canonical);
+		AssetMetadata written = AssetSerializer::Read(kassetPath);
 		written.FilePath      = relative;
 
 		m_Registry.Add(written);
@@ -175,7 +175,7 @@ namespace Engine
 		}
 
 		// Rewrite .kasset (refreshes SourceHash)
-		KassetSerializer::Write(it->second, *metadata);
+		AssetSerializer::Write(it->second, *metadata);
 
 		// Evict loaded asset — next GetAsset() call will re-run importer
 		m_LoadedAssets.erase(handle);

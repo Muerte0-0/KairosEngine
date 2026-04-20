@@ -6,10 +6,10 @@ namespace Engine
 {
 	// .kasset sidecar: lives next to source file as <source>.kasset
 	// e.g.  Barrel.fbx  ->  Barrel.fbx.kasset
-	class KassetSerializer
+	class AssetSerializer
 	{
 	public:
-		KassetSerializer() = delete;
+		AssetSerializer() = delete;
 
 		static std::filesystem::path GetKassetPath(const std::filesystem::path& sourcePath);
 

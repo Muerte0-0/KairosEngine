@@ -483,13 +483,13 @@ namespace Kairos
 		switch (type)
 		{
 			// Stubs for now — replace with real windows as they're built
-		case AssetType::Material:
-		case AssetType::Texture:
-		case AssetType::Mesh:
-		case AssetType::Shader:
-		default:
-			LOG(LogLevel::Info, "OpenAssetEditor: no editor yet for '{}'.", path.string());
-			break;
+			case AssetType::Material:
+			case AssetType::Texture:
+			case AssetType::Mesh:
+			case AssetType::Shader:
+			default:
+				LOG(LogLevel::Info, "OpenAssetEditor: no editor yet for '{}'.", path.string());
+				break;
 		}
 	}
 

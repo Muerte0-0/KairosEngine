@@ -1,5 +1,5 @@
 #include "kepch.h"
-#include "KassetSerializer.h"
+#include "AssetSerializer.h"
 
 #include <yaml-cpp/yaml.h>
 #include <fstream>
@@ -59,19 +59,19 @@ namespace Engine
 	}
 
 	// -----------------------------------------------------------------------
-	// KassetSerializer
+	// AssetSerializer
 	// -----------------------------------------------------------------------
-	std::filesystem::path KassetSerializer::GetKassetPath(const std::filesystem::path& sourcePath)
+	std::filesystem::path AssetSerializer::GetKassetPath(const std::filesystem::path& sourcePath)
 	{
 		return std::filesystem::path(sourcePath.string() + ".kasset");
 	}
 
-	std::string KassetSerializer::ComputeSourceHash(const std::filesystem::path& sourcePath)
+	std::string AssetSerializer::ComputeSourceHash(const std::filesystem::path& sourcePath)
 	{
 		return FNV1aHash(sourcePath);
 	}
 
-	bool KassetSerializer::Write(const std::filesystem::path& sourcePath, const AssetMetadata& metadata)
+	bool AssetSerializer::Write(const std::filesystem::path& sourcePath, const AssetMetadata& metadata)
 	{
 		std::filesystem::path kassetPath = GetKassetPath(sourcePath);
 
@@ -100,14 +100,14 @@ namespace Engine
 		std::ofstream file(kassetPath);
 		if (!file)
 		{
-			LOG(LogLevel::Error, "KassetSerializer: failed to write '{}'.", kassetPath.string());
+			LOG(LogLevel::Error, "AssetSerializer: failed to write '{}'.", kassetPath.string());
 			return false;
 		}
 		file << out.c_str();
 		return true;
 	}
 
-	AssetMetadata KassetSerializer::Read(const std::filesystem::path& kassetPath)
+	AssetMetadata AssetSerializer::Read(const std::filesystem::path& kassetPath)
 	{
 		AssetMetadata metadata;
 
@@ -115,7 +115,7 @@ namespace Engine
 		try { root = YAML::LoadFile(kassetPath.string()); }
 		catch (const YAML::Exception& e)
 		{
-			LOG(LogLevel::Error, "KassetSerializer: parse error '{}': {}", kassetPath.string(), e.what());
+			LOG(LogLevel::Error, "AssetSerializer: parse error '{}': {}", kassetPath.string(), e.what());
 			return metadata;
 		}
 
