@@ -60,6 +60,7 @@ namespace Kairos
 		void DrawLevelEditorWindow();
 		void BuildLevelEditorLayout(ImGuiID innerID);
 		void DrawMenuBar();
+		void OpenAssetEditor(const std::filesystem::path& path);
 
 		// Debug
 		void DrawImGuiDebug();
@@ -70,8 +71,6 @@ namespace Kairos
 		
 		bool OnKeyPressedEvent(KeyPressedEvent& event);
 		bool OnMouseButtonPressedEvent(MouseButtonPressedEvent& event);
-
-		void OpenAssetEditor(const std::filesystem::path& path);
 		
 		// Returns the entity under the viewport mouse cursor, or an invalid Entity.
 		// Cycles through overlapping hits if current selection is the front-most.
