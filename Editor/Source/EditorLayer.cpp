@@ -5,6 +5,9 @@
 
 #include "imgui_internal.h"
 #include "Panels/SceneHierarchyPanel.h"
+#include "Engine/Assets/Editor/AssetImporter.h"
+#include "Windows/TextureEditorWindow.h"
+#include "Windows/MeshEditorWindow.h"
 
 #include "Engine/Scene/SceneSerializer.h"
 
@@ -169,6 +172,7 @@ namespace Kairos
 		// Tool windows (Material Editor, Texture Editor, etc.)
 		for (auto it = m_OpenWindows.begin(); it != m_OpenWindows.end();)
 		{
+			(*it)->SetOuterDockID(m_OuterDockID);
 			(*it)->OnImGuiRender();
 			if (!(*it)->IsOpen())
 				it = m_OpenWindows.erase(it);
@@ -477,18 +481,33 @@ namespace Kairos
 			}
 		}
 
-		// Dispatch stub by type
+		// Dispatch by type
 		AssetType type = AssetImporter::DeduceTypeFromPath(path);
-		
+
 		switch (type)
 		{
-			// Stubs for now — replace with real windows as they're built
-			case AssetType::Material:
 			case AssetType::Texture:
+			{
+				auto editorAM = Project::GetActive()->GetEditorAssetManager();
+				AssetHandle handle = editorAM->ImportAsset(path);
+				m_OpenWindows.push_back(CreateRef<TextureEditorWindow>(path, handle));
+				break;
+			}
+			case AssetType::Material:
+				LOG(LogLevel::Info, "OpenAssetEditor: Material editor not yet implemented.");
+				break;
 			case AssetType::Mesh:
+			{
+				auto editorAM = Project::GetActive()->GetEditorAssetManager();
+				AssetHandle handle = editorAM->ImportAsset(path);
+				m_OpenWindows.push_back(CreateRef<MeshEditorWindow>(path, handle));
+				break;
+			}
 			case AssetType::Shader:
+				LOG(LogLevel::Info, "OpenAssetEditor: Shader editor not yet implemented.");
+				break;
 			default:
-				LOG(LogLevel::Info, "OpenAssetEditor: no editor yet for '{}'.", path.string());
+				LOG(LogLevel::Warning, "OpenAssetEditor: unknown type for '{}'.", path.string());
 				break;
 		}
 	}

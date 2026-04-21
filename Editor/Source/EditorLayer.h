@@ -6,7 +6,8 @@
 #include "Panels/ContentBrowserPanel.h"
 #include "Panels/PropertiesPanel.h"
 #include "Panels/ViewportPanel.h"
-#include "EditorWindow.h"
+
+#include "Windows/EditorWindow.h"
 
 namespace Kairos
 {

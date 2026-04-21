@@ -77,7 +77,7 @@ namespace Engine
 			AssetType type = AssetImporter::DeduceTypeFromPath(entry.path());
 			if (type == AssetType::None) continue;
 
-			std::filesystem::path kassetPath = AssetSerializer::GetKassetPath(entry.path());
+			std::filesystem::path kassetPath = AssetSerializer::GetAssetPath(entry.path());
 			if (std::filesystem::exists(kassetPath)) continue; // already has sidecar
 
 			// Build metadata for the orphaned source file
@@ -140,7 +140,7 @@ namespace Engine
 		if (!AssetSerializer::Write(canonical, metadata))
 			return AssetHandle(NullAssetHandle);
 
-		std::filesystem::path kassetPath = AssetSerializer::GetKassetPath(canonical);
+		std::filesystem::path kassetPath = AssetSerializer::GetAssetPath(canonical);
 		AssetMetadata written = AssetSerializer::Read(kassetPath);
 		written.FilePath      = relative;
 

@@ -61,7 +61,7 @@ namespace Engine
 	// -----------------------------------------------------------------------
 	// AssetSerializer
 	// -----------------------------------------------------------------------
-	std::filesystem::path AssetSerializer::GetKassetPath(const std::filesystem::path& sourcePath)
+	std::filesystem::path AssetSerializer::GetAssetPath(const std::filesystem::path& sourcePath)
 	{
 		return std::filesystem::path(sourcePath.string() + ".kasset");
 	}
@@ -73,7 +73,7 @@ namespace Engine
 
 	bool AssetSerializer::Write(const std::filesystem::path& sourcePath, const AssetMetadata& metadata)
 	{
-		std::filesystem::path kassetPath = GetKassetPath(sourcePath);
+		std::filesystem::path kassetPath = GetAssetPath(sourcePath);
 
 		YAML::Emitter out;
 		out << YAML::BeginMap;
@@ -107,15 +107,15 @@ namespace Engine
 		return true;
 	}
 
-	AssetMetadata AssetSerializer::Read(const std::filesystem::path& kassetPath)
+	AssetMetadata AssetSerializer::Read(const std::filesystem::path& assetPath)
 	{
 		AssetMetadata metadata;
 
 		YAML::Node root;
-		try { root = YAML::LoadFile(kassetPath.string()); }
+		try { root = YAML::LoadFile(assetPath.string()); }
 		catch (const YAML::Exception& e)
 		{
-			LOG(LogLevel::Error, "AssetSerializer: parse error '{}': {}", kassetPath.string(), e.what());
+			LOG(LogLevel::Error, "AssetSerializer: parse error '{}': {}", assetPath.string(), e.what());
 			return metadata;
 		}
 
