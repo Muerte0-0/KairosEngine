@@ -15,6 +15,9 @@ namespace Kairos
 		// Set by EditorLayer — called when a non-directory asset is double-clicked
 		std::function<void(const std::filesystem::path&)> OnAssetDoubleClicked;
 
+		// Set by EditorLayer — called on single-click of a non-directory asset
+		std::function<void(const std::filesystem::path&)> OnAssetSelected;
+
 	private:
 		void RenderFolderTree(const std::filesystem::path& directory);
 		Ref<Texture> GetIconForPath(const std::filesystem::path& path) const;

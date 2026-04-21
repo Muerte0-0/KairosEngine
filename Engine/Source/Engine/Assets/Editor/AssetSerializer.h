@@ -22,6 +22,9 @@ namespace Engine
 		// FNV-1a hash of source file bytes — for change detection.
 		static std::string ComputeSourceHash(const std::filesystem::path& sourcePath);
 
+		// True if metadata.SourceHash differs from the current hash of absoluteSourcePath.
+		static bool IsStale(const AssetMetadata& metadata, const std::filesystem::path& absoluteSourcePath);
+
 		static constexpr uint32_t CurrentImporterVersion = 1;
 	};
 }

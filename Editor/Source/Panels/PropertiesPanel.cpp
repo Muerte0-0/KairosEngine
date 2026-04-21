@@ -6,6 +6,7 @@
 
 #include "Engine/Assets/AssetManager.h"
 #include "Engine/Assets/Editor/EditorAssetManager.h"
+#include "Engine/Assets/Editor/AssetSerializer.h"
 #include "Engine/Project/Project.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "Engine/Scene/Components.h"
@@ -125,7 +126,11 @@ namespace Kairos
 	{
 		ImGui::Begin("Properties");
 
-		if (m_SelectionContext)
+		if (m_SelectedAsset != Engine::AssetHandle(Engine::NullAssetHandle))
+		{
+			DrawAssetInspector(m_SelectedAsset);
+		}
+		else if (m_SelectionContext)
 		{
 			DrawComponents(m_SelectionContext);
 
@@ -151,6 +156,59 @@ namespace Kairos
 		}
 
 		ImGui::End();
+	}
+
+	static const char* AssetTypeLabel(Engine::AssetType type)
+	{
+		switch (type)
+		{
+			case Engine::AssetType::Mesh:     return "Mesh";
+			case Engine::AssetType::Texture:  return "Texture";
+			case Engine::AssetType::Material: return "Material";
+			case Engine::AssetType::Shader:   return "Shader";
+			case Engine::AssetType::Scene:    return "Scene";
+			default:                          return "Unknown";
+		}
+	}
+
+	void PropertiesPanel::DrawAssetInspector(Engine::AssetHandle handle)
+	{
+		using namespace Engine;
+
+		auto editorAM = Project::GetActive()->GetEditorAssetManager();
+		const AssetMetadata* meta = editorAM->GetRegistry().Get(handle);
+
+		if (!meta || !meta->IsValid())
+		{
+			ImGui::TextDisabled("(no asset selected)");
+			return;
+		}
+
+		ImGui::SeparatorText("Asset Inspector");
+
+		ImGui::LabelText("Type",   "%s", AssetTypeLabel(meta->Type));
+		ImGui::LabelText("Path",   "%s", meta->FilePath.string().c_str());
+		ImGui::LabelText("Handle", "%llu", static_cast<uint64_t>(handle));
+		ImGui::LabelText("Hash",   "%s", meta->SourceHash.empty() ? "(none)" : meta->SourceHash.c_str());
+
+		bool stale = AssetSerializer::IsStale(*meta,
+			Project::GetAssetDirectory() / meta->FilePath);
+		if (stale)
+			ImGui::TextColored({ 1.f, 0.6f, 0.1f, 1.f }, "  Source modified — reimport recommended");
+
+		if (meta->Type == AssetType::Texture)
+		{
+			ImGui::Separator();
+			ImGui::SeparatorText("Import Settings");
+
+			AssetMetadata* mutable_meta = editorAM->GetRegistry().Get(handle);
+			bool changed = false;
+			changed |= ImGui::Checkbox("sRGB",          &mutable_meta->TextureSettings.sRGB);
+			changed |= ImGui::Checkbox("Generate Mips", &mutable_meta->TextureSettings.GenerateMips);
+
+			if (changed || ImGui::Button("Reimport", { -1.f, 0.f }))
+				editorAM->ReimportAsset(handle);
+		}
 	}
 
 	void PropertiesPanel::DrawComponents(Entity entity)

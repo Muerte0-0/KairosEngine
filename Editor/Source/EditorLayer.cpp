@@ -671,6 +671,13 @@ namespace Kairos
 			{
 				OpenAssetEditor(path);
 			};
+
+			m_ContentBrowserPanel->OnAssetSelected = [this](const std::filesystem::path& path)
+			{
+				auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+				Engine::AssetHandle handle = editorAM->ImportAsset(path);
+				m_PropertiesPanel->SetSelectedAsset(handle);
+			};
 		}
 	}
 
@@ -687,7 +694,10 @@ namespace Kairos
 
 		SceneSerializer serializer(m_ActiveScene);
 		if (serializer.Deserialize(filepath.string()))
+		{
 			m_ActiveScenePath = filepath;
+			m_ActiveScene->SetName(filepath.stem().string());
+		}
 	}
 	
 	void EditorLayer::SaveScene()

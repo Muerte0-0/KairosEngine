@@ -58,6 +58,14 @@ namespace Engine
 
 			m_Registry.Add(metadata);
 			m_HandleToSourcePath[metadata.Handle] = canonical;
+
+			// Stale detection — warn if source was modified since last import
+			if (AssetSerializer::IsStale(metadata, canonical))
+			{
+				LOG(LogLevel::Warning, "EditorAssetManager: '{}' is stale (source modified). Use Reimport.",
+					relative.string());
+			}
+
 			++loaded;
 		}
 

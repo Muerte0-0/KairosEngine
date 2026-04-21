@@ -198,6 +198,13 @@ namespace Kairos
 							OnAssetDoubleClicked(path);
 					}
 
+					// ── Single-click: select asset for Properties ─────────────
+					if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+					{
+						if (!directoryEntry.is_directory() && OnAssetSelected)
+							OnAssetSelected(path);
+					}
+
 					// ── Right-click context menu ──────────────────────────────
 					std::string popupId = "##CBContext_" + filenameString;
 					if (ImGui::BeginPopupContextItem(popupId.c_str()))

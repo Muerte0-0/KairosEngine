@@ -27,6 +27,15 @@ namespace Kairos
 	{
 		m_Title   = path.stem().string();
 		m_Texture = Engine::AssetManager::GetAsset<Texture>(handle);
+
+		// Initialise toggles from stored import settings
+		auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+		const Engine::AssetMetadata* meta = editorAM->GetRegistry().Get(handle);
+		if (meta)
+		{
+			m_sRGB    = meta->TextureSettings.sRGB;
+			m_GenMips = meta->TextureSettings.GenerateMips;
+		}
 	}
 
 	void TextureEditorWindow::OnImGuiRender()
@@ -111,8 +120,17 @@ namespace Kairos
 				ImGui::Spacing();
 				if (ImGui::Button("Reimport", { -1.f, 0.f }))
 				{
-					// TODO: trigger reimport via EditorAssetManager once ImportSettings
-					// block is wired into AssetSerializer
+					auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+					// Push current UI settings into the registry before reimport
+					Engine::AssetMetadata* meta = editorAM->GetRegistry().Get(m_Handle);
+					if (meta)
+					{
+						meta->TextureSettings.sRGB         = m_sRGB;
+						meta->TextureSettings.GenerateMips = m_GenMips;
+					}
+					editorAM->ReimportAsset(m_Handle);
+					// Reload displayed texture
+					m_Texture = Engine::AssetManager::GetAsset<Texture>(m_Handle);
 				}
 			}
 			ImGui::EndChild();

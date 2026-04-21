@@ -25,6 +25,7 @@ externalincludedirs {
 	"%{IncludeDir.GLFW}",
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.ImGuizmo}",
+	"%{IncludeDir.ImNodeFlow}",
 	"%{IncludeDir.GLM}",
 	"%{IncludeDir.EnTT}",
 }
@@ -33,6 +34,7 @@ links {
 	"Engine",
 	"GLFW",
 	"ImGui",
+	"ImNodeFlow",
 	"Assimp",
 	"YAML-CPP",
 }

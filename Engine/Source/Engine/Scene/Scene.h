@@ -28,6 +28,9 @@ namespace Engine
 
 		void OnUpdate(float deltaTime);
 
+		const std::string& GetName() const { return m_Name; }
+		void               SetName(const std::string& name) { m_Name = name; }
+
 		/**
 		 * @brief Walk all MeshComponent + TransformComponent entities and
 		 *        submit them to the provided SceneRenderer.
@@ -43,6 +46,7 @@ namespace Engine
 
 	private:
 		entt::registry m_Registry;
+		std::string    m_Name = "Untitled";
 		
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);

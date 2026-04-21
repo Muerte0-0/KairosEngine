@@ -29,6 +29,7 @@ namespace Engine
 		AssetType  GetAssetType(AssetHandle handle)  const override;
 
 		const AssetRegistry& GetRegistry() const { return m_Registry; }
+		AssetRegistry&       GetRegistry()       { return m_Registry; }
 
 	private:
 		Ref<Asset> LoadAsset(const AssetMetadata& metadata);

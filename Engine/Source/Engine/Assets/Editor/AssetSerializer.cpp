@@ -71,6 +71,12 @@ namespace Engine
 		return FNV1aHash(sourcePath);
 	}
 
+	bool AssetSerializer::IsStale(const AssetMetadata& metadata, const std::filesystem::path& absoluteSourcePath)
+	{
+		if (metadata.SourceHash.empty()) return true;
+		return metadata.SourceHash != FNV1aHash(absoluteSourcePath);
+	}
+
 	bool AssetSerializer::Write(const std::filesystem::path& sourcePath, const AssetMetadata& metadata)
 	{
 		std::filesystem::path kassetPath = GetAssetPath(sourcePath);
@@ -93,6 +99,11 @@ namespace Engine
 		out << YAML::Key << "ImportSettings" << YAML::Value << YAML::BeginMap;
 		out << YAML::Key << "Scale"   << YAML::Value << 1.0;
 		out << YAML::Key << "FlipUVs" << YAML::Value << false;
+		if (metadata.Type == AssetType::Texture)
+		{
+			out << YAML::Key << "sRGB"         << YAML::Value << metadata.TextureSettings.sRGB;
+			out << YAML::Key << "GenerateMips" << YAML::Value << metadata.TextureSettings.GenerateMips;
+		}
 		out << YAML::EndMap;
 
 		out << YAML::EndMap;
@@ -128,6 +139,15 @@ namespace Engine
 
 		if (auto source = root["Source"])
 			metadata.SourceHash = source["Hash"].as<std::string>("");
+
+		if (auto settings = root["ImportSettings"])
+		{
+			if (metadata.Type == AssetType::Texture)
+			{
+				metadata.TextureSettings.sRGB         = settings["sRGB"].as<bool>(false);
+				metadata.TextureSettings.GenerateMips = settings["GenerateMips"].as<bool>(false);
+			}
+		}
 
 		return metadata;
 	}
