@@ -55,6 +55,10 @@
 #include "Engine/Renderer/Cameras/CameraManager.h"
 // ------------------------------- //
 
+// ---------- Materials ---------- //
+#include "Engine/Materials/MaterialGraph.h"
+// ------------------------------- //
+
 // ------------ Utils ------------ //
 #include "Engine/Utils/PlatformUtils.h"
 // ------------------------------- //

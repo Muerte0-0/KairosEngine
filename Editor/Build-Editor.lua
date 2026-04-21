@@ -9,6 +9,7 @@ objdir (ProjectIntDir)
 
 defines {
 	"GLM_ENABLE_EXPERIMENTAL",
+	"IMGUI_DEFINE_MATH_OPERATORS",
 }
 
 files {
@@ -23,6 +24,7 @@ externalincludedirs {
 	"%{wks.location}/Engine/Source",
 	"%{wks.location}/ThirdParty/",
 	"%{IncludeDir.GLFW}",
+	"%{IncludeDir.JSON}",
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.ImGuizmo}",
 	"%{IncludeDir.ImNodeFlow}",

@@ -12,6 +12,7 @@
 #include "Engine/Scene/SceneSerializer.h"
 
 #include "ImGuizmo.h"
+#include "Windows/MaterialEditorWindow.h"
 
 constexpr const char* KPROJ_FILTER = "Kairos Project\0*.kproj\0\0";
 
@@ -494,8 +495,12 @@ namespace Kairos
 				break;
 			}
 			case AssetType::Material:
-				LOG(LogLevel::Info, "OpenAssetEditor: Material editor not yet implemented.");
+			{
+				auto editorAM = Project::GetActive()->GetEditorAssetManager();
+				AssetHandle handle = editorAM->ImportAsset(path);
+				m_OpenWindows.push_back(CreateRef<MaterialEditorWindow>(path, handle));
 				break;
+			}
 			case AssetType::Mesh:
 			{
 				auto editorAM = Project::GetActive()->GetEditorAssetManager();
