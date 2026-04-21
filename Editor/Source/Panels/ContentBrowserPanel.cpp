@@ -189,12 +189,50 @@ namespace Kairos
 
 					ImGui::PopStyleColor();
 
+					// ── Double-click ──────────────────────────────────────────
 					if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					{
 						if (directoryEntry.is_directory())
 							m_CurrentDirectory = path;
 						else if (OnAssetDoubleClicked)
 							OnAssetDoubleClicked(path);
+					}
+
+					// ── Right-click context menu ──────────────────────────────
+					std::string popupId = "##CBContext_" + filenameString;
+					if (ImGui::BeginPopupContextItem(popupId.c_str()))
+					{
+						if (!directoryEntry.is_directory())
+						{
+							if (ImGui::MenuItem("Open"))
+							{
+								if (OnAssetDoubleClicked)
+									OnAssetDoubleClicked(path);
+							}
+							ImGui::Separator();
+							if (ImGui::MenuItem("Reimport"))
+							{
+								// TODO: trigger reimport via EditorAssetManager
+								LOG(Engine::LogLevel::Info, "Reimport: {}", path.string());
+							}
+							ImGui::Separator();
+						}
+						if (ImGui::MenuItem("Show in Explorer"))
+						{
+							std::filesystem::path target = directoryEntry.is_directory() ? path : path.parent_path();
+#ifdef PLATFORM_WINDOWS
+							std::string cmd = "explorer \"" + target.string() + "\"";
+							system(cmd.c_str());
+#endif
+						}
+						if (!directoryEntry.is_directory())
+						{
+							if (ImGui::MenuItem("Copy Path"))
+							{
+								ImGui::SetClipboardText(path.string().c_str());
+							}
+						}
+						ImGui::EndPopup();
 					}
 
 					ImGui::TextUnformatted(filenameString.c_str());
