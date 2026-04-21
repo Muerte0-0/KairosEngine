@@ -26,5 +26,5 @@
 	branch = master
 [submodule "Vendor/ocornut/Extensions/ImNodeFlow"]
 	path = Vendor/ocornut/Extensions/ImNodeFlow
-	url = https://github.com/Fattorino/ImNodeFlow.git
+	url = https://github.com/Muerte0-0/ImNodeFlow-premake.git
 	branch = master
