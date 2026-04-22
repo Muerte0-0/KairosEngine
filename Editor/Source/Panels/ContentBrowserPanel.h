@@ -29,7 +29,9 @@ namespace Kairos
 
 		std::filesystem::path m_BaseDirectory;
 		std::filesystem::path m_CurrentDirectory;
-		std::filesystem::path m_SelectedPath;   // single-click selection
+		std::filesystem::path m_SelectedPath;    // single-click selection
+		std::filesystem::path m_RenamingPath;    // item currently being renamed (empty = none)
+		char                  m_RenameBuffer[256] = {};  // edit buffer for inline rename
 
 		// Icons
 		Ref<Texture> m_DirectoryIcon;

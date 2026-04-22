@@ -245,44 +245,103 @@ namespace Kairos
     // ================================================================
     void MaterialEditorWindow::DrawParamsSidebar()
     {
-        ImGui::TextDisabled("Parameters");
-        ImGui::Separator();
-    
+        ImGui::SeparatorText("Node Parameters");
+
         if (m_SelectedNodeID == 0)
         {
-            ImGui::TextDisabled("(select a node)");
+            ImGui::Spacing();
+            ImGui::TextDisabled("  Click a node to inspect it.");
             return;
         }
-    
+
         Engine::MaterialNode* node = m_Graph.FindNode(m_SelectedNodeID);
-        if (!node)
-        {
-            m_SelectedNodeID = 0;
-            return;
-        }
-    
+        if (!node) { m_SelectedNodeID = 0; return; }
+
+        // Node name + type badge
         ImGui::Text("%s", node->Name.c_str());
+        ImGui::SameLine();
+        ImGui::TextDisabled("(%s)", node->GetTypeName().c_str());
         ImGui::Spacing();
-    
-        // ---- Type-specific params ----
+
+        // ----------------------------------------------------------------
+        // Type-specific section
+        // ----------------------------------------------------------------
         if (node->GetTypeName() == "TextureSample")
         {
             auto* tsn = static_cast<Engine::TextureSampleNode*>(node);
-            uint64_t raw = static_cast<uint64_t>(tsn->TextureHandle);
-            ImGui::TextDisabled("Texture Handle");
-            ImGui::SameLine();
-            // Show handle as hex; user replaces via drag-drop from Content Browser later
-            ImGui::Text("0x%016llX", static_cast<unsigned long long>(raw));
-    
-            // Drag-drop target — accepts TEXTURE_ITEM from Content Browser (wchar_t path)
+
+            ImGui::SeparatorText("Texture");
+
+            // ── Texture preview ──────────────────────────────────────────
+            bool hasTexture = static_cast<uint64_t>(tsn->TextureHandle) != Engine::NullAssetHandle;
+            if (hasTexture)
+            {
+                auto texAsset = Engine::AssetManager::GetAsset<Engine::Texture>(tsn->TextureHandle);
+                if (texAsset)
+                {
+                    float previewW = ImGui::GetContentRegionAvail().x;
+                    ImGui::Image(texAsset->GetTextureID(), ImVec2(previewW, previewW));
+                }
+                else
+                {
+                    ImGui::TextColored(ImVec4(1,0.4f,0.4f,1), "  Asset not loaded");
+                }
+            }
+            else
+            {
+                // Empty placeholder rect
+                ImVec2 pos  = ImGui::GetCursorScreenPos();
+                float  sz   = ImGui::GetContentRegionAvail().x;
+                ImGui::GetWindowDrawList()->AddRectFilled(pos, { pos.x + sz, pos.y + sz * 0.5f },
+                    IM_COL32(40, 40, 40, 200), 4.f);
+                ImGui::GetWindowDrawList()->AddRect(pos, { pos.x + sz, pos.y + sz * 0.5f },
+                    IM_COL32(100, 100, 100, 200), 4.f);
+                ImGui::SetCursorPosY(ImGui::GetCursorPosY() + sz * 0.5f);
+                ImGui::TextDisabled("  No texture assigned");
+            }
+
+            ImGui::Spacing();
+
+            // ── Assign strip ─────────────────────────────────────────────
+            // [← Assign from CB]  [drag-drop target strip]
+            bool cbIsTexture = false;
+            if (!m_CBSelectedPath.empty())
+            {
+                auto ext = m_CBSelectedPath.extension();
+                cbIsTexture = (ext == ".png" || ext == ".jpg" || ext == ".jpeg"
+                            || ext == ".tga" || ext == ".ktx");
+            }
+
+            if (!cbIsTexture) ImGui::BeginDisabled();
+            if (ImGui::Button("  \u2190 Assign from Content Browser  "))
+            {
+                auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+                auto h = editorAM->ImportAsset(m_CBSelectedPath);
+                if (static_cast<uint64_t>(h) != Engine::NullAssetHandle)
+                {
+                    tsn->TextureHandle = h;
+                    m_Dirty = true;
+                }
+            }
+            if (!cbIsTexture) ImGui::EndDisabled();
+
+            if (!cbIsTexture)
+                ImGui::TextDisabled("  (select a texture in Content Browser)");
+            else
+                ImGui::TextDisabled("  %s", m_CBSelectedPath.filename().string().c_str());
+
+            // ── Drag-drop target ──────────────────────────────────────────
+            ImGui::Spacing();
+            ImGui::TextDisabled("  or drag a texture here:");
+            ImGui::Button("  Drop Texture Here  ", ImVec2(ImGui::GetContentRegionAvail().x, 0));
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("TEXTURE_ITEM"))
                 {
-                    std::wstring wpath(static_cast<const wchar_t*>(p->Data), p->DataSize / sizeof(wchar_t));
-                    std::filesystem::path texPath(wpath);
+                    std::wstring wpath(static_cast<const wchar_t*>(p->Data),
+                                       p->DataSize / sizeof(wchar_t));
                     auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
-                    Engine::AssetHandle h = editorAM->ImportAsset(texPath);
+                    auto h = editorAM->ImportAsset(std::filesystem::path(wpath));
                     if (static_cast<uint64_t>(h) != Engine::NullAssetHandle)
                     {
                         tsn->TextureHandle = h;
@@ -291,48 +350,50 @@ namespace Kairos
                 }
                 ImGui::EndDragDropTarget();
             }
-            
-            ImGui::TextDisabled("Texture Sample");
-            
-            ImGui::SameLine();
-            
-            if (ImGui::ArrowButton("##AssignFromCB", ImGuiDir_Left))
+
+            // ── Handle display ─────────────────────────────────────────────
+            if (hasTexture)
             {
-                if (!m_CBSelectedPath.empty())
-                {
-                    auto ext = m_CBSelectedPath.extension();
-                    bool isTexture = (ext == ".png" || ext == ".jpg" || ext == ".jpeg"
-                                   || ext == ".tga" || ext == ".ktx");
-                    if (isTexture)
-                    {
-                        auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
-                        auto h = editorAM->ImportAsset(m_CBSelectedPath);
-                        if (static_cast<uint64_t>(h) != Engine::NullAssetHandle)
-                        {
-                            tsn->TextureHandle = h;
-                            m_Dirty = true;
-                        }
-                    }
-                }
+                ImGui::Spacing();
+                ImGui::TextDisabled("  Handle: 0x%016llX",
+                    static_cast<unsigned long long>(static_cast<uint64_t>(tsn->TextureHandle)));
             }
         }
         else if (node->GetTypeName() == "ConstantVec3")
         {
             auto* cvn = static_cast<Engine::ConstantVec3Node*>(node);
-            if (ImGui::ColorEdit3("Value", &cvn->Value.x))
+            ImGui::SeparatorText("Value");
+            if (ImGui::ColorEdit3("##Vec3Val", &cvn->Value.x,
+                ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR))
+                m_Dirty = true;
+            // Also expose as drag-float for non-colour use cases
+            if (ImGui::DragFloat3("XYZ", &cvn->Value.x, 0.01f))
                 m_Dirty = true;
         }
-    
-        ImGui::Spacing();
-        ImGui::Separator();
-    
-        // ---- Pin defaults (inputs only) ----
+        else if (node->GetTypeName() == "PBROutput")
+        {
+            ImGui::SeparatorText("Info");
+            ImGui::TextWrapped("This is the final PBR output node. "
+                "Connect BaseColor, Metallic, Roughness, Normal, Emissive "
+                "and AmbientOcclusion from the graph above.");
+        }
+
+        // ----------------------------------------------------------------
+        // Input pin defaults — shown for every node type
+        // ----------------------------------------------------------------
         if (!node->Inputs.empty())
         {
-            ImGui::TextDisabled("Input defaults");
+            ImGui::Spacing();
+            ImGui::SeparatorText("Input Defaults");
+            ImGui::TextDisabled("Used when pin has no incoming connection.");
+            ImGui::Spacing();
+
             for (auto& pin : node->Inputs)
             {
-                ImGui::PushID(pin.ID);
+                // Skip Texture2D pins — no meaningful default scalar
+                if (pin.Type == Engine::PinType::Texture2D) continue;
+
+                ImGui::PushID(static_cast<int>(pin.ID));
                 switch (pin.Type)
                 {
                     case Engine::PinType::Float:
@@ -344,11 +405,13 @@ namespace Kairos
                             m_Dirty = true;
                         break;
                     case Engine::PinType::Vec3:
-                        if (ImGui::ColorEdit3(pin.Name.c_str(), &pin.DefaultValue.x))
+                        if (ImGui::ColorEdit3(pin.Name.c_str(), &pin.DefaultValue.x,
+                            ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR))
                             m_Dirty = true;
                         break;
                     case Engine::PinType::Vec4:
-                        if (ImGui::ColorEdit4(pin.Name.c_str(), &pin.DefaultValue.x))
+                        if (ImGui::ColorEdit4(pin.Name.c_str(), &pin.DefaultValue.x,
+                            ImGuiColorEditFlags_Float))
                             m_Dirty = true;
                         break;
                     default: break;

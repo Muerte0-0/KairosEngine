@@ -70,7 +70,8 @@ namespace Engine
 
 	struct MeshComponent
 	{
-		AssetHandle                MeshAssetHandle = AssetHandle(NullAssetHandle);
+		AssetHandle                MeshAssetHandle         = AssetHandle(NullAssetHandle);
+		AssetHandle                MaterialAssetHandle     = AssetHandle(NullAssetHandle); // optional .kmat override
 		Ref<Mesh>                  MeshRef;
 		std::vector<Ref<Material>> Materials;   // indexed by SubMesh::MaterialIndex
 

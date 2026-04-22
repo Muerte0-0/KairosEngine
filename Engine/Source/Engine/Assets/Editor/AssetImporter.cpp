@@ -5,6 +5,7 @@
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "Engine/Renderer/RHI/Resources/Texture.h"
 #include "Engine/Materials/MaterialGraph.h"
+#include "Engine/Materials/MaterialGraphCompiler.h"
 
 namespace Engine
 {
@@ -115,6 +116,11 @@ namespace Engine
 				return nullptr;
 			}
 		}
+
+		// Compile graph → GPU material eagerly so it's ready on first use.
+		// IsDirty stays false; MeshRenderSystem re-compiles only after graph edits.
+		material->CompiledMaterial = MaterialGraphCompiler::Compile(material->Graph);
+		material->IsDirty          = false;
 
 		return material;
 	}

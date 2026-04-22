@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 #include "Engine/Assets/Asset.h"
+#include "Engine/Core/Base.h"
 
 namespace Engine
 {
@@ -153,10 +154,17 @@ namespace Engine
     // ----------------------------------------------------------------
     // Asset wrapper
     // ----------------------------------------------------------------
+    class Material; // forward — avoids pulling Vulkan headers into this header
+
     class MaterialAsset : public Asset
     {
     public:
-        MaterialGraph Graph;
+        MaterialGraph  Graph;
+
+        // Compiled GPU material — populated by MaterialGraphCompiler::Compile().
+        // Null until first compile. Re-compile when IsDirty == true.
+        Ref<Material>  CompiledMaterial;
+        bool           IsDirty = true;  // true → recompile before next use
 
         AssetType        GetType()        const override { return AssetType::Material; }
         static AssetType GetStaticType()               { return AssetType::Material; }

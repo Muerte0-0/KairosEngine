@@ -231,10 +231,17 @@ namespace Kairos
 							ImGui::Separator();
 							if (ImGui::MenuItem("Reimport"))
 							{
-								// TODO: trigger reimport via EditorAssetManager
 								LOG(Engine::LogLevel::Info, "Reimport: {}", path.string());
 							}
 							ImGui::Separator();
+						}
+						if (ImGui::MenuItem("Rename"))
+						{
+							m_RenamingPath = path;
+							std::string stem = path.stem().string()
+							                 + (directoryEntry.is_directory() ? "" : path.extension().string());
+							strncpy_s(m_RenameBuffer, stem.c_str(), sizeof(m_RenameBuffer) - 1);
+							ImGui::SetKeyboardFocusHere();
 						}
 						if (ImGui::MenuItem("Show in Explorer"))
 						{
@@ -247,14 +254,52 @@ namespace Kairos
 						if (!directoryEntry.is_directory())
 						{
 							if (ImGui::MenuItem("Copy Path"))
-							{
 								ImGui::SetClipboardText(path.string().c_str());
-							}
 						}
 						ImGui::EndPopup();
 					}
 
-					ImGui::TextUnformatted(filenameString.c_str());
+					// ── F2 to begin rename ────────────────────────────────────
+					if (path == m_SelectedPath && ImGui::IsKeyPressed(ImGuiKey_F2))
+					{
+						m_RenamingPath = path;
+						std::string name = path.filename().string();
+						strncpy_s(m_RenameBuffer, name.c_str(), sizeof(m_RenameBuffer) - 1);
+					}
+
+					// ── Label or inline rename field ──────────────────────────
+					if (path == m_RenamingPath)
+					{
+						ImGui::SetNextItemWidth(thumbnailSize);
+						ImGui::PushID("##RenameInput");
+						if (ImGui::InputText("##Rename", m_RenameBuffer, sizeof(m_RenameBuffer),
+							ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
+						{
+							// Commit rename
+							std::string newName(m_RenameBuffer);
+							if (!newName.empty() && newName != path.filename().string())
+							{
+								std::filesystem::path newPath = path.parent_path() / newName;
+								std::error_code ec;
+								std::filesystem::rename(path, newPath, ec);
+								if (!ec)
+								{
+									if (m_SelectedPath == path) m_SelectedPath = newPath;
+								}
+								else
+									LOG(Engine::LogLevel::Error, "Rename failed: {}", ec.message());
+							}
+							m_RenamingPath.clear();
+						}
+						// Esc cancels
+						if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+							m_RenamingPath.clear();
+						ImGui::PopID();
+					}
+					else
+					{
+						ImGui::TextUnformatted(filenameString.c_str());
+					}
 					ImGui::NextColumn();
 					ImGui::PopID();
 				}
