@@ -2,6 +2,11 @@
 
 #include "Engine.h"
 #include "Engine/Assets/Editor/AssetImporter.h"
+#include <fstream>
+#ifdef PLATFORM_WINDOWS
+#include <Windows.h>
+#include <commdlg.h>
+#endif
 
 namespace Kairos
 {
@@ -168,9 +173,11 @@ namespace Kairos
 
 					Ref<Texture> icon = directoryEntry.is_directory() ? m_DirectoryIcon : GetIconForPath(path);
 
-					ImGui::PushStyleColor(ImGuiCol_Button, { 0, 0, 0, 0 });
+					bool isSelected = (path == m_SelectedPath);
+					ImGui::PushStyleColor(ImGuiCol_Button, isSelected ? ImVec4(0.3f, 0.5f, 1.0f, 0.4f) : ImVec4(0, 0, 0, 0));
 					ImGui::ImageButton(filenameString.c_str(), icon->GetTextureID(), { thumbnailSize, thumbnailSize });
-
+					ImGui::PopStyleColor();
+					
 					if (ImGui::BeginDragDropSource())
 					{
 						const wchar_t* itemPath = path.c_str();
@@ -181,13 +188,17 @@ namespace Kairos
 						else if (path.extension() == L".obj"  || path.extension() == L".fbx" ||
 						         path.extension() == L".gltf" || path.extension() == L".glb")
 							payloadType = "MESH_ITEM";
+						else if (path.extension() == L".png"  || path.extension() == L".jpg" ||
+						         path.extension() == L".jpeg" || path.extension() == L".tga" ||
+						         path.extension() == L".ktx")
+							payloadType = "TEXTURE_ITEM";
+						else if (path.extension() == L".kmat")
+							payloadType = "MATERIAL_ITEM";
 
 						ImGui::SetDragDropPayload(payloadType, itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 						ImGui::TextUnformatted(filenameString.c_str());
 						ImGui::EndDragDropSource();
 					}
-
-					ImGui::PopStyleColor();
 
 					// ── Double-click ──────────────────────────────────────────
 					if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
@@ -201,6 +212,7 @@ namespace Kairos
 					// ── Single-click: select asset for Properties ─────────────
 					if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 					{
+						m_SelectedPath = path;
 						if (!directoryEntry.is_directory() && OnAssetSelected)
 							OnAssetSelected(path);
 					}
@@ -249,6 +261,15 @@ namespace Kairos
 				
 				ImGui::Columns(1);
 				
+				// ── Empty-space right-click ─────────────────────────────────────
+				if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
+				    ImGui::IsMouseClicked(ImGuiMouseButton_Right) &&
+				    !ImGui::IsAnyItemHovered())
+				{
+					ImGui::OpenPopup("##CBEmptyPopup");
+				}
+				DrawEmptySpaceContextMenu();
+				
 				ImGui::Dummy({0, (ImGui::GetContentRegionAvail().y - 96)});
 			
 				// ── Settings ────────────────────────────────────────────────────
@@ -263,4 +284,88 @@ namespace Kairos
 		}
 		ImGui::End();
 	}
-}
+
+	// =====================================================================
+	// CreateNewAsset
+	// Creates a uniquely-named stub file in m_CurrentDirectory.
+	// AssetImporter::ImportMaterial handles first-open initialisation.
+	// =====================================================================
+	void ContentBrowserPanel::CreateNewAsset(const std::string& baseName,
+	                                          const std::string& extension)
+	{
+		std::filesystem::path candidate = m_CurrentDirectory / (baseName + extension);
+		int suffix = 0;
+		while (std::filesystem::exists(candidate))
+			candidate = m_CurrentDirectory / (baseName + std::to_string(++suffix) + extension);
+
+		// Empty file — ImportMaterial / ImportScene will fill it on first open
+		{ std::ofstream f(candidate); }
+
+		LOG(Engine::LogLevel::Info, "ContentBrowser: created '{}'.", candidate.string());
+	}
+
+
+	// =====================================================================
+	// DrawEmptySpaceContextMenu
+	// =====================================================================
+	void ContentBrowserPanel::DrawEmptySpaceContextMenu()
+	{
+		if (!ImGui::BeginPopup("##CBEmptyPopup")) return;
+
+		// ── Import ────────────────────────────────────────────────────────
+		if (ImGui::MenuItem("  Import Asset..."))
+		{
+#ifdef PLATFORM_WINDOWS
+			char filename[MAX_PATH] = {};
+			OPENFILENAMEA ofn   = {};
+			ofn.lStructSize     = sizeof(ofn);
+			ofn.lpstrFile       = filename;
+			ofn.nMaxFile        = MAX_PATH;
+			ofn.lpstrFilter     =
+				"All Supported\0*.obj;*.fbx;*.gltf;*.glb;*.png;*.jpg;*.jpeg;*.tga;*.ktx\0"
+				"Mesh\0*.obj;*.fbx;*.gltf;*.glb\0"
+				"Texture\0*.png;*.jpg;*.jpeg;*.tga;*.ktx\0"
+				"All Files\0*.*\0";
+			ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+
+			if (GetOpenFileNameA(&ofn))
+			{
+				std::filesystem::path src(filename);
+				std::filesystem::path dst = m_CurrentDirectory / src.filename();
+				std::error_code ec;
+				if (!std::filesystem::exists(dst))
+					std::filesystem::copy_file(src, dst, ec);
+				if (!ec && OnAssetDoubleClicked)
+					OnAssetDoubleClicked(dst);
+			}
+#endif
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::Separator();
+		ImGui::SeparatorText("Create");
+
+		if (ImGui::MenuItem("  Material  (.kmat)"))
+		{
+			CreateNewAsset("NewMaterial", ".kmat");
+			ImGui::CloseCurrentPopup();
+		}
+		if (ImGui::MenuItem("  Scene     (.kscn)"))
+		{
+			CreateNewAsset("NewScene", ".kscn");
+			ImGui::CloseCurrentPopup();
+		}
+		if (ImGui::MenuItem("  Folder"))
+		{
+			std::filesystem::path newDir = m_CurrentDirectory / "NewFolder";
+			int suffix = 0;
+			while (std::filesystem::exists(newDir))
+				newDir = m_CurrentDirectory / ("NewFolder" + std::to_string(++suffix));
+			std::filesystem::create_directory(newDir);
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::EndPopup();
+	}
+
+} // namespace Kairos

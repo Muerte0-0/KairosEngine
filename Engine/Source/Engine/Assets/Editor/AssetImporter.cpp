@@ -4,6 +4,7 @@
 #include "Engine/Renderer/RHI/Factories/ModelFactory.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "Engine/Renderer/RHI/Resources/Texture.h"
+#include "Engine/Materials/MaterialGraph.h"
 
 namespace Engine
 {
@@ -36,8 +37,9 @@ namespace Engine
 	{
 		switch (metadata.Type)
 		{
-			case AssetType::Mesh:    return ImportMesh(metadata);
-			case AssetType::Texture: return ImportTexture(metadata);
+			case AssetType::Mesh:     return ImportMesh(metadata);
+			case AssetType::Texture:  return ImportTexture(metadata);
+			case AssetType::Material: return ImportMaterial(metadata);
 			default:
 				LOG(LogLevel::Error, "AssetImporter: no importer for AssetType '{}'.", (uint16_t)metadata.Type);
 				return nullptr;
@@ -86,5 +88,34 @@ namespace Engine
 
 		texture->Handle = metadata.Handle;
 		return texture;
+	}
+
+	Ref<Asset> AssetImporter::ImportMaterial(const AssetMetadata& metadata)
+	{
+		std::filesystem::path absolutePath = Project::GetAssetPath(metadata.FilePath);
+
+		auto material = CreateRef<MaterialAsset>();
+		material->Handle = metadata.Handle;
+
+		// Treat missing OR empty files as brand-new — init default and write
+		bool isEmpty = !std::filesystem::exists(absolutePath) ||
+		               std::filesystem::file_size(absolutePath) == 0;
+
+		if (isEmpty)
+		{
+			material->Graph.Name = metadata.FilePath.stem().string();
+			material->Graph.InitDefault();
+			material->Graph.SaveToFile(absolutePath);
+		}
+		else
+		{
+			if (!material->Graph.LoadFromFile(absolutePath))
+			{
+				LOG(LogLevel::Error, "AssetImporter: failed to parse material '{}'.", absolutePath.string());
+				return nullptr;
+			}
+		}
+
+		return material;
 	}
 }

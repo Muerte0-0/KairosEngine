@@ -16,7 +16,8 @@ namespace Engine
 		static Ref<Asset> Import(const AssetMetadata& metadata);
 
 	private:
-		static Ref<Asset> ImportMesh(const AssetMetadata& metadata);
-		static Ref<Asset> ImportTexture(const AssetMetadata& metadata);
+		static Ref<Asset> ImportMesh    (const AssetMetadata& metadata);
+		static Ref<Asset> ImportTexture (const AssetMetadata& metadata);
+		static Ref<Asset> ImportMaterial(const AssetMetadata& metadata);
 	};
 }

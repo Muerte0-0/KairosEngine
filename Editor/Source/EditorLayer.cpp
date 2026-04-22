@@ -682,6 +682,10 @@ namespace Kairos
 				auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
 				Engine::AssetHandle handle = editorAM->ImportAsset(path);
 				m_PropertiesPanel->SetSelectedAsset(handle);
+				
+				for (auto& win : m_OpenWindows)
+					if (auto* matWin = dynamic_cast<MaterialEditorWindow*>(win.get()))
+						matWin->SetContentBrowserSelection(path);
 			};
 		}
 	}

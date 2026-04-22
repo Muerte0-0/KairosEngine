@@ -27,6 +27,8 @@ namespace Kairos
         void OnImGuiRender() override;
         const std::string& GetTitle() const override { return m_Title; }
 
+        void SetContentBrowserSelection(const std::filesystem::path& p) { m_CBSelectedPath = p; }
+        
     private:
         // --- Toolbar helpers ---
         void DrawToolbar();
@@ -53,6 +55,8 @@ namespace Kairos
         Engine::AssetHandle     m_Handle = Engine::AssetHandle(Engine::NullAssetHandle);
         bool                    m_Dirty  = false;
 
+        std::filesystem::path   m_CBSelectedPath;
+        
         Engine::MaterialGraph   m_Graph;
         ImFlow::ImNodeFlow      m_Canvas{ "MaterialEditor" };
 
@@ -60,6 +64,7 @@ namespace Kairos
         std::unordered_map<uint32_t, std::shared_ptr<ImFlow::BaseNode>> m_CanvasNodes;
 
         // Currently selected node ID (0 = none)
-        uint32_t m_SelectedNodeID = 0;
+        uint32_t m_SelectedNodeID    = 0;
+        bool     m_OpenAddNodePopup  = false;   // set by toolbar button, consumed by DrawNodeCanvas
     };
 }

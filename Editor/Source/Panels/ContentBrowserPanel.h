@@ -18,12 +18,18 @@ namespace Kairos
 		// Set by EditorLayer — called on single-click of a non-directory asset
 		std::function<void(const std::filesystem::path&)> OnAssetSelected;
 
+		// Returns the currently single-clicked item (empty if none)
+		const std::filesystem::path& GetSelectedPath() const { return m_SelectedPath; }
+
 	private:
 		void RenderFolderTree(const std::filesystem::path& directory);
+		void DrawEmptySpaceContextMenu();
+		void CreateNewAsset(const std::string& name, const std::string& extension);
 		Ref<Texture> GetIconForPath(const std::filesystem::path& path) const;
 
 		std::filesystem::path m_BaseDirectory;
 		std::filesystem::path m_CurrentDirectory;
+		std::filesystem::path m_SelectedPath;   // single-click selection
 
 		// Icons
 		Ref<Texture> m_DirectoryIcon;

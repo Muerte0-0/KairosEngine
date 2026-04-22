@@ -2,6 +2,9 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "Engine/Debugging/Log.h"
+#include "Engine/Assets/AssetManager.h"
+#include "Engine/Assets/Editor/EditorAssetManager.h"
+#include "Engine/Project/Project.h"
 
 // ================================================================
 // ImNodeFlow node wrappers
@@ -37,8 +40,8 @@ namespace Kairos
     class GraphNodeWrapper : public ImFlow::BaseNode
     {
     public:
-        explicit GraphNodeWrapper(Engine::MaterialNode* graphNode, uint32_t* selectedID)
-            : m_GraphNode(graphNode), m_SelectedID(selectedID)
+        explicit GraphNodeWrapper(Engine::MaterialNode* graphNode)
+            : m_GraphNode(graphNode)
         {
             setTitle(graphNode->Name);
             setStyle(ImFlow::NodeStyle::cyan());
@@ -46,17 +49,13 @@ namespace Kairos
     
         void draw() override
         {
-            // Register click for param sidebar selection
-            if (ImGui::IsItemClicked())
-                *m_SelectedID = m_GraphNode->ID;
-    
             // Input pins
             for (auto& pin : m_GraphNode->Inputs)
                 showIN_uid<glm::vec4>(pin.ID, pin.Name,
                     pin.DefaultValue,
                     [](ImFlow::Pin*, ImFlow::Pin*){ return true; },
                     MakePinStyle(pin.Type));
-    
+
             // Output pins
             for (auto& pin : m_GraphNode->Outputs)
                 showOUT_uid<glm::vec4>(pin.ID, pin.Name,
@@ -65,10 +64,9 @@ namespace Kairos
         }
     
         Engine::MaterialNode* GetGraphNode() const { return m_GraphNode; }
-    
+
     private:
         Engine::MaterialNode* m_GraphNode = nullptr;
-        uint32_t*             m_SelectedID = nullptr;
     };
     
     
@@ -77,7 +75,7 @@ namespace Kairos
     // ================================================================
     MaterialEditorWindow::MaterialEditorWindow(const std::filesystem::path& path, Engine::AssetHandle handle) : m_Path(path), m_Handle(handle)
     {
-        m_Title = "Material: " + path.stem().string();
+        m_Title = path.stem().string();
         if (!m_Graph.LoadFromFile(path))
             m_Graph.InitDefault();
         RebuildCanvasFromGraph();
@@ -85,7 +83,7 @@ namespace Kairos
     
     MaterialEditorWindow::MaterialEditorWindow()
     {
-        m_Title = "Material: Untitled*";
+        m_Title = "Untitled Material";
         m_Graph.InitDefault();
         RebuildCanvasFromGraph();
         m_Dirty = true;
@@ -94,19 +92,40 @@ namespace Kairos
     void MaterialEditorWindow::OnImGuiRender()
     {
         if (!m_Open) return;
-    
+
         if (m_OuterDockID != 0)
             ImGui::SetNextWindowDockID(m_OuterDockID, ImGuiCond_Appearing);
-    
-        std::string windowTitle = m_Title + "###MaterialEditor_" + m_Title;
-        
+
+        // Unique stable ID so multiple material windows can coexist
+        std::string windowTitle = m_Title + (m_Dirty ? " *" : "") + "###MatEd_" + m_Title;
+        ImGui::SetNextWindowSize(ImVec2(1200.f, 720.f), ImGuiCond_FirstUseEver);
+
         if (!ImGui::Begin(windowTitle.c_str(), &m_Open, ImGuiWindowFlags_NoCollapse))
         {
             ImGui::End();
             return;
         }
-        
+
+        DrawToolbar();
+        ImGui::Separator();
+
+        // Split: canvas left | params sidebar right
+        constexpr float kSidebarW = 400.f;
+        float canvasW = ImGui::GetContentRegionAvail().x - kSidebarW - 6.f;
+        float height  = ImGui::GetContentRegionAvail().y;
+
+        ImGui::BeginChild("##MatCanvas", ImVec2(canvasW, height), false,
+            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        DrawNodeCanvas();
         ImGui::EndChild();
+
+        ImGui::SameLine();
+
+        ImGui::BeginChild("##MatParams", ImVec2(kSidebarW, height), true);
+        DrawParamsSidebar();
+        ImGui::EndChild();
+
+        ImGui::End();
     }
     
     // ================================================================
@@ -119,7 +138,7 @@ namespace Kairos
         {
             auto wrapper = m_Canvas.addNode<GraphNodeWrapper>(
                 ImVec2(node->Position.x, node->Position.y),
-                node.get(), &m_SelectedNodeID);
+                node.get());
             m_CanvasNodes[node->ID] = wrapper;
         }
         // Restore links
@@ -138,27 +157,32 @@ namespace Kairos
     {
         auto wrapper = m_Canvas.addNode<GraphNodeWrapper>(
             ImVec2(node->Position.x, node->Position.y),
-            node, &m_SelectedNodeID);
+            node);
         m_CanvasNodes[node->ID] = wrapper;
     }
     
     void MaterialEditorWindow::DrawToolbar()
     {
-        if (ImGui::Button("Save"))
-        {
+        if (ImGui::Button("  Save  "))
             Save();
-        }
-    
+
         ImGui::SameLine();
-    
-        if (ImGui::Button("Rebuild"))
-        {
+
+        if (ImGui::Button("  Add Node  "))
+            m_OpenAddNodePopup = true;          // signal — popup opened from canvas child
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("  Rebuild  "))
             RebuildCanvasFromGraph();
-        }
-    
+
         ImGui::SameLine();
-    
-        ImGui::TextDisabled(m_Dirty ? "● Modified" : "Saved");
+
+        // Dirty indicator
+        ImVec4 indicatorCol = m_Dirty
+            ? ImVec4(1.0f, 0.6f, 0.1f, 1.0f)   // amber = unsaved
+            : ImVec4(0.4f, 0.9f, 0.4f, 1.0f);   // green  = saved
+        ImGui::TextColored(indicatorCol, m_Dirty ? "●  Unsaved" : "●  Saved");
     }
     
     // ================================================================
@@ -167,8 +191,31 @@ namespace Kairos
     void MaterialEditorWindow::DrawNodeCanvas()
     {
         m_Canvas.update();
-    
-        // Detect deleted nodes — any canvas node no longer alive
+
+        // Poll ImNodeFlow selection — whichever node reports isSelected() wins
+        for (auto& [id, wrapper] : m_CanvasNodes)
+        {
+            if (wrapper->isSelected())
+                m_SelectedNodeID = id;
+        }
+
+        // Toolbar "Add Node" button deferred open — must be called inside the canvas child
+        if (m_OpenAddNodePopup)
+        {
+            ImGui::OpenPopup("##AddNodePopup");
+            m_OpenAddNodePopup = false;
+        }
+
+        // Right-click on empty canvas space → same popup
+        if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows) &&
+            ImGui::IsMouseClicked(ImGuiMouseButton_Right) &&
+            !ImGui::IsAnyItemHovered())
+        {
+            ImGui::OpenPopup("##AddNodePopup");
+        }
+        DrawAddNodePopup();
+
+        // Detect deleted nodes
         for (auto it = m_CanvasNodes.begin(); it != m_CanvasNodes.end(); )
         {
             if (it->second->toDestroy())
@@ -180,7 +227,7 @@ namespace Kairos
             }
             else ++it;
         }
-    
+
         // Sync node positions back to graph every frame (cheap)
         for (auto& [id, wrapper] : m_CanvasNodes)
         {
@@ -227,22 +274,47 @@ namespace Kairos
             // Show handle as hex; user replaces via drag-drop from Content Browser later
             ImGui::Text("0x%016llX", static_cast<unsigned long long>(raw));
     
-            // Drag-drop target for a texture asset from the Content Browser
+            // Drag-drop target — accepts TEXTURE_ITEM from Content Browser (wchar_t path)
             if (ImGui::BeginDragDropTarget())
             {
-                if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("ASSET_HANDLE"))
+                if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("TEXTURE_ITEM"))
                 {
-                    Engine::AssetHandle dropped;
-                    memcpy(&dropped, p->Data, sizeof(Engine::AssetHandle));
-                    if (Engine::AssetManager::GetAssetType(dropped) == Engine::AssetType::Texture)
+                    std::wstring wpath(static_cast<const wchar_t*>(p->Data), p->DataSize / sizeof(wchar_t));
+                    std::filesystem::path texPath(wpath);
+                    auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+                    Engine::AssetHandle h = editorAM->ImportAsset(texPath);
+                    if (static_cast<uint64_t>(h) != Engine::NullAssetHandle)
                     {
-                        tsn->TextureHandle = dropped;
+                        tsn->TextureHandle = h;
                         m_Dirty = true;
                     }
                 }
                 ImGui::EndDragDropTarget();
             }
-            ImGui::TextDisabled("(drag texture from Content Browser)");
+            
+            ImGui::TextDisabled("Texture Sample");
+            
+            ImGui::SameLine();
+            
+            if (ImGui::ArrowButton("##AssignFromCB", ImGuiDir_Left))
+            {
+                if (!m_CBSelectedPath.empty())
+                {
+                    auto ext = m_CBSelectedPath.extension();
+                    bool isTexture = (ext == ".png" || ext == ".jpg" || ext == ".jpeg"
+                                   || ext == ".tga" || ext == ".ktx");
+                    if (isTexture)
+                    {
+                        auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+                        auto h = editorAM->ImportAsset(m_CBSelectedPath);
+                        if (static_cast<uint64_t>(h) != Engine::NullAssetHandle)
+                        {
+                            tsn->TextureHandle = h;
+                            m_Dirty = true;
+                        }
+                    }
+                }
+            }
         }
         else if (node->GetTypeName() == "ConstantVec3")
         {
@@ -293,11 +365,16 @@ namespace Kairos
     void MaterialEditorWindow::DrawAddNodePopup()
     {
         if (!ImGui::BeginPopup("##AddNodePopup")) return;
-    
-        // Spawn position — centre of current canvas view
-        ImVec2 scroll = m_Canvas.getScroll();
-        glm::vec2 spawnPos = { -scroll.x + 300.0f, -scroll.y + 200.0f };
-    
+
+        // Spawn at mouse position converted to grid space
+        ImVec2 mouseScreen = ImGui::GetMousePosOnOpeningCurrentPopup();
+        ImVec2 canvasOrigin = m_Canvas.getPos();
+        ImVec2 scroll       = m_Canvas.getScroll();
+        glm::vec2 spawnPos  = {
+            mouseScreen.x - canvasOrigin.x - scroll.x,
+            mouseScreen.y - canvasOrigin.y - scroll.y
+        };
+
         auto addNode = [&](auto nodePtr)
         {
             m_Graph.Nodes.push_back(nodePtr);
@@ -305,23 +382,25 @@ namespace Kairos
             m_Dirty = true;
             ImGui::CloseCurrentPopup();
         };
-    
-        if (ImGui::MenuItem("Texture Sample"))
-            addNode(Engine::TextureSampleNode::Create(m_Graph.NextNodeID(), spawnPos));
-    
-        if (ImGui::MenuItem("Constant Vec3"))
-            addNode(Engine::ConstantVec3Node::Create(m_Graph.NextNodeID(), spawnPos));
-    
+
+        ImGui::SeparatorText("Math");
         if (ImGui::MenuItem("Multiply"))
             addNode(Engine::MultiplyNode::Create(m_Graph.NextNodeID(), spawnPos));
-    
         if (ImGui::MenuItem("Lerp"))
             addNode(Engine::LerpNode::Create(m_Graph.NextNodeID(), spawnPos));
-    
-        ImGui::Separator();
+
+        ImGui::SeparatorText("Constant");
+        if (ImGui::MenuItem("Vec3 Constant"))
+            addNode(Engine::ConstantVec3Node::Create(m_Graph.NextNodeID(), spawnPos));
+
+        ImGui::SeparatorText("Texture");
+        if (ImGui::MenuItem("Texture Sample"))
+            addNode(Engine::TextureSampleNode::Create(m_Graph.NextNodeID(), spawnPos));
+
+        ImGui::SeparatorText("Output");
         if (ImGui::MenuItem("PBR Output"))
             addNode(Engine::PBROutputNode::Create(m_Graph.NextNodeID(), spawnPos));
-    
+
         ImGui::EndPopup();
     }
     
