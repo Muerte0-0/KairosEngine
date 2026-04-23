@@ -231,7 +231,12 @@ namespace Kairos
 							ImGui::Separator();
 							if (ImGui::MenuItem("Reimport"))
 							{
-								LOG(Engine::LogLevel::Info, "Reimport: {}", path.string());
+								auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+								Engine::AssetHandle handle = editorAM->ImportAsset(path);
+								if (static_cast<uint64_t>(handle) != Engine::NullAssetHandle)
+									editorAM->ReimportAsset(handle);
+								else
+									LOG(Engine::LogLevel::Warning, "Reimport: asset not registered — {}", path.string());
 							}
 							ImGui::Separator();
 						}

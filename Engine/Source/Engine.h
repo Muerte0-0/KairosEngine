@@ -57,6 +57,7 @@
 
 // ---------- Materials ---------- //
 #include "Engine/Materials/MaterialGraph.h"
+#include "Engine/Materials/MaterialGraphCompiler.h"
 // ------------------------------- //
 
 // ------------ Utils ------------ //

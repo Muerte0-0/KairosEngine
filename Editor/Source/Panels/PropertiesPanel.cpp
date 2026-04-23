@@ -7,6 +7,8 @@
 #include "Engine/Assets/AssetManager.h"
 #include "Engine/Assets/Editor/EditorAssetManager.h"
 #include "Engine/Assets/Editor/AssetSerializer.h"
+#include "Engine/Materials/MaterialGraph.h"
+#include "Engine/Materials/MaterialGraphCompiler.h"
 #include "Engine/Project/Project.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "Engine/Scene/Components.h"
@@ -73,6 +75,93 @@ namespace Kairos
 
 		ImGui::PopID();
 		return componentChanged;
+	}
+
+	// Returns true if any slot changed (caller should mark scene dirty)
+	static bool DrawMaterialSlots(Engine::MeshComponent& mc)
+	{
+		using namespace Engine;
+
+		if (!mc.MeshRef) return false;
+
+		const auto& subMeshes = mc.MeshRef->GetSubMeshes();
+		if (subMeshes.empty()) return false;
+
+		// Ensure Materials vector has enough entries
+		if (mc.Materials.size() < subMeshes.size())
+			mc.Materials.resize(subMeshes.size(), nullptr);
+
+		bool changed = false;
+		auto editorAM = Project::GetActive()->GetEditorAssetManager();
+
+		ImGui::SeparatorText("Materials");
+
+		for (uint32_t i = 0; i < static_cast<uint32_t>(subMeshes.size()); ++i)
+		{
+			ImGui::PushID(static_cast<int>(i));
+
+			// Slot label
+			std::string label = subMeshes[i].Name.empty()
+				? ("Slot " + std::to_string(i))
+				: subMeshes[i].Name;
+			ImGui::Text("%s", label.c_str());
+			ImGui::SameLine();
+
+			// Display name: find .kmat in registry that matches this material
+			std::string displayName = "Default";
+			if (mc.Materials[i])
+				displayName = mc.Materials[i]->GetName().empty() ? "Material" : mc.Materials[i]->GetName();
+
+			float clearW = 24.f;
+			float btnW   = ImGui::GetContentRegionAvail().x - clearW - ImGui::GetStyle().ItemSpacing.x;
+			ImGui::Button(displayName.c_str(), ImVec2(btnW, 0));
+
+			// Highlight drop target
+			if (const ImGuiPayload* drag = ImGui::GetDragDropPayload())
+			{
+				if (std::strcmp(drag->DataType, "MATERIAL_ITEM") == 0 && ImGui::IsItemHovered())
+				{
+					ImGui::GetWindowDrawList()->AddRect(
+						ImGui::GetItemRectMin(), ImGui::GetItemRectMax(),
+						ImGui::GetColorU32(ImGuiCol_DragDropTarget), 4.f, 0, 2.f);
+				}
+			}
+
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MATERIAL_ITEM"))
+				{
+					std::filesystem::path droppedPath(static_cast<const wchar_t*>(payload->Data));
+					AssetHandle handle = editorAM->ImportAsset(droppedPath);
+					if (static_cast<uint64_t>(handle) != NullAssetHandle)
+					{
+						Ref<MaterialAsset> matAsset = AssetManager::GetAsset<MaterialAsset>(handle);
+						if (matAsset)
+						{
+							if (matAsset->IsDirty || !matAsset->CompiledMaterial)
+							{
+								matAsset->CompiledMaterial = MaterialGraphCompiler::Compile(matAsset->Graph);
+								matAsset->IsDirty = false;
+							}
+							mc.Materials[i] = matAsset->CompiledMaterial;
+							changed = true;
+						}
+					}
+				}
+				ImGui::EndDragDropTarget();
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("X", ImVec2(clearW, 0)))
+			{
+				mc.Materials[i] = nullptr;
+				changed = true;
+			}
+
+			ImGui::PopID();
+		}
+
+		return changed;
 	}
 
 	static void DrawVec3Control(const std::string& label, glm::vec3& values, float defaultValue = 0.0f, float columnWidth = 100.0f)
@@ -269,6 +358,9 @@ namespace Kairos
 				ImGui::NextColumn();
 				DrawMeshAssetField(mc);
 				ImGui::Columns(1);
+
+				DrawMaterialSlots(mc);
+
 				ImGui::TreePop();
 			}
 

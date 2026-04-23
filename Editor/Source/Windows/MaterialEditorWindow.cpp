@@ -45,24 +45,24 @@ namespace Kairos
         {
             setTitle(graphNode->Name);
             setStyle(ImFlow::NodeStyle::cyan());
-        }
-    
-        void draw() override
-        {
-            // Input pins
-            for (auto& pin : m_GraphNode->Inputs)
-                showIN_uid<glm::vec4>(pin.ID, pin.Name,
-                    pin.DefaultValue,
+
+            // Register pins statically so getIns()/getOuts() work for link restore/sync
+            for (auto& pin : graphNode->Inputs)
+                addIN_uid(pin.ID, pin.Name, pin.DefaultValue,
                     [](ImFlow::Pin*, ImFlow::Pin*){ return true; },
                     MakePinStyle(pin.Type));
 
-            // Output pins
-            for (auto& pin : m_GraphNode->Outputs)
-                showOUT_uid<glm::vec4>(pin.ID, pin.Name,
-                    [&pin](){ return pin.DefaultValue; },
-                    MakePinStyle(pin.Type));
+            for (auto& pin : graphNode->Outputs)
+            {
+                glm::vec4 defVal = pin.DefaultValue;
+                addOUT_uid<glm::vec4>(pin.ID, pin.Name,
+                    MakePinStyle(pin.Type))
+                    ->behaviour([defVal](){ return defVal; });
+            }
         }
     
+        void draw() override {} // pins already registered in ctor
+
         Engine::MaterialNode* GetGraphNode() const { return m_GraphNode; }
 
     private:
@@ -141,15 +141,28 @@ namespace Kairos
                 node.get());
             m_CanvasNodes[node->ID] = wrapper;
         }
-        // Restore links
+
+        // Restore links: for each saved MaterialLink, find the canvas pins by
+        // hashed UID and call createLink() so ImNodeFlow owns the connection.
         for (auto& link : m_Graph.Links)
         {
-            // ImNodeFlow re-creates links automatically when pins with matching UIDs
-            // are connected — we just flag existing pin connections here if needed.
-            // Full link restoration requires ImNodeFlow's internal link API; for now
-            // the user will see correct pins and can reconnect if needed after load.
-            // TODO: add proper link restore via ImNodeFlow pin lookup when API supports it.
-            (void)link;
+            ImFlow::PinUID fromHash = std::hash<uint32_t>{}(link.FromPin);
+            ImFlow::PinUID toHash   = std::hash<uint32_t>{}(link.ToPin);
+
+            ImFlow::Pin* outPin = nullptr;
+            ImFlow::Pin* inPin  = nullptr;
+
+            for (auto& [nodeID, wrapper] : m_CanvasNodes)
+            {
+                for (auto& p : wrapper->getOuts())
+                    if (p->getUid() == fromHash) { outPin = p.get(); }
+
+                for (auto& p : wrapper->getIns())
+                    if (p->getUid() == toHash)   { inPin  = p.get(); }
+            }
+
+            if (outPin && inPin)
+                outPin->createLink(inPin);
         }
     }
     
@@ -235,6 +248,17 @@ namespace Kairos
             {
                 ImVec2 pos = wrapper->getPos();
                 gn->Position = { pos.x, pos.y };
+            }
+        }
+
+        // DEL key — destroy selected node (toDestroy() sweep above handles cleanup)
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) &&
+            ImGui::IsKeyPressed(ImGuiKey_Delete))
+        {
+            for (auto& [id, wrapper] : m_CanvasNodes)
+            {
+                if (wrapper->isSelected())
+                    wrapper->destroy();
             }
         }
     }
@@ -468,13 +492,61 @@ namespace Kairos
     }
     
     // ================================================================
-    // SyncLinksFromCanvas  (stub — ImNodeFlow manages link lifetime)
+    // SyncLinksFromCanvas — reconstruct m_Graph.Links from live canvas state
     // ================================================================
     void MaterialEditorWindow::SyncLinksFromCanvas()
     {
-        // ImNodeFlow owns link lifetime internally. Graph links are written on Save()
-        // by walking canvas pins for connections. Full bidirectional sync can be
-        // wired here once the project needs runtime link queries.
+        m_Graph.Links.clear();
+
+        for (auto& [nodeID, wrapper] : m_CanvasNodes)
+        {
+            for (auto& pin : wrapper->getIns())
+            {
+                if (!pin->isConnected()) continue;
+
+                auto linkWeak = pin->getLink();
+                auto link     = linkWeak.lock();
+                if (!link) continue;
+
+                // left() = output pin on the source node
+                ImFlow::PinUID outUID = link->left()->getUid();
+                ImFlow::PinUID inUID  = pin->getUid();
+
+                // Match UIDs back to graph pin IDs
+                // ImNodeFlow hashes via std::hash<uint32_t>{}, so we can search by comparing
+                uint32_t fromPinID = 0, toPinID = 0;
+                bool foundFrom = false, foundTo = false;
+
+                for (auto& node : m_Graph.Nodes)
+                {
+                    for (auto& gpin : node->Outputs)
+                    {
+                        if (std::hash<uint32_t>{}(gpin.ID) == outUID)
+                        {
+                            fromPinID = gpin.ID;
+                            foundFrom = true;
+                        }
+                    }
+                    for (auto& gpin : node->Inputs)
+                    {
+                        if (std::hash<uint32_t>{}(gpin.ID) == inUID)
+                        {
+                            toPinID = gpin.ID;
+                            foundTo = true;
+                        }
+                    }
+                }
+
+                if (foundFrom && foundTo)
+                {
+                    Engine::MaterialLink ml;
+                    ml.ID      = m_Graph.NextLinkID();
+                    ml.FromPin = fromPinID;
+                    ml.ToPin   = toPinID;
+                    m_Graph.Links.push_back(ml);
+                }
+            }
+        }
     }
     
     // ================================================================
@@ -487,10 +559,24 @@ namespace Kairos
             LOG(LogLevel::Warning, "MaterialEditorWindow::Save — no path set, cannot save.");
             return;
         }
+
+        // Sync canvas connection state into graph before serialising
+        SyncLinksFromCanvas();
         if (m_Graph.SaveToFile(m_Path))
         {
             m_Dirty = false;
             LOG(LogLevel::Info, "Material saved: {0}", m_Path.string());
+
+            // Mark the live asset dirty so MeshRenderSystem recompiles on next draw.
+            if (static_cast<uint64_t>(m_Handle) != Engine::NullAssetHandle)
+            {
+                auto asset = Engine::AssetManager::GetAsset<Engine::MaterialAsset>(m_Handle);
+                if (asset)
+                {
+                    asset->Graph    = m_Graph; // push editor copy back
+                    asset->IsDirty  = true;    // compiler picks this up next frame
+                }
+            }
         }
     }
     

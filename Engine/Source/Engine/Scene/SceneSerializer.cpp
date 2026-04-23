@@ -113,6 +113,8 @@ namespace Engine
 			auto& mc = entity.GetComponent<MeshComponent>();
 			if (mc.HasMeshAsset())
 				out << YAML::Key << "MeshAssetHandle" << YAML::Value << static_cast<uint64_t>(mc.MeshAssetHandle);
+			if (static_cast<uint64_t>(mc.MaterialAssetHandle) != NullAssetHandle)
+				out << YAML::Key << "MaterialAssetHandle" << YAML::Value << static_cast<uint64_t>(mc.MaterialAssetHandle);
 			out << YAML::EndMap;
 		}
 
@@ -190,6 +192,8 @@ namespace Engine
 						else
 							LOG(LogLevel::Warning, "SceneSerializer: handle {} not resolvable — asset missing?", handleNode.as<uint64_t>());
 					}
+					if (auto matHandleNode = meshNode["MaterialAssetHandle"])
+						mc.MaterialAssetHandle = AssetHandle(matHandleNode.as<uint64_t>());
 				}
 			}
 		}
