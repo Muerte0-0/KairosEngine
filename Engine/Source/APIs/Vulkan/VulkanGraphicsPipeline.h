@@ -25,6 +25,7 @@ namespace Engine
 		[[nodiscard]] const vk::raii::DescriptorPool&				GetDescriptorPool()			const { return m_DescriptorPool; }
 		[[nodiscard]] const vk::raii::DescriptorSetLayout&			GetDescriptorSetLayout()	const { return m_DescriptorSetLayout; }
 		[[nodiscard]] const std::vector<vk::raii::DescriptorSet>&	GetDescriptorSets()			const { return m_DescriptorSets; }
+		void UpdateShadowMapDescriptor(uint32_t frameIndex, const vk::DescriptorImageInfo& imageInfo) const;
 
 	private:
 		GraphicsPipelineCreateInfo				m_CreateInfo;

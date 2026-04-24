@@ -7,6 +7,8 @@
 #include "Engine/Materials/MaterialGraph.h"
 #include "Engine/Materials/MaterialGraphCompiler.h"
 
+#include <glm/gtx/quaternion.hpp>
+
 namespace Engine::MeshRenderSystem
 {
     // Compile (or return cached) material from a MaterialAsset.
@@ -31,8 +33,57 @@ namespace Engine::MeshRenderSystem
 
     void Render(entt::registry& registry, SceneRenderer& renderer)
     {
-        auto view = registry.view<MeshComponent, TransformComponent>();
+        // ---- Submit lights first ----------------------------------------
+        auto lightView = registry.view<LightComponent, TransformComponent>();
+        for (auto entity : lightView)
+        {
+            const auto& [lc, tc] = lightView.get<LightComponent, TransformComponent>(entity);
 
+            LightSubmission ls{};
+            ls.EntityID  = static_cast<uint32_t>(entt::to_integral(entity));
+            ls.Color     = lc.Color;
+            ls.Intensity = lc.Intensity;
+
+            // Direction is derived from the entity's rotation (extract -Z axis = forward)
+            glm::mat4 rot = glm::toMat4(glm::quat(tc.Rotation));
+            glm::vec3 forward = glm::normalize(glm::vec3(rot * glm::vec4(0.f, 0.f, -1.f, 0.f)));
+
+            switch (lc.Type)
+            {
+                case LightType::Directional:
+                    ls.Type      = 0;
+                    ls.Position  = glm::vec3(0.f);
+                    ls.Direction = lc.Directional.Direction; // explicit override if set; else use forward
+                    ls.Range     = 0.f;
+                    ls.InnerConeAngle = 0.f;
+                    ls.OuterConeAngle = 0.f;
+                    break;
+
+                case LightType::Point:
+                    ls.Type      = 1;
+                    ls.Position  = tc.Translation;
+                    ls.Direction = glm::vec3(0.f, -1.f, 0.f);
+                    ls.Range     = lc.Point.Range;
+                    ls.InnerConeAngle = 0.f;
+                    ls.OuterConeAngle = 0.f;
+                    break;
+
+                case LightType::Spot:
+                    ls.Type      = 2;
+                    ls.Position  = tc.Translation;
+                    ls.Direction = lc.Spot.Direction;
+                    ls.Range     = lc.Spot.Range;
+                    // Store as cosines — shader does dot(L,Dir) comparison directly
+                    ls.InnerConeAngle = glm::cos(lc.Spot.InnerConeAngle);
+                    ls.OuterConeAngle = glm::cos(lc.Spot.OuterConeAngle);
+                    break;
+            }
+
+            renderer.SubmitLight(ls);
+        }
+
+        // ---- Submit meshes ----------------------------------------------
+        auto view = registry.view<MeshComponent, TransformComponent>();
         for (auto entity : view)
         {
             const auto& [meshComp, transformComp] =

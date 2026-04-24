@@ -25,7 +25,10 @@ namespace Engine
 	{
 		ASSERT(m_CreateInfo.Shader, "VulkanGraphicsPipeline: Shader is null.")
 		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Vertex), "VulkanGraphicsPipeline: shader '{}' has no Vertex stage.", m_CreateInfo.Shader->GetName())
-		ASSERT(m_CreateInfo.Shader->HasStage(ShaderStage::Fragment), "VulkanGraphicsPipeline: shader '{}' has no Fragment stage.", m_CreateInfo.Shader->GetName())
+		ASSERT(
+			m_CreateInfo.ColorFormat == TextureFormat::Undefined || m_CreateInfo.Shader->HasStage(ShaderStage::Fragment),
+			"VulkanGraphicsPipeline: shader '{}' has no Fragment stage for color pass.",
+			m_CreateInfo.Shader->GetName())
 
 		CreatePipelineCache();
 		CreatePipelineLayout();
@@ -61,6 +64,9 @@ namespace Engine
 			vk::DescriptorSetLayoutBinding(
 				0, vk::DescriptorType::eUniformBuffer, 1,
 				vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment, nullptr),
+			vk::DescriptorSetLayoutBinding(
+				1, vk::DescriptorType::eCombinedImageSampler, 1,
+				vk::ShaderStageFlagBits::eFragment, nullptr),
 		};
 		vk::DescriptorSetLayoutCreateInfo set0Info;
 		set0Info.bindingCount = static_cast<uint32_t>(set0Bindings.size());
@@ -74,8 +80,11 @@ namespace Engine
 
 		std::array setLayouts = { *m_DescriptorSetLayout, set1Layout };
 
-		constexpr vk::PushConstantRange pushConstantRange(
-			vk::ShaderStageFlagBits::eVertex, 0, sizeof(PushConstantObject));
+		const vk::ShaderStageFlags pushStages =
+			m_CreateInfo.Shader->HasStage(ShaderStage::Fragment)
+			? (vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
+			: vk::ShaderStageFlagBits::eVertex;
+		const vk::PushConstantRange pushConstantRange(pushStages, 0, sizeof(PushConstantObject));
 
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
 		pipelineLayoutInfo.setLayoutCount         = static_cast<uint32_t>(setLayouts.size());
@@ -152,8 +161,8 @@ namespace Engine
 
 		vk::PipelineColorBlendStateCreateInfo blendState;
 		blendState.logicOpEnable   = vk::False;
-		blendState.attachmentCount = 1;
-		blendState.pAttachments    = &blendAttachment;
+		blendState.attachmentCount = m_CreateInfo.ColorFormat == TextureFormat::Undefined ? 0u : 1u;
+		blendState.pAttachments    = m_CreateInfo.ColorFormat == TextureFormat::Undefined ? nullptr : &blendAttachment;
 
 		constexpr std::array dynamicStates = {
 			vk::DynamicState::eViewport,
@@ -163,12 +172,12 @@ namespace Engine
 		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
 		dynamicState.pDynamicStates    = dynamicStates.data();
 
-		vk::Format colorFmt = VulkanUtils::ToVulkanFormat(m_CreateInfo.ColorFormat);
 		vk::Format depthFmt = VulkanUtils::ToVulkanFormat(m_CreateInfo.DepthFormat);
+		vk::Format colorFmt = VulkanUtils::ToVulkanFormat(m_CreateInfo.ColorFormat);
 
 		vk::PipelineRenderingCreateInfo renderingInfo;
-		renderingInfo.colorAttachmentCount    = 1;
-		renderingInfo.pColorAttachmentFormats = &colorFmt;
+		renderingInfo.colorAttachmentCount    = m_CreateInfo.ColorFormat == TextureFormat::Undefined ? 0u : 1u;
+		renderingInfo.pColorAttachmentFormats = m_CreateInfo.ColorFormat == TextureFormat::Undefined ? nullptr : &colorFmt;
 		renderingInfo.depthAttachmentFormat   = depthFmt;
 
 		vk::GraphicsPipelineCreateInfo pipelineInfo;
@@ -197,6 +206,7 @@ namespace Engine
 	{
 		std::array poolSizes{
 			vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
+			vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT),
 		};
 
 		vk::DescriptorPoolCreateInfo poolInfo(
@@ -220,9 +230,10 @@ namespace Engine
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
 			vk::DescriptorBufferInfo bufferInfo(
-				*api->GetUniformBuffers()[i], 0, sizeof(UniformBufferObject));
+				*api->GetUniformBuffers()[i], 0, sizeof(SceneData));
+			vk::DescriptorImageInfo shadowInfo = api->GetShadowDescriptorImageInfo();
 
-			std::array<vk::WriteDescriptorSet, 1> writes{};
+			std::array<vk::WriteDescriptorSet, 2> writes{};
 			writes[0].setDstSet(*m_DescriptorSets[i]);
 			writes[0].setDstBinding(0);
 			writes[0].setDstArrayElement(0);
@@ -230,7 +241,25 @@ namespace Engine
 			writes[0].setDescriptorType(vk::DescriptorType::eUniformBuffer);
 			writes[0].setPBufferInfo(&bufferInfo);
 
+			writes[1].setDstSet(*m_DescriptorSets[i]);
+			writes[1].setDstBinding(1);
+			writes[1].setDstArrayElement(0);
+			writes[1].setDescriptorCount(1);
+			writes[1].setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+			writes[1].setPImageInfo(&shadowInfo);
+
 			GetDevice().updateDescriptorSets(writes, {});
 		}
+	}
+
+	void VulkanGraphicsPipeline::UpdateShadowMapDescriptor(uint32_t frameIndex, const vk::DescriptorImageInfo& imageInfo) const
+	{
+		vk::WriteDescriptorSet write;
+		write.dstSet = *m_DescriptorSets[frameIndex];
+		write.dstBinding = 1;
+		write.descriptorCount = 1;
+		write.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+		write.pImageInfo = &imageInfo;
+		GetDevice().updateDescriptorSets(write, {});
 	}
 }

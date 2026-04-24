@@ -240,6 +240,12 @@ namespace Kairos
 					ImGui::CloseCurrentPopup();
 				}
 
+				if (ImGui::MenuItem("Light Component"))
+				{
+					m_SelectionContext.AddComponent<LightComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
 				ImGui::EndPopup();
 			}
 		}
@@ -330,11 +336,11 @@ namespace Kairos
 				ImGui::TreePop();
 			}
 		}
-
-		ImGui::Separator();
-
+		
 		if (entity.HasComponent<MeshComponent>())
 		{
+			ImGui::Separator();
+			
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4.0f, 4.0f});
 			bool open = ImGui::TreeNodeEx((void*)typeid(MeshComponent).hash_code(), treeNodeFlags, "Mesh");
 			ImGui::SameLine(ImGui::GetWindowWidth() - 25.f);
@@ -368,10 +374,10 @@ namespace Kairos
 				entity.RemoveComponent<MeshComponent>();
 		}
 
-		ImGui::Separator();
-
 		if (entity.HasComponent<CameraComponent>())
 		{
+			ImGui::Separator();
+			
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4.0f, 4.0f});
 			bool open = ImGui::TreeNodeEx((void*)typeid(CameraComponent).hash_code(), treeNodeFlags, "Camera");
 			ImGui::SameLine(ImGui::GetWindowWidth() - 25.f);
@@ -391,6 +397,71 @@ namespace Kairos
 
 			if (removeComponent)
 				entity.RemoveComponent<CameraComponent>();
+		}
+
+		if (entity.HasComponent<LightComponent>())
+		{
+			ImGui::Separator();
+			
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{4.0f, 4.0f});
+			bool open = ImGui::TreeNodeEx((void*)typeid(LightComponent).hash_code(), treeNodeFlags, "Light");
+			ImGui::SameLine(ImGui::GetWindowWidth() - 25.f);
+			if (ImGui::Button(":", ImVec2{20.0f, 20.0f}))
+				ImGui::OpenPopup("LightComponentSettings");
+			ImGui::PopStyleVar();
+
+			bool removeComponent = false;
+			if (ImGui::BeginPopup("LightComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove Component")) removeComponent = true;
+				ImGui::EndPopup();
+			}
+
+			if (open)
+			{
+				auto& lc = entity.GetComponent<LightComponent>();
+
+				// Type selector
+				const char* typeNames[] = { "Directional", "Point", "Spot" };
+				int typeIdx = static_cast<int>(lc.Type);
+				if (ImGui::Combo("Type", &typeIdx, typeNames, 3))
+					lc.Type = static_cast<LightType>(typeIdx);
+
+				ImGui::ColorEdit3("Color", &lc.Color.x);
+				ImGui::DragFloat("Intensity", &lc.Intensity, 0.01f, 0.0f, 100.0f, "%.2f");
+
+				ImGui::Separator();
+
+				if (lc.Type == LightType::Directional)
+				{
+					ImGui::Text("Direction");
+					DrawVec3Control("Direction", lc.Directional.Direction);
+				}
+				else if (lc.Type == LightType::Point)
+				{
+					ImGui::DragFloat("Range", &lc.Point.Range, 0.1f, 0.01f, 1000.0f, "%.2f");
+				}
+				else if (lc.Type == LightType::Spot)
+				{
+					DrawVec3Control("Direction", lc.Spot.Direction);
+					ImGui::DragFloat("Range", &lc.Spot.Range, 0.1f, 0.01f, 1000.0f, "%.2f");
+
+					float innerDeg = glm::degrees(lc.Spot.InnerConeAngle);
+					float outerDeg = glm::degrees(lc.Spot.OuterConeAngle);
+					if (ImGui::DragFloat("Inner Cone", &innerDeg, 0.5f, 0.0f, 89.0f, "%.1f deg"))
+						lc.Spot.InnerConeAngle = glm::radians(innerDeg);
+					if (ImGui::DragFloat("Outer Cone", &outerDeg, 0.5f, 0.0f, 89.0f, "%.1f deg"))
+						lc.Spot.OuterConeAngle = glm::radians(outerDeg);
+					// Clamp inner <= outer
+					if (lc.Spot.InnerConeAngle > lc.Spot.OuterConeAngle)
+						lc.Spot.InnerConeAngle = lc.Spot.OuterConeAngle;
+				}
+
+				ImGui::TreePop();
+			}
+
+			if (removeComponent)
+				entity.RemoveComponent<LightComponent>();
 		}
 	}
 }

@@ -62,6 +62,7 @@
 
 // ------------ Utils ------------ //
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Utils/PrimitiveMeshFactory.h"
 // ------------------------------- //
 
 using namespace std;

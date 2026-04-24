@@ -64,12 +64,16 @@ namespace Engine
 	{
 		m_MSAASamples = PickMSAASamples(m_Device, m_FramebufferSpec.SampleCount);
 
-		CreateColorAttachment();
-		if (HasMSAA())
+		if (HasColorAttachment())
+			CreateColorAttachment();
+		if (HasColorAttachment() && HasMSAA())
 			CreateMSAAColorAttachment();
-		if (m_FramebufferSpec.DepthFormat != TextureFormat::Undefined)
+		if (HasDepthAttachment())
 			CreateDepthAttachment();
-		CreateSampler();
+		if (HasColorAttachment())
+			CreateColorSampler();
+		if (HasDepthAttachment())
+			CreateDepthSampler();
 	}
 
 	VulkanFramebuffer::~VulkanFramebuffer()
@@ -96,15 +100,19 @@ namespace Engine
 		m_FramebufferSpec.Width  = width;
 		m_FramebufferSpec.Height = height;
 
-		CreateColorAttachment();
-		if (HasMSAA())
+		if (HasColorAttachment())
+			CreateColorAttachment();
+		if (HasColorAttachment() && HasMSAA())
 			CreateMSAAColorAttachment();
-		if (m_FramebufferSpec.DepthFormat != TextureFormat::Undefined)
+		if (HasDepthAttachment())
 			CreateDepthAttachment();
 	}
 
 	void* VulkanFramebuffer::GetImGuiTextureID()
 	{
+		if (!HasColorAttachment())
+			return nullptr;
+
 		if (m_ImGuiTextureID == nullptr && ImGui::GetCurrentContext() != nullptr)
 		{
 			m_ImGuiTextureID = ImGui_ImplVulkan_AddTexture(
@@ -117,46 +125,46 @@ namespace Engine
 
 	vk::RenderingInfo VulkanFramebuffer::BuildRenderingInfo(const glm::vec4& clearColor) const
 	{
-		// ---- Color attachment ----
-		// If MSAA: render into m_MSAAColorImage, resolve into m_ColorImage.
-		// If no MSAA: render directly into m_ColorImage.
-
 		static vk::RenderingAttachmentInfo colorAttachment{};
-		colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-		colorAttachment.loadOp      = vk::AttachmentLoadOp::eClear;
-		colorAttachment.storeOp     = vk::AttachmentStoreOp::eStore;
-		colorAttachment.clearValue  = vk::ClearColorValue(std::array<float, 4>{
-			clearColor.r, clearColor.g, clearColor.b, clearColor.a });
-
-		if (HasMSAA())
+		if (HasColorAttachment())
 		{
-			colorAttachment.imageView        = *m_MSAAColorImageView;
-			colorAttachment.resolveMode      = vk::ResolveModeFlagBits::eAverage;
-			colorAttachment.resolveImageView = *m_ColorImageView;
-			colorAttachment.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
-		}
-		else
-		{
-			colorAttachment.imageView = *m_ColorImageView;
+			colorAttachment.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+			colorAttachment.loadOp      = vk::AttachmentLoadOp::eClear;
+			colorAttachment.storeOp     = vk::AttachmentStoreOp::eStore;
+			colorAttachment.clearValue  = vk::ClearColorValue(std::array<float, 4>{
+				clearColor.r, clearColor.g, clearColor.b, clearColor.a });
+
+			if (HasMSAA())
+			{
+				colorAttachment.imageView          = *m_MSAAColorImageView;
+				colorAttachment.resolveMode        = vk::ResolveModeFlagBits::eAverage;
+				colorAttachment.resolveImageView   = *m_ColorImageView;
+				colorAttachment.resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+			}
+			else
+			{
+				colorAttachment.imageView          = *m_ColorImageView;
+				colorAttachment.resolveMode        = vk::ResolveModeFlagBits::eNone;
+				colorAttachment.resolveImageView   = nullptr;
+				colorAttachment.resolveImageLayout = vk::ImageLayout::eUndefined;
+			}
 		}
 
-		// ---- Depth attachment (optional) ----
 		static vk::RenderingAttachmentInfo depthAttachment{};
 		if (HasDepth())
 		{
 			depthAttachment.imageView   = *m_DepthImageView;
 			depthAttachment.imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
 			depthAttachment.loadOp      = vk::AttachmentLoadOp::eClear;
-			depthAttachment.storeOp     = vk::AttachmentStoreOp::eDontCare;
+			depthAttachment.storeOp     = vk::AttachmentStoreOp::eStore;
 			depthAttachment.clearValue  = vk::ClearDepthStencilValue(1.0f, 0);
 		}
 
-		// ---- Assemble RenderingInfo ----
 		vk::RenderingInfo info;
 		info.renderArea           = vk::Rect2D(vk::Offset2D(0, 0), GetExtent());
 		info.layerCount           = 1;
-		info.colorAttachmentCount = 1;
-		info.pColorAttachments    = &colorAttachment;
+		info.colorAttachmentCount = HasColorAttachment() ? 1u : 0u;
+		info.pColorAttachments    = HasColorAttachment() ? &colorAttachment : nullptr;
 		info.pDepthAttachment     = HasDepth() ? &depthAttachment : nullptr;
 
 		return info;
@@ -233,7 +241,7 @@ namespace Engine
 			m_MSAASamples,   // depth must match the color sample count
 			depthFmt,
 			vk::ImageTiling::eOptimal,
-			vk::ImageUsageFlagBits::eDepthStencilAttachment,
+			vk::ImageUsageFlagBits::eDepthStencilAttachment | vk::ImageUsageFlagBits::eSampled,
 			vk::MemoryPropertyFlagBits::eDeviceLocal,
 			m_DepthImage,
 			m_DepthImageMemory);
@@ -244,9 +252,11 @@ namespace Engine
 			depthFmt,
 			vk::ImageAspectFlagBits::eDepth,
 			1);
+
+		m_CurrentDepthLayout = vk::ImageLayout::eUndefined;
 	}
 
-	void VulkanFramebuffer::CreateSampler()
+	void VulkanFramebuffer::CreateColorSampler()
 	{
 		vk::SamplerCreateInfo samplerInfo;
 		samplerInfo.magFilter               = vk::Filter::eLinear;
@@ -262,6 +272,24 @@ namespace Engine
 		samplerInfo.mipmapMode              = vk::SamplerMipmapMode::eLinear;
 
 		m_ColorSampler = vk::raii::Sampler(m_Device.GetDevice(), samplerInfo);
+	}
+
+	void VulkanFramebuffer::CreateDepthSampler()
+	{
+		vk::SamplerCreateInfo samplerInfo;
+		samplerInfo.magFilter               = vk::Filter::eLinear;
+		samplerInfo.minFilter               = vk::Filter::eLinear;
+		samplerInfo.addressModeU            = vk::SamplerAddressMode::eClampToBorder;
+		samplerInfo.addressModeV            = vk::SamplerAddressMode::eClampToBorder;
+		samplerInfo.addressModeW            = vk::SamplerAddressMode::eClampToBorder;
+		samplerInfo.anisotropyEnable        = vk::False;
+		samplerInfo.maxAnisotropy           = 1.0f;
+		samplerInfo.borderColor             = vk::BorderColor::eFloatOpaqueWhite;
+		samplerInfo.unnormalizedCoordinates = vk::False;
+		samplerInfo.compareEnable           = vk::False;
+		samplerInfo.mipmapMode              = vk::SamplerMipmapMode::eLinear;
+
+		m_DepthSampler = vk::raii::Sampler(m_Device.GetDevice(), samplerInfo);
 	}
 
 	void VulkanFramebuffer::ReleaseResources()
@@ -281,6 +309,7 @@ namespace Engine
 		m_DepthImageView   = nullptr;
 		m_DepthImage       = nullptr;
 		m_DepthImageMemory = nullptr;
+		m_CurrentDepthLayout = vk::ImageLayout::eUndefined;
 	}
 
 	void VulkanFramebuffer::ReleaseImGuiTexture()

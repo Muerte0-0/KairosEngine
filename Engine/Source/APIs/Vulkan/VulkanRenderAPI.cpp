@@ -20,6 +20,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
 
 #include "VulkanUtils.h"
 #include "VulkanMaterial.h"
+#include "VulkanTexture.h"
 #include "Engine/Utils/RendererUtils.h"
 
 namespace Engine
@@ -78,6 +79,12 @@ namespace Engine
 
 		CreateUniformBuffers();
 		CreateMaterialDescriptorSetLayout();
+
+		constexpr uint8_t shadowFallbackPixel[4] = { 255, 255, 255, 255 };
+		TextureSpecification shadowFallbackSpec;
+		shadowFallbackSpec.Width = 1;
+		shadowFallbackSpec.Height = 1;
+		m_DefaultShadowTexture = Texture::Create(shadowFallbackPixel, sizeof(shadowFallbackPixel), shadowFallbackSpec);
 	}
 
 	// -----------------------------------------------------------------------
@@ -138,22 +145,22 @@ namespace Engine
 
 		vk::CommandBuffer commandBuffer = *GetActiveCommandBuffer();
 
-		// Transition the resolve target (always needed — this is what gets sampled by ImGui).
-		VulkanUtils::TransitionImageLayout(
-			commandBuffer,
-			framebuffer->GetImage(),
-			framebuffer->GetCurrentLayout(),
-			vk::ImageLayout::eColorAttachmentOptimal,
-			{},
-			vk::AccessFlagBits2::eColorAttachmentWrite,
-			vk::PipelineStageFlagBits2::eTopOfPipe,
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-			vk::ImageAspectFlagBits::eColor);
-		framebuffer->SetCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
+		if (framebuffer->HasColorAttachment())
+		{
+			VulkanUtils::TransitionImageLayout(
+				commandBuffer,
+				framebuffer->GetImage(),
+				framebuffer->GetCurrentLayout(),
+				vk::ImageLayout::eColorAttachmentOptimal,
+				{},
+				vk::AccessFlagBits2::eColorAttachmentWrite,
+				vk::PipelineStageFlagBits2::eTopOfPipe,
+				vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+				vk::ImageAspectFlagBits::eColor);
+			framebuffer->SetCurrentLayout(vk::ImageLayout::eColorAttachmentOptimal);
+		}
 
-		// When MSAA is active, the render target is the MSAA image, not the resolve image.
-		// It also starts in eUndefined each frame and must be transitioned before beginRendering.
-		if (framebuffer->HasMSAA())
+		if (framebuffer->HasColorAttachment() && framebuffer->HasMSAA())
 		{
 			VulkanUtils::TransitionImageLayout(
 				commandBuffer,
@@ -172,13 +179,14 @@ namespace Engine
 			VulkanUtils::TransitionImageLayout(
 				commandBuffer,
 				framebuffer->GetDepthImage(),
-				vk::ImageLayout::eUndefined,
+				framebuffer->GetCurrentDepthLayout(),
 				vk::ImageLayout::eDepthStencilAttachmentOptimal,
 				{},
 				vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
 				vk::PipelineStageFlagBits2::eTopOfPipe,
 				vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
 				vk::ImageAspectFlagBits::eDepth);
+			framebuffer->SetCurrentDepthLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
 		}
 
 		vk::RenderingInfo renderingInfo = framebuffer->BuildRenderingInfo(renderPass.ClearColor);
@@ -193,17 +201,36 @@ namespace Engine
 		vk::CommandBuffer commandBuffer = *GetActiveCommandBuffer();
 		commandBuffer.endRendering();
 
-		VulkanUtils::TransitionImageLayout(
-			commandBuffer,
-			m_ActiveFramebuffer->GetImage(),
-			vk::ImageLayout::eColorAttachmentOptimal,
-			vk::ImageLayout::eShaderReadOnlyOptimal,
-			vk::AccessFlagBits2::eColorAttachmentWrite,
-			vk::AccessFlagBits2::eShaderRead,
-			vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-			vk::PipelineStageFlagBits2::eFragmentShader,
-			vk::ImageAspectFlagBits::eColor);
-		m_ActiveFramebuffer->SetCurrentLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+		if (m_ActiveFramebuffer->HasColorAttachment())
+		{
+			VulkanUtils::TransitionImageLayout(
+				commandBuffer,
+				m_ActiveFramebuffer->GetImage(),
+				vk::ImageLayout::eColorAttachmentOptimal,
+				vk::ImageLayout::eShaderReadOnlyOptimal,
+				vk::AccessFlagBits2::eColorAttachmentWrite,
+				vk::AccessFlagBits2::eShaderRead,
+				vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+				vk::PipelineStageFlagBits2::eFragmentShader,
+				vk::ImageAspectFlagBits::eColor);
+			m_ActiveFramebuffer->SetCurrentLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+		}
+
+		if (m_ActiveFramebuffer->HasDepthAttachment() && !m_ActiveFramebuffer->HasColorAttachment())
+		{
+			VulkanUtils::TransitionImageLayout(
+				commandBuffer,
+				m_ActiveFramebuffer->GetDepthImage(),
+				vk::ImageLayout::eDepthStencilAttachmentOptimal,
+				vk::ImageLayout::eShaderReadOnlyOptimal,
+				vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+				vk::AccessFlagBits2::eShaderRead,
+				vk::PipelineStageFlagBits2::eLateFragmentTests,
+				vk::PipelineStageFlagBits2::eFragmentShader,
+				vk::ImageAspectFlagBits::eDepth);
+			m_ActiveFramebuffer->SetCurrentDepthLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+		}
+
 		m_ActiveFramebuffer = nullptr;
 		m_OffscreenPassActive = false;
 	}
@@ -244,7 +271,7 @@ namespace Engine
 		memcpy(
 			m_UniformBuffersMapped[m_CurrentFrameIndex],
 			&uniformBufferObject,
-			sizeof(uniformBufferObject));
+			sizeof(SceneData));
 
 		const PushConstantObject pushConstantObject{
 			.Model = modelTransform
@@ -259,6 +286,7 @@ namespace Engine
 			0,
 			sizeof(PushConstantObject),
 			&pushConstantObject);
+		vkPipeline->UpdateShadowMapDescriptor(m_CurrentFrameIndex, GetShadowDescriptorImageInfo());
 		commandBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
 			*vkPipeline->GetPipelineLayout(),
@@ -381,6 +409,29 @@ namespace Engine
 		return VulkanUtils::ToTextureFormat(fmt);
 	}
 
+	void VulkanRenderAPI::SetShadowMap(const Framebuffer* framebuffer)
+	{
+		m_ShadowFramebuffer = dynamic_cast<const VulkanFramebuffer*>(framebuffer);
+	}
+
+	vk::DescriptorImageInfo VulkanRenderAPI::GetShadowDescriptorImageInfo() const
+	{
+		if (m_ShadowFramebuffer != nullptr && m_ShadowFramebuffer->HasDepthAttachment())
+		{
+			return vk::DescriptorImageInfo(
+				m_ShadowFramebuffer->GetDepthSampler(),
+				m_ShadowFramebuffer->GetDepthImageView(),
+				vk::ImageLayout::eShaderReadOnlyOptimal);
+		}
+
+		const auto* fallbackTexture = static_cast<const VulkanTexture*>(m_DefaultShadowTexture.get());
+		ASSERT(fallbackTexture, "VulkanRenderAPI: default shadow texture is unavailable.");
+		return vk::DescriptorImageInfo(
+			fallbackTexture->GetSampler(),
+			fallbackTexture->GetImageView(),
+			vk::ImageLayout::eShaderReadOnlyOptimal);
+	}
+
 	void VulkanRenderAPI::WaitIdle()
 	{
 		m_VulkanDevice->WaitIdle();
@@ -401,7 +452,7 @@ namespace Engine
 
 		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
 		{
-			vk::DeviceSize bufferSize = sizeof(UniformBufferObject);
+			vk::DeviceSize bufferSize = sizeof(SceneData);
 			vk::raii::Buffer       buffer({});
 			vk::raii::DeviceMemory bufferMem({});
 

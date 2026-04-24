@@ -118,6 +118,32 @@ namespace Engine
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<LightComponent>())
+		{
+			out << YAML::Key << "LightComponent";
+			out << YAML::BeginMap;
+			auto& lc = entity.GetComponent<LightComponent>();
+			out << YAML::Key << "Type"      << YAML::Value << static_cast<int>(lc.Type);
+			out << YAML::Key << "Color"     << YAML::Value << lc.Color;
+			out << YAML::Key << "Intensity" << YAML::Value << lc.Intensity;
+
+			if (lc.Type == LightType::Directional)
+				out << YAML::Key << "Direction" << YAML::Value << lc.Directional.Direction;
+
+			if (lc.Type == LightType::Point)
+				out << YAML::Key << "Range" << YAML::Value << lc.Point.Range;
+
+			if (lc.Type == LightType::Spot)
+			{
+				out << YAML::Key << "Direction"      << YAML::Value << lc.Spot.Direction;
+				out << YAML::Key << "Range"          << YAML::Value << lc.Spot.Range;
+				out << YAML::Key << "InnerConeAngle" << YAML::Value << lc.Spot.InnerConeAngle;
+				out << YAML::Key << "OuterConeAngle" << YAML::Value << lc.Spot.OuterConeAngle;
+			}
+
+			out << YAML::EndMap;
+		}
+
 		out << YAML::EndMap;
 	}
 
@@ -194,6 +220,30 @@ namespace Engine
 					}
 					if (auto matHandleNode = meshNode["MaterialAssetHandle"])
 						mc.MaterialAssetHandle = AssetHandle(matHandleNode.as<uint64_t>());
+				}
+
+				if (auto lightNode = entity["LightComponent"])
+				{
+					auto& lc    = deserialized.AddComponent<LightComponent>();
+					lc.Type      = static_cast<LightType>(lightNode["Type"].as<int>());
+					lc.Color     = lightNode["Color"].as<glm::vec3>();
+					lc.Intensity = lightNode["Intensity"].as<float>();
+
+					if (lc.Type == LightType::Directional)
+					{
+						if (auto n = lightNode["Direction"]) lc.Directional.Direction = n.as<glm::vec3>();
+					}
+					else if (lc.Type == LightType::Point)
+					{
+						if (auto n = lightNode["Range"]) lc.Point.Range = n.as<float>();
+					}
+					else if (lc.Type == LightType::Spot)
+					{
+						if (auto n = lightNode["Direction"])      lc.Spot.Direction      = n.as<glm::vec3>();
+						if (auto n = lightNode["Range"])          lc.Spot.Range          = n.as<float>();
+						if (auto n = lightNode["InnerConeAngle"]) lc.Spot.InnerConeAngle = n.as<float>();
+						if (auto n = lightNode["OuterConeAngle"]) lc.Spot.OuterConeAngle = n.as<float>();
+					}
 				}
 			}
 		}

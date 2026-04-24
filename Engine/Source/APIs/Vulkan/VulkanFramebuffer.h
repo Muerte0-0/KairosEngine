@@ -19,6 +19,8 @@ namespace Engine
 
 		uint32_t GetWidth()  const override { return m_FramebufferSpec.Width; }
 		uint32_t GetHeight() const override { return m_FramebufferSpec.Height; }
+		bool HasColorAttachment() const override { return m_FramebufferSpec.ColorFormat != TextureFormat::Undefined; }
+		bool HasDepthAttachment() const override { return m_FramebufferSpec.DepthFormat != TextureFormat::Undefined; }
 
 		// ---- Color (resolve target / sampled image) ----
 		vk::Image     GetImage()     const { return *m_ColorImage; }
@@ -33,6 +35,9 @@ namespace Engine
 		bool          HasDepth()          const { return *m_DepthImage != VK_NULL_HANDLE; }
 		vk::Image     GetDepthImage()     const { return *m_DepthImage; }
 		vk::ImageView GetDepthImageView() const { return *m_DepthImageView; }
+		vk::Sampler   GetDepthSampler()   const { return *m_DepthSampler; }
+		vk::ImageLayout GetCurrentDepthLayout() const { return m_CurrentDepthLayout; }
+		void            SetCurrentDepthLayout(vk::ImageLayout layout) { m_CurrentDepthLayout = layout; }
 
 		// ---- MSAA ----
 		bool                    HasMSAA()        const { return m_MSAASamples != vk::SampleCountFlagBits::e1; }
@@ -46,7 +51,8 @@ namespace Engine
 		void CreateColorAttachment();
 		void CreateMSAAColorAttachment();
 		void CreateDepthAttachment();
-		void CreateSampler();
+		void CreateColorSampler();
+		void CreateDepthSampler();
 		void ReleaseResources();
 		void ReleaseImGuiTexture();
 
@@ -70,6 +76,8 @@ namespace Engine
 		vk::raii::Image        m_DepthImage        = nullptr;
 		vk::raii::DeviceMemory m_DepthImageMemory  = nullptr;
 		vk::raii::ImageView    m_DepthImageView    = nullptr;
+		vk::raii::Sampler      m_DepthSampler      = nullptr;
+		vk::ImageLayout        m_CurrentDepthLayout = vk::ImageLayout::eUndefined;
 
 		void* m_ImGuiTextureID = nullptr;
 	};

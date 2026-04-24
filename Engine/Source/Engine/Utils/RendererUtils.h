@@ -22,15 +22,52 @@ namespace Engine
 		glm::vec3 Bitangent { 0.f, 0.f, 1.f };
 		glm::vec2 TexCoord  { 0.f, 0.f };
 
-		// Binding / attribute descriptions are generated from this layout
-		// do not change member order without updating the pipeline's vertex input state.
+		// Binding / attribute descriptions are generated from this layout.
+		// Do not change member order without updating the pipeline's vertex input state.
 	};
 
-	struct UniformBufferObject
+	// -----------------------------------------------------------------------
+	// GpuLight — GPU-side light struct.
+	// std140-compatible: every member 16-byte aligned.
+	//
+	// Type encoding (matches Mesh.slang):
+	//   0 = Directional   — uses Direction, Color, Intensity
+	//   1 = Point         — uses Position, Color, Intensity, Range
+	//   2 = Spot          — uses Position, Direction, Color, Intensity, Range, cone angles
+	// -----------------------------------------------------------------------
+	struct alignas(16) GpuLight
+	{
+		glm::vec4 Position;         // xyz = world pos,       w = unused
+		glm::vec4 Direction;        // xyz = normalized dir,  w = unused
+		glm::vec4 ColorIntensity;   // xyz = linear color,    w = intensity
+		float     Range;            // Point / Spot attenuation radius
+		float     InnerConeAngle;   // Spot — cosine of inner half-angle
+		float     OuterConeAngle;   // Spot — cosine of outer half-angle
+		int       Type;             // 0=Directional 1=Point 2=Spot
+	};
+
+	static_assert(sizeof(GpuLight) % 16 == 0, "GpuLight must be 16-byte aligned for std140");
+
+	// -----------------------------------------------------------------------
+	// SceneData — Set 0 Binding 0 UBO.  Replaces old UniformBufferObject.
+	// -----------------------------------------------------------------------
+	static constexpr int MAX_LIGHTS = 16;
+
+	struct SceneData
 	{
 		alignas(16) glm::mat4 View;
 		alignas(16) glm::mat4 Proj;
+		alignas(16) glm::mat4 LightViewProj;
+		alignas(16) GpuLight  Lights[MAX_LIGHTS];
+		alignas(16) glm::vec4 ShadowParams{ 0.f, 0.f, 0.f, 0.f };
+		alignas(4)  int       LightCount = 0;
+		alignas(4)  int       ShadowLightIndex = -1;
+		alignas(4)  int       ShadowEnabled = 0;
+		float                 _pad0 = 0.f;
 	};
+
+	// Keep old name as alias so any remaining code still compiles during transition.
+	using UniformBufferObject = SceneData;
 
 	struct PushConstantObject
 	{
@@ -56,7 +93,7 @@ namespace Engine
 		Depth24Stencil8,
 		Depth32_Float,
 
-		// Optional extras (nice to have)
+		// Optional extras
 		R8_UNorm,
 		RG8_UNorm
 	};
@@ -76,18 +113,13 @@ namespace Engine
 		Fragment,
 		Compute
 	};
-	/**
-		* @brief All data describing a single shader stage.
-		*
-		* Passed into Shader::Create() as part of a Shader Descriptor.
-		* The Bytecode field starts empty and is populated later when shader is Created
-	*/
+
 	struct ShaderStageData
 	{
 		ShaderStage				Stage		= ShaderStage::Vertex;
-		std::filesystem::path	Filepath;								// Relative to Shader Directory.
+		std::filesystem::path	Filepath;
 		std::string				EntryPoint	= "main";
-		std::vector<uint32_t>	Bytecode;								// Filled during Init().
+		std::vector<uint32_t>	Bytecode;
 	};
 	
 	enum class ShaderDataType : uint8_t
@@ -124,7 +156,6 @@ namespace Engine
 
 namespace std
 {
-	// std::unordered_map<ShaderStage, ...> requires a hash specialization.
 	template<>
 	struct hash<Engine::ShaderStage>
 	{
@@ -133,5 +164,4 @@ namespace std
 			return hash<int>{}(static_cast<int>(stage));
 		}
 	};
-	
 }

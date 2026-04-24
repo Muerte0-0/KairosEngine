@@ -2,8 +2,10 @@
 #include "SceneRenderer.h"
 
 #include "Renderer.h"
+#include "RenderPipeline.h"
 #include "RHI/RenderAPI.h"
 #include "RHI/Shader.h"
+#include "Engine/Scene/Systems/MeshRenderSystem.h"
 
 namespace Engine
 {
@@ -37,6 +39,7 @@ namespace Engine
 		EnsureFormats();
 		CreateFramebuffer();
 		m_RenderPass.TargetFramebuffer = m_Framebuffer.get();
+		m_RenderPipeline = CreateScope<RenderPipeline>(*this);
 	}
 
 	void SceneRenderer::BeginScene(const CameraManager& cameraManager)
@@ -60,8 +63,17 @@ namespace Engine
 		
 		m_View       = cam->GetView();
 		m_Projection = cam->GetProjection();
+		m_ShadowData = {};
 		m_DrawQueue.clear();
+		m_LightQueue.clear();
 		m_SceneActive = true;
+	}
+
+	void SceneRenderer::Render(entt::registry& registry)
+	{
+		ASSERT(m_SceneActive, "SceneRenderer::Render called outside BeginScene/EndScene.");
+		ASSERT(m_RenderPipeline, "SceneRenderer::Render requires a valid render pipeline.");
+		m_RenderPipeline->Execute(registry);
 	}
 
 	void SceneRenderer::SubmitMesh(const Ref<Mesh>& mesh,
@@ -77,11 +89,27 @@ namespace Engine
 		m_DrawQueue.push_back({ mesh, std::move(materials), transform });
 	}
 
+	void SceneRenderer::SubmitLight(const LightSubmission& light)
+	{
+		ASSERT(m_SceneActive, "SceneRenderer::SubmitLight called outside BeginScene/EndScene.");
+		m_LightQueue.push_back(light);
+	}
+
 	void SceneRenderer::EndScene()
 	{
 		ASSERT(m_SceneActive, "SceneRenderer::EndScene called without a matching BeginScene.");
-		Flush();
 		m_SceneActive = false;
+	}
+
+	void SceneRenderer::SetShadowData(const ShadowSceneData& shadowData)
+	{
+		m_ShadowData = shadowData;
+	}
+
+	void SceneRenderer::ExecuteGeometryPass(entt::registry& registry)
+	{
+		MeshRenderSystem::Render(registry, *this);
+		Flush();
 	}
 
 	void SceneRenderer::Resize(uint32_t width, uint32_t height)
@@ -107,17 +135,49 @@ namespace Engine
 
 		if (m_Pipeline != nullptr && !m_DrawQueue.empty())
 		{
+			// Build SceneData — pack lights from submission queue
+			SceneData sceneData{};
+			sceneData.View = m_View;
+			sceneData.Proj = m_Projection;
+			sceneData.LightViewProj = m_ShadowData.LightViewProj;
+			sceneData.ShadowParams = glm::vec4(m_ShadowData.Bias, m_ShadowData.TexelSize, 0.0f, 0.0f);
+			sceneData.LightCount = static_cast<int>(
+				std::min(static_cast<size_t>(MAX_LIGHTS), m_LightQueue.size()));
+			sceneData.ShadowEnabled = m_ShadowData.Enabled ? 1 : 0;
+			sceneData.ShadowLightIndex = -1;
+
+			for (int i = 0; i < sceneData.LightCount; ++i)
+			{
+				const LightSubmission& src = m_LightQueue[i];
+				GpuLight& dst = sceneData.Lights[i];
+
+				dst.Position        = glm::vec4(src.Position,  1.f);
+				dst.Direction       = glm::vec4(glm::normalize(src.Direction), 0.f);
+				dst.ColorIntensity  = glm::vec4(src.Color, src.Intensity);
+				dst.Range           = src.Range;
+				dst.InnerConeAngle  = src.InnerConeAngle;
+				dst.OuterConeAngle  = src.OuterConeAngle;
+				dst.Type            = src.Type;
+
+				if (src.EntityID == static_cast<uint32_t>(m_ShadowData.LightEntityID))
+					sceneData.ShadowLightIndex = i;
+			}
+
+			api->SetShadowMap(sceneData.ShadowEnabled ? m_RenderPipeline->GetShadowMapFramebuffer() : nullptr);
+
 			for (DrawCommand& cmd : m_DrawQueue)
 			{
-				UniformBufferObject ubo{};
-				ubo.View = m_View;
-				ubo.Proj = m_Projection;
 				api->DrawMesh(*m_Framebuffer, *m_Pipeline, *cmd.MeshRef,
-				              cmd.Transform, ubo, cmd.Materials);
+				              cmd.Transform, sceneData, cmd.Materials);
 			}
+		}
+		else
+		{
+			api->SetShadowMap(nullptr);
 		}
 
 		api->EndPass();
+		api->SetShadowMap(nullptr);
 	}
 
 	void SceneRenderer::CreateFramebuffer()

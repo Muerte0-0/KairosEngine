@@ -15,6 +15,7 @@ constexpr int MAX_FRAMES_IN_FLIGHT = 3;
 namespace Engine
 {
 	class VulkanFramebuffer;
+	class Texture;
 
 	class VulkanRenderAPI : public RenderAPI
 	{
@@ -40,6 +41,7 @@ namespace Engine
 		const std::filesystem::path& GetShaderDirectory() const override { return m_ShaderDirectory; }
 		TextureFormat GetDefaultColorFormat() const override;
 		TextureFormat GetDefaultDepthFormat() const override;
+		void SetShadowMap(const Framebuffer* framebuffer) override;
 		void WaitIdle() override;
 		void ReleaseStaticResources() override;
 		API GetType() override { return API::Vulkan; }
@@ -73,6 +75,7 @@ namespace Engine
 
 		const std::vector<vk::raii::Buffer>& GetUniformBuffers() const { return m_UniformBuffers; }
 		const std::vector<void*>& GetMappedUniformBuffers() const { return m_UniformBuffersMapped; }
+		vk::DescriptorImageInfo GetShadowDescriptorImageInfo() const;
 
 	private:
 		vk::raii::Context                m_Context;
@@ -85,6 +88,7 @@ namespace Engine
 		Scope<VulkanSwapchain> m_VulkanSwapchain = nullptr;
 
 		ShaderLibrary m_ShaderLibrary;
+		Ref<Texture>  m_DefaultShadowTexture;
 
 		vk::raii::DescriptorSetLayout m_MaterialDescriptorSetLayout = nullptr;
 
@@ -98,6 +102,7 @@ namespace Engine
 		bool     m_SwapchainDirty    = false;
 		bool     m_OffscreenPassActive = false;
 		VulkanFramebuffer* m_ActiveFramebuffer = nullptr;
+		const VulkanFramebuffer* m_ShadowFramebuffer = nullptr;
 
 		std::filesystem::path m_ShaderDirectory;
 

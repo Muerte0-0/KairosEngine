@@ -46,6 +46,7 @@ namespace Engine
 		virtual const std::filesystem::path& GetShaderDirectory() const = 0;
 		virtual TextureFormat GetDefaultColorFormat() const = 0;
 		virtual TextureFormat GetDefaultDepthFormat() const = 0;
+		virtual void SetShadowMap(const Framebuffer* framebuffer) = 0;
 		virtual void WaitIdle() = 0;
 
 		// Release backend-side static/shared GPU resources before device destroy.

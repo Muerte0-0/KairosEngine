@@ -3,6 +3,7 @@
 
 #include "Components.h"
 #include "Entity.h"
+#include "Engine/Renderer/SceneRenderer.h"
 #include "Systems/MeshRenderSystem.h"
 
 namespace Engine
@@ -43,7 +44,7 @@ namespace Engine
 
 	void Scene::OnRender(SceneRenderer& renderer)
 	{
-		MeshRenderSystem::Render(m_Registry, renderer);
+		renderer.Render(m_Registry);
 	}
 
 	void Scene::EachEntity(const std::function<void(Entity)>& fn)
@@ -84,6 +85,12 @@ namespace Engine
 	
 	template <>
 	void Scene::OnComponentAdded<MeshComponent>(Entity entity, MeshComponent& component)
+	{
+		
+	}
+	
+	template <>
+	void Scene::OnComponentAdded<LightComponent>(Entity entity, LightComponent& component)
 	{
 		
 	}
