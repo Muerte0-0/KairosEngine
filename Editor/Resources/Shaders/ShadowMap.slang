@@ -25,5 +25,6 @@ struct SceneData
 float4 vertMain(VSInput input) : SV_Position
 {
     float4 worldPos = mul(u_PushConstants.Model, float4(input.Position, 1.0f));
-    return mul(u_SceneData.Projection, worldPos);
+    float4 lightSpacePos = mul(u_SceneData.View, worldPos);
+    return mul(u_SceneData.Projection, lightSpacePos);
 }

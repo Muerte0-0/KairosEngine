@@ -68,7 +68,7 @@ namespace Engine
 			return;
 
 		RenderAPI* api = Renderer::GetAPI();
-		ASSERT(api, "ShadowPass::End requires a valid RenderAPI.");
+		ASSERT(api, "ShadowPass::End requires a valid RenderAPI.")
 		api->EndPass();
 	}
 

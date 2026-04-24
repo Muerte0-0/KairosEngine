@@ -128,7 +128,9 @@ namespace Engine
 			out << YAML::Key << "Intensity" << YAML::Value << lc.Intensity;
 
 			if (lc.Type == LightType::Directional)
-				out << YAML::Key << "Direction" << YAML::Value << lc.Directional.Direction;
+			{
+				// Direction is derived from entity rotation at runtime — nothing to serialize.
+			}
 
 			if (lc.Type == LightType::Point)
 				out << YAML::Key << "Range" << YAML::Value << lc.Point.Range;
@@ -231,7 +233,8 @@ namespace Engine
 
 					if (lc.Type == LightType::Directional)
 					{
-						if (auto n = lightNode["Direction"]) lc.Directional.Direction = n.as<glm::vec3>();
+						// Direction driven by entity rotation — no fields to read.
+						// Legacy keys "Direction", "UseCustomDirection", "CustomDirection" are silently ignored.
 					}
 					else if (lc.Type == LightType::Point)
 					{

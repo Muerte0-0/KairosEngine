@@ -434,8 +434,7 @@ namespace Kairos
 
 				if (lc.Type == LightType::Directional)
 				{
-					ImGui::Text("Direction");
-					DrawVec3Control("Direction", lc.Directional.Direction);
+					ImGui::TextDisabled("Direction driven by entity rotation (-Y axis)");
 				}
 				else if (lc.Type == LightType::Point)
 				{

@@ -20,8 +20,9 @@ namespace Engine
 		m_ShadowPass->Begin();
 		m_Renderer.SetShadowData(m_ShadowPass->Render(registry));
 		m_ShadowPass->End();
-
+		
 		m_Renderer.ExecuteGeometryPass(registry);
+
 	}
 
 	Framebuffer* RenderPipeline::GetShadowMapFramebuffer() const

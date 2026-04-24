@@ -282,10 +282,12 @@ namespace Engine
 		commandBuffer.bindIndexBuffer(*indexBuffer->GetBuffer(), 0, vk::IndexType::eUint32);
 		commandBuffer.pushConstants(
 			*vkPipeline->GetPipelineLayout(),
-			vk::ShaderStageFlagBits::eVertex,
+			vkPipeline->GetPushConstantStages(),
 			0,
 			sizeof(PushConstantObject),
 			&pushConstantObject);
+
+		// Update shadow map descriptor before binding — must happen before bindDescriptorSets.
 		vkPipeline->UpdateShadowMapDescriptor(m_CurrentFrameIndex, GetShadowDescriptorImageInfo());
 		commandBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,

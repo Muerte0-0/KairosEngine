@@ -80,7 +80,6 @@ namespace Engine
 
 	struct DirectionalLightData
 	{
-		glm::vec3 Direction = { 0.0f, -1.0f, 0.0f }; // normalized, world-space
 	};
 
 	struct PointLightData

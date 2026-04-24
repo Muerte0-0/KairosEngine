@@ -44,16 +44,16 @@ namespace Engine::MeshRenderSystem
             ls.Color     = lc.Color;
             ls.Intensity = lc.Intensity;
 
-            // Direction is derived from the entity's rotation (extract -Z axis = forward)
+            // Direction: -Y axis of the entity's rotation
             glm::mat4 rot = glm::toMat4(glm::quat(tc.Rotation));
-            glm::vec3 forward = glm::normalize(glm::vec3(rot * glm::vec4(0.f, 0.f, -1.f, 0.f)));
+            glm::vec3 downDir = glm::normalize(glm::vec3(rot * glm::vec4(0.f, -1.f, 0.f, 0.f)));
 
             switch (lc.Type)
             {
                 case LightType::Directional:
                     ls.Type      = 0;
                     ls.Position  = glm::vec3(0.f);
-                    ls.Direction = lc.Directional.Direction; // explicit override if set; else use forward
+                    ls.Direction = downDir;
                     ls.Range     = 0.f;
                     ls.InnerConeAngle = 0.f;
                     ls.OuterConeAngle = 0.f;

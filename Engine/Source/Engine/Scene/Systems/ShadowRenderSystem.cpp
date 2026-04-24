@@ -25,10 +25,10 @@ namespace Engine::ShadowRenderSystem
 			}
 		};
 
-		glm::vec3 ComputeForward(const TransformComponent& transform)
+		glm::vec3 ComputeDown(const TransformComponent& transform)
 		{
 			glm::mat4 rotation = glm::toMat4(glm::quat(transform.Rotation));
-			return glm::normalize(glm::vec3(rotation * glm::vec4(0.f, 0.f, -1.f, 0.f)));
+			return glm::normalize(glm::vec3(rotation * glm::vec4(0.f, -1.f, 0.f, 0.f)));
 		}
 
 		bool ShouldCastShadow(entt::registry& registry, entt::entity entity)
@@ -92,10 +92,7 @@ namespace Engine::ShadowRenderSystem
 			if (lightComponent.Type != LightType::Directional || lightComponent.Intensity <= 0.0f)
 				continue;
 
-			glm::vec3 direction = lightComponent.Directional.Direction;
-			if (glm::dot(direction, direction) < 1e-6f)
-				direction = ComputeForward(transformComponent);
-			direction = glm::normalize(direction);
+			glm::vec3 direction = ComputeDown(transformComponent);
 
 			const glm::vec3 extents = glm::max((casterBounds.Max - casterBounds.Min) * 0.5f, glm::vec3(5.0f));
 			const float distance = glm::length(extents) + 25.0f;

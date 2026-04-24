@@ -84,6 +84,7 @@ namespace Engine
 			m_CreateInfo.Shader->HasStage(ShaderStage::Fragment)
 			? (vk::ShaderStageFlagBits::eVertex | vk::ShaderStageFlagBits::eFragment)
 			: vk::ShaderStageFlagBits::eVertex;
+		m_PushStages = pushStages;
 		const vk::PushConstantRange pushConstantRange(pushStages, 0, sizeof(PushConstantObject));
 
 		vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
