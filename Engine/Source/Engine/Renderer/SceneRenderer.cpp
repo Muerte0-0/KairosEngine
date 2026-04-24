@@ -128,8 +128,11 @@ namespace Engine
 	void SceneRenderer::Flush()
 	{
 		RenderAPI* api = Renderer::GetAPI();
-		ASSERT(api, "SceneRenderer::Flush requires a valid RenderAPI.");
+		ASSERT(api, "SceneRenderer::Flush requires a valid RenderAPI.")
 
+		if (m_Pipeline)
+			api->PrepareForDraw(*m_Pipeline);
+		
 		m_RenderPass.TargetFramebuffer = m_Framebuffer.get();
 		api->BeginPass(m_RenderPass);
 

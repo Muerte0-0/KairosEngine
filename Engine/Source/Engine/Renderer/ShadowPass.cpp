@@ -48,7 +48,11 @@ namespace Engine
 		if (m_LightData.Valid)
 		{
 			RenderAPI* api = Renderer::GetAPI();
-			ASSERT(api, "ShadowPass::Render requires a valid RenderAPI.");
+			ASSERT(api, "ShadowPass::Render requires a valid RenderAPI.")
+			
+			if (m_Pipeline)
+				api->PrepareForDraw(*m_Pipeline);
+			
 			api->BeginPass(m_RenderPass);
 			ShadowRenderSystem::Render(registry, *this, m_LightData);
 		}
@@ -74,7 +78,8 @@ namespace Engine
 
 	void ShadowPass::SubmitMesh(const Ref<Mesh>& mesh, const glm::mat4& modelTransform, const glm::mat4& lightViewProjection)
 	{
-		ASSERT(mesh, "ShadowPass::SubmitMesh called with a null mesh.");
+		ASSERT(mesh, "ShadowPass::SubmitMesh called with a null mesh.")
+		
 		if (!m_Pipeline)
 			CreatePipeline(mesh->GetLayout());
 
@@ -84,7 +89,8 @@ namespace Engine
 		sceneData.LightViewProj = lightViewProjection;
 
 		RenderAPI* api = Renderer::GetAPI();
-		ASSERT(api, "ShadowPass::SubmitMesh requires a valid RenderAPI.");
+		ASSERT(api, "ShadowPass::SubmitMesh requires a valid RenderAPI.")
+		
 		api->DrawMesh(*m_Framebuffer, *m_Pipeline, *mesh, modelTransform, sceneData, {});
 	}
 

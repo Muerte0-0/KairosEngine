@@ -35,15 +35,19 @@ namespace Engine
 		void DrawFrame()  override;
 		void EndScene()   override;
 
+		void SetShadowMap(const Framebuffer* framebuffer) override;
+		void PrepareForDraw(const GraphicsPipeline& pipeline) override;
+		
 		void WindowResized() override;
 
 		ShaderLibrary* GetShaderLibrary() override { return &m_ShaderLibrary; }
 		const std::filesystem::path& GetShaderDirectory() const override { return m_ShaderDirectory; }
 		TextureFormat GetDefaultColorFormat() const override;
 		TextureFormat GetDefaultDepthFormat() const override;
-		void SetShadowMap(const Framebuffer* framebuffer) override;
+		
 		void WaitIdle() override;
 		void ReleaseStaticResources() override;
+		
 		API GetType() override { return API::Vulkan; }
 
 		// Material factory + shared descriptor set layout for set 1

@@ -286,9 +286,7 @@ namespace Engine
 			0,
 			sizeof(PushConstantObject),
 			&pushConstantObject);
-
-		// Update shadow map descriptor before binding — must happen before bindDescriptorSets.
-		vkPipeline->UpdateShadowMapDescriptor(m_CurrentFrameIndex, GetShadowDescriptorImageInfo());
+		
 		commandBuffer.bindDescriptorSets(
 			vk::PipelineBindPoint::eGraphics,
 			*vkPipeline->GetPipelineLayout(),
@@ -414,6 +412,19 @@ namespace Engine
 	void VulkanRenderAPI::SetShadowMap(const Framebuffer* framebuffer)
 	{
 		m_ShadowFramebuffer = dynamic_cast<const VulkanFramebuffer*>(framebuffer);
+	}
+
+	void VulkanRenderAPI::PrepareForDraw(const GraphicsPipeline& pipeline)
+	{
+		// Update shadow-map descriptor for the current frame BEFORE beginRendering.
+		// Must not be called inside an active render pass (between beginRendering / endRendering).
+		if (!m_FrameValid)
+			return;
+		
+		const auto* vkPipeline = dynamic_cast<const VulkanGraphicsPipeline*>(&pipeline);
+		ASSERT(vkPipeline, "VulkanRenderAPI::PrepareForDraw expects a VulkanGraphicsPipeline.")
+		
+		vkPipeline->UpdateShadowMapDescriptor(m_CurrentFrameIndex, GetShadowDescriptorImageInfo());
 	}
 
 	vk::DescriptorImageInfo VulkanRenderAPI::GetShadowDescriptorImageInfo() const

@@ -47,6 +47,11 @@ namespace Engine
 		virtual TextureFormat GetDefaultColorFormat() const = 0;
 		virtual TextureFormat GetDefaultDepthFormat() const = 0;
 		virtual void SetShadowMap(const Framebuffer* framebuffer) = 0;
+
+		// Call once per pass BEFORE BeginPass — updates per-frame descriptors
+		// (e.g. shadow-map sampler) while the command buffer is NOT inside beginRendering.
+		virtual void PrepareForDraw(const GraphicsPipeline& pipeline) = 0;
+
 		virtual void WaitIdle() = 0;
 
 		// Release backend-side static/shared GPU resources before device destroy.
