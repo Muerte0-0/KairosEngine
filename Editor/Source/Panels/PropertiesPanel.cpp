@@ -365,6 +365,8 @@ namespace Kairos
 				DrawMeshAssetField(mc);
 				ImGui::Columns(1);
 
+				ImGui::Checkbox("Cast Shadows", &mc.CastShadows);
+
 				DrawMaterialSlots(mc);
 
 				ImGui::TreePop();

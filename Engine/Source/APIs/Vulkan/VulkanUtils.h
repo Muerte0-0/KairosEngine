@@ -88,6 +88,7 @@ namespace Engine
 		
 		static vk::Format ToVulkanFormat(TextureFormat format);
 		static vk::SampleCountFlagBits ToVulkanSampleCount(SampleCountBits samples);
+		static vk::CullModeFlags ToVulkanCullMode(CullMode mode);
 		static TextureFormat ToTextureFormat(vk::Format format);
 		static SampleCountBits ToSampleCountBits(vk::SampleCountFlagBits samples);
 		

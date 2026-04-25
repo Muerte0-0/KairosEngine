@@ -129,6 +129,8 @@ namespace Engine
 	{
 		RenderAPI* api = Renderer::GetAPI();
 		ASSERT(api, "SceneRenderer::Flush requires a valid RenderAPI.")
+		
+		api->SetShadowMap(m_ShadowData.Enabled ? m_RenderPipeline->GetShadowMapFramebuffer() : nullptr);
 
 		if (m_Pipeline)
 			api->PrepareForDraw(*m_Pipeline);
@@ -166,17 +168,11 @@ namespace Engine
 					sceneData.ShadowLightIndex = i;
 			}
 
-			api->SetShadowMap(sceneData.ShadowEnabled ? m_RenderPipeline->GetShadowMapFramebuffer() : nullptr);
-
 			for (DrawCommand& cmd : m_DrawQueue)
 			{
 				api->DrawMesh(*m_Framebuffer, *m_Pipeline, *cmd.MeshRef,
 				              cmd.Transform, sceneData, cmd.Materials);
 			}
-		}
-		else
-		{
-			api->SetShadowMap(nullptr);
 		}
 
 		api->EndPass();

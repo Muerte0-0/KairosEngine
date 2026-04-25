@@ -277,8 +277,8 @@ namespace Engine
 	void VulkanFramebuffer::CreateDepthSampler()
 	{
 		vk::SamplerCreateInfo samplerInfo;
-		samplerInfo.magFilter               = vk::Filter::eLinear;
-		samplerInfo.minFilter               = vk::Filter::eLinear;
+		samplerInfo.magFilter               = vk::Filter::eNearest;
+		samplerInfo.minFilter               = vk::Filter::eNearest;
 		samplerInfo.addressModeU            = vk::SamplerAddressMode::eClampToBorder;
 		samplerInfo.addressModeV            = vk::SamplerAddressMode::eClampToBorder;
 		samplerInfo.addressModeW            = vk::SamplerAddressMode::eClampToBorder;

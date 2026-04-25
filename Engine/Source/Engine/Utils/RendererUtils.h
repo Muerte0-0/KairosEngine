@@ -106,6 +106,13 @@ namespace Engine
 		s8 = 8,
 		s16 = 16
 	};
+
+	enum class CullMode : uint8_t
+	{
+		None  = 0,
+		Front = 1,
+		Back  = 2,
+	};
 	
 	enum class ShaderStage : uint8_t
 	{

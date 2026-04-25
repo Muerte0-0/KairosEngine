@@ -140,7 +140,7 @@ namespace Engine
 
 		vk::PipelineRasterizationStateCreateInfo rasterState;
 		rasterState.polygonMode = vk::PolygonMode::eFill;
-		rasterState.cullMode    = vk::CullModeFlagBits::eBack;
+		rasterState.cullMode    = VulkanUtils::ToVulkanCullMode(m_CreateInfo.CullMode);
 		rasterState.frontFace   = vk::FrontFace::eClockwise;
 		rasterState.lineWidth   = 1.0f;
 

@@ -115,6 +115,7 @@ namespace Engine
 				out << YAML::Key << "MeshAssetHandle" << YAML::Value << static_cast<uint64_t>(mc.MeshAssetHandle);
 			if (static_cast<uint64_t>(mc.MaterialAssetHandle) != NullAssetHandle)
 				out << YAML::Key << "MaterialAssetHandle" << YAML::Value << static_cast<uint64_t>(mc.MaterialAssetHandle);
+			out << YAML::Key << "CastShadows" << YAML::Value << mc.CastShadows;
 			out << YAML::EndMap;
 		}
 
@@ -222,6 +223,9 @@ namespace Engine
 					}
 					if (auto matHandleNode = meshNode["MaterialAssetHandle"])
 						mc.MaterialAssetHandle = AssetHandle(matHandleNode.as<uint64_t>());
+					if (auto castShadowsNode = meshNode["CastShadows"])
+						mc.CastShadows = castShadowsNode.as<bool>();
+					// else: default true — old scenes cast shadows
 				}
 
 				if (auto lightNode = entity["LightComponent"])

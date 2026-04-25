@@ -31,23 +31,14 @@ namespace Engine::ShadowRenderSystem
 			return glm::normalize(glm::vec3(rotation * glm::vec4(0.f, -1.f, 0.f, 0.f)));
 		}
 
-		bool ShouldCastShadow(entt::registry& registry, entt::entity entity)
-		{
-			auto taggedCasters = registry.view<ShadowCasterComponent>();
-			return taggedCasters.empty() || registry.all_of<ShadowCasterComponent>(entity);
-		}
-
 		Bounds ComputeCasterBounds(entt::registry& registry)
 		{
 			Bounds bounds;
 			auto view = registry.view<MeshComponent, TransformComponent>();
 			for (auto entity : view)
 			{
-				if (!ShouldCastShadow(registry, entity))
-					continue;
-
 				const auto& [meshComponent, transformComponent] = view.get<MeshComponent, TransformComponent>(entity);
-				if (!meshComponent.HasMesh())
+				if (!meshComponent.CastShadows || !meshComponent.HasMesh())
 					continue;
 
 				const Mesh::AABB localBounds = meshComponent.MeshRef->ComputeAABB();
@@ -100,10 +91,10 @@ namespace Engine::ShadowRenderSystem
 			glm::vec3 up = glm::abs(direction.y) > 0.99f ? glm::vec3(0.f, 0.f, 1.f) : glm::vec3(0.f, 1.f, 0.f);
 
 			LightRenderData result;
-			result.Direction = direction;
+			result.Direction     = direction;
 			result.LightEntityID = static_cast<int>(entt::to_integral(entity));
-			result.TexelSize = 1.0f / static_cast<float>(shadowMapSize);
-			result.LightView = glm::lookAt(lightPosition, center, up);
+			result.TexelSize     = 1.0f / static_cast<float>(shadowMapSize);
+			result.LightView     = glm::lookAt(lightPosition, center, up);
 
 			glm::vec3 lightSpaceMin{ FLT_MAX, FLT_MAX, FLT_MAX };
 			glm::vec3 lightSpaceMax{ -FLT_MAX, -FLT_MAX, -FLT_MAX };
@@ -126,7 +117,7 @@ namespace Engine::ShadowRenderSystem
 			}
 
 			const float xyPadding = 2.0f;
-			const float zPadding = 20.0f;
+			const float zPadding  = 20.0f;
 			result.LightProjection = glm::ortho(
 				lightSpaceMin.x - xyPadding,
 				lightSpaceMax.x + xyPadding,
@@ -150,11 +141,8 @@ namespace Engine::ShadowRenderSystem
 		auto view = registry.view<MeshComponent, TransformComponent>();
 		for (auto entity : view)
 		{
-			if (!ShouldCastShadow(registry, entity))
-				continue;
-
 			const auto& [meshComponent, transformComponent] = view.get<MeshComponent, TransformComponent>(entity);
-			if (!meshComponent.HasMesh())
+			if (!meshComponent.CastShadows || !meshComponent.HasMesh())
 				continue;
 
 			shadowPass.SubmitMesh(meshComponent.MeshRef, transformComponent.GetTransform(), lightData.LightViewProjection);

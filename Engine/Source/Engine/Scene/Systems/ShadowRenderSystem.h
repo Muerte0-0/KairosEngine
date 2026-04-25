@@ -17,7 +17,7 @@ namespace Engine
 			glm::mat4 LightProjection{ 1.0f };
 			glm::mat4 LightViewProjection{ 1.0f };
 			glm::vec3 Direction{ 0.0f, -1.0f, 0.0f };
-			float     Bias = 0.0015f;
+			float     Bias = 0.0f;
 			float     TexelSize = 0.0f;
 			int       LightEntityID = -1;
 			bool      Valid = false;

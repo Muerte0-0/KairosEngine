@@ -109,11 +109,12 @@ namespace Engine
 	void ShadowPass::CreatePipeline(const BufferLayout& vertexLayout)
 	{
 		GraphicsPipelineCreateInfo createInfo;
-		createInfo.Shader = GetShadowShader();
+		createInfo.Shader       = GetShadowShader();
 		createInfo.VertexLayout = vertexLayout;
-		createInfo.ColorFormat = TextureFormat::Undefined;
-		createInfo.DepthFormat = TextureFormat::Depth32_Float;
-		createInfo.SampleCount = SampleCountBits::s1;
+		createInfo.ColorFormat  = TextureFormat::Undefined;
+		createInfo.DepthFormat  = TextureFormat::Depth32_Float;
+		createInfo.SampleCount  = SampleCountBits::s1;
+		createInfo.CullMode     = CullMode::Front;
 
 		m_Pipeline = GraphicsPipeline::Create(std::move(createInfo));
 	}

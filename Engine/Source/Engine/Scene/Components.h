@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "Engine/Core/UUID.h"
 #include "Engine/Assets/Asset.h"
@@ -108,21 +108,16 @@ namespace Engine
 		LightComponent() = default;
 	};
 
-	struct ShadowCasterComponent
-	{
-	};
-
 	struct MeshComponent
 	{
-		AssetHandle                MeshAssetHandle         = AssetHandle(NullAssetHandle);
-		AssetHandle                MaterialAssetHandle     = AssetHandle(NullAssetHandle); // optional .kmat override
+		AssetHandle                MeshAssetHandle     = AssetHandle(NullAssetHandle);
+		AssetHandle                MaterialAssetHandle = AssetHandle(NullAssetHandle); // optional .kmat override
 		Ref<Mesh>                  MeshRef;
-		std::vector<Ref<Material>> Materials;   // indexed by SubMesh::MaterialIndex
+		std::vector<Ref<Material>> Materials;     // indexed by SubMesh::MaterialIndex
+		bool                       CastShadows   = true;
 
 		// Set mesh + materials together from an already-loaded Mesh ref.
-		bool SetMeshAsset(AssetHandle handle,
-		                  const Ref<Mesh>& mesh,
-		                  std::vector<Ref<Material>> materials = {})
+		bool SetMeshAsset(AssetHandle handle, const Ref<Mesh>& mesh, std::vector<Ref<Material>> materials = {})
 		{
 			if (MeshAssetHandle == handle && MeshRef == mesh)
 				return false;

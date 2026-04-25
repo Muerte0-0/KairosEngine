@@ -18,6 +18,7 @@ namespace Engine
 		TextureFormat   ColorFormat = TextureFormat::Undefined;
 		TextureFormat   DepthFormat = TextureFormat::Undefined;
 		SampleCountBits SampleCount = SampleCountBits::s1;
+		CullMode        CullMode    = CullMode::Back;
 	};
 
 	// -----------------------------------------------------------------------

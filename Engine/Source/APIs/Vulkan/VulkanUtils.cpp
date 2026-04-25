@@ -214,6 +214,17 @@ namespace Engine
 			default:					return vk::SampleCountFlagBits::e1;
 		}
 	}
+
+	vk::CullModeFlags VulkanUtils::ToVulkanCullMode(CullMode mode)
+	{
+		switch (mode)
+		{
+			case CullMode::None:  return vk::CullModeFlagBits::eNone;
+			case CullMode::Front: return vk::CullModeFlagBits::eFront;
+			case CullMode::Back:  return vk::CullModeFlagBits::eBack;
+			default:              return vk::CullModeFlagBits::eBack;
+		}
+	}
 	
 	TextureFormat VulkanUtils::ToTextureFormat(vk::Format format)
 	{
