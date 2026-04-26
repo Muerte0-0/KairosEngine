@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Core/UUID.h"
+#include "SceneGraph.h"
 
 #include "entt.hpp"
 #include <functional>
@@ -31,21 +32,20 @@ namespace Engine
 		const std::string& GetName() const { return m_Name; }
 		void               SetName(const std::string& name) { m_Name = name; }
 
-		/**
-		 * @brief Walk all MeshComponent + TransformComponent entities and
-		 *        submit them to the provided SceneRenderer.
-		 *        Call this between SceneRenderer::BeginScene and EndScene.
-		 */
 		void OnRender(SceneRenderer& renderer);
 
-		/**
-		 * @brief Invoke fn(entity) for every living entity in the scene.
-		 *        Provides iteration without exposing entt to callers.
-		 */
 		void EachEntity(const std::function<void(Entity)>& fn);
 
+		SceneGraph& GetSceneGraph() { return m_SceneGraph; }
+
+		// Returns the UUID of entity's parent, or 0 if root.
+		uint64_t GetParentUUID(EntityID id) const;
+
 	private:
+		void PropagateTransforms();
+
 		entt::registry m_Registry;
+		SceneGraph     m_SceneGraph;
 		std::string    m_Name = "Untitled";
 		
 		template<typename T>

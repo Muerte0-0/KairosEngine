@@ -2,9 +2,12 @@
 #include "SceneHierarchyPanel.h"
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include "ImGuizmo.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include "Engine/Math/Math.h"
+#include "Engine/Scene/SceneGraph.h"
 
 namespace Kairos
 {
@@ -20,9 +23,78 @@ namespace Kairos
 		m_GizmoType     = ImGuizmo::OPERATION::TRANSLATE;
 	}
 
+	// -----------------------------------------------------------------------
+	// Toolbar — drawn as an overlay inside the viewport window
+	// -----------------------------------------------------------------------
+	static void DrawToolbar(int& gizmoType, int& gizmoMode)
+	{
+		const float PAD        = 8.f;
+		const float BTN_SIZE   = 28.f;
+		const float BTN_ROUND  = 4.f;
+		const float SEPARATOR  = 6.f;
+
+		ImVec2 winPos  = ImGui::GetWindowPos();
+		ImVec2 winSize = ImGui::GetWindowSize();
+
+		// Total width: 4 op buttons + separator + 2 mode buttons
+		float totalW = 4 * (BTN_SIZE + PAD) - PAD + SEPARATOR + 2 * (BTN_SIZE + PAD) + PAD * 2;
+		float startX = winPos.x + PAD * 2;
+		float startY = winPos.y + PAD;
+
+		// Background pill via DrawList
+		ImDrawList* dl = ImGui::GetWindowDrawList();
+		dl->AddRectFilled({ startX, startY },
+		                  { startX + totalW, startY + BTN_SIZE + PAD * 2 },
+		                  IM_COL32(30, 30, 30, 200), BTN_ROUND * 2);
+
+		ImGui::SetCursorScreenPos({ startX + PAD, startY + PAD });
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { PAD, 0.f });
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, BTN_ROUND);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.f, 0.f });
+
+		auto OpBtn = [&](const char* label, int op)
+		{
+			bool active = (gizmoType == op);
+			if (active) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+			if (ImGui::Button(label, { BTN_SIZE, BTN_SIZE }))
+				gizmoType = (gizmoType == op) ? -1 : op;   // toggle off with same button
+			if (active) ImGui::PopStyleColor();
+			ImGui::SameLine();
+		};
+
+		OpBtn("T", ImGuizmo::OPERATION::TRANSLATE);
+		OpBtn("R", ImGuizmo::OPERATION::ROTATE);
+		OpBtn("S", ImGuizmo::OPERATION::SCALE);
+		OpBtn("U", ImGuizmo::OPERATION::UNIVERSAL);
+
+		// Visual separator
+		ImVec2 sepCursor = ImGui::GetCursorScreenPos();
+		dl->AddLine({ sepCursor.x + 1.f, startY + 4.f },
+		            { sepCursor.x + 1.f, startY + BTN_SIZE + PAD * 2 - 4.f },
+		            IM_COL32(80, 80, 80, 255));
+		ImGui::SetCursorScreenPos({ sepCursor.x + SEPARATOR, sepCursor.y });
+
+		auto ModeBtn = [&](const char* label, int mode)
+		{
+			bool active = (gizmoMode == mode);
+			if (active) ImGui::PushStyleColor(ImGuiCol_Button, ImGui::GetStyleColorVec4(ImGuiCol_ButtonActive));
+			if (ImGui::Button(label, { BTN_SIZE, BTN_SIZE }))
+				gizmoMode = mode;
+			if (active) ImGui::PopStyleColor();
+			ImGui::SameLine();
+		};
+
+		ModeBtn("L", 0);   // LOCAL
+		ModeBtn("W", 1);   // WORLD
+
+		ImGui::PopStyleVar(3);
+	}
+
 	void ViewportPanel::OnImGuiRender()
 	{
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");
+		ImGui::PopStyleVar();
 
 		ImVec2 size = ImGui::GetContentRegionAvail();
 		m_Size = { size.x, size.y };
@@ -73,6 +145,9 @@ namespace Kairos
 			m_Focused = true;
 		}
 
+		// Toolbar sits on top of the viewport image
+		DrawToolbar(m_GizmoType, m_GizmoMode);
+
 		DrawGizmos();
 
 		ImGui::End();
@@ -90,26 +165,49 @@ namespace Kairos
 		                  ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
 		auto& tc = selected.GetComponent<TransformComponent>();
-		glm::mat4 transform = tc.GetTransform();
+
+		// Always manipulate WorldTransform — gizmo lives in world space
+		glm::mat4 worldTransform = tc.WorldTransform;
 
 		bool snap = Engine::Input::IsKeyPressed(Engine::KeyBoard::LeftControl);
-		float snapValue = (m_GizmoType == ImGuizmo::OPERATION::ROTATE) ? 5.0f : 0.5f;
+		float snapValue  = (m_GizmoType == ImGuizmo::OPERATION::ROTATE) ? 5.0f : 0.5f;
 		float snapValues[3] = { snapValue, snapValue, snapValue };
+
+		ImGuizmo::MODE imguizmoMode = (m_GizmoMode == 1) ? ImGuizmo::WORLD : ImGuizmo::LOCAL;
 
 		ImGuizmo::Manipulate(
 			glm::value_ptr(m_CameraManager->GetActiveCamera()->GetView()),
 			glm::value_ptr(m_CameraManager->GetActiveCamera()->GetProjection()),
-			static_cast<ImGuizmo::OPERATION>(m_GizmoType), ImGuizmo::LOCAL,
-			glm::value_ptr(transform), nullptr, snap ? snapValues : nullptr);
+			static_cast<ImGuizmo::OPERATION>(m_GizmoType), imguizmoMode,
+			glm::value_ptr(worldTransform), nullptr, snap ? snapValues : nullptr);
 
 		if (ImGuizmo::IsUsing())
 		{
+			// worldTransform is now the desired new world matrix.
+			// Convert back to local: local = inverse(parentWorld) * newWorld
+			glm::mat4 parentWorld = glm::mat4(1.0f);
+
+			Scene* scene = selected.GetScene();
+			if (scene)
+			{
+				Engine::EntityID id = selected;
+				const Engine::SceneNode* node = scene->GetSceneGraph().GetNode(id);
+				if (node && node->Parent != Engine::INVALID_ENTITY)
+				{
+					Entity parentEnt{ node->Parent, scene };
+					if (parentEnt)
+						parentWorld = parentEnt.GetComponent<TransformComponent>().WorldTransform;
+				}
+			}
+
+			glm::mat4 newLocal = glm::inverse(parentWorld) * worldTransform;
 			glm::vec3 translation, rotation, scale;
-			Engine::Math::DecomposeTransform(transform, translation, rotation, scale);
+			Engine::Math::DecomposeTransform(newLocal, translation, rotation, scale);
+
 			glm::vec3 deltaRotation = rotation - tc.Rotation;
-			tc.Translation  = translation;
-			tc.Rotation    += deltaRotation;
-			tc.Scale        = scale;
+			tc.Translation = translation;
+			tc.Rotation   += deltaRotation;
+			tc.Scale       = scale;
 		}
 	}
 }

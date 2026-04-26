@@ -43,6 +43,7 @@ namespace Engine
 		}
 		
 		UUID GetUUID() { return GetComponent<IDComponent>().ID; }
+		Scene* GetScene() const { return m_Scene; }
 		
 		operator bool() const { return m_EntityHandle != entt::null; }
 		operator entt::entity() const { return m_EntityHandle; }

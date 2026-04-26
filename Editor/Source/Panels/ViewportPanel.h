@@ -21,6 +21,9 @@ namespace Kairos
 		int  GetGizmoType()              const { return m_GizmoType; }
 		void SetGizmoType(int type)            { m_GizmoType = type; }
 
+		int  GetGizmoMode()              const { return m_GizmoMode; }
+		void SetGizmoMode(int mode)            { m_GizmoMode = mode; }
+
 		const glm::vec2& GetSize()       const { return m_Size; }
 		const glm::vec2* GetBounds()     const { return m_Bounds; }
 
@@ -42,5 +45,6 @@ namespace Kairos
 		glm::vec2 m_Size      = { 1280.f, 720.f };
 		glm::vec2 m_Bounds[2] = {};
 		int       m_GizmoType = -1;
+		int       m_GizmoMode = 0; // 0 = LOCAL, 1 = WORLD
 	};
 }

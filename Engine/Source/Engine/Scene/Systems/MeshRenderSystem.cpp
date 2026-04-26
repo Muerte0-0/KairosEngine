@@ -102,12 +102,12 @@ namespace Engine::MeshRenderSystem
                     meshComp.MeshRef->GetSubMeshes().empty() ? 1
                                                              : meshComp.MeshRef->GetSubMeshes().size(),
                     overrideMat);
-                renderer.SubmitMesh(meshComp.MeshRef, transformComp.GetTransform(), std::move(mats));
+                renderer.SubmitMesh(meshComp.MeshRef, transformComp.WorldTransform, std::move(mats));
             }
             else
             {
                 // Fallback: Assimp-imported materials (or empty → DrawMesh fallback white)
-                renderer.SubmitMesh(meshComp.MeshRef, transformComp.GetTransform(), meshComp.Materials);
+                renderer.SubmitMesh(meshComp.MeshRef, transformComp.WorldTransform, meshComp.Materials);
             }
         }
     }

@@ -136,7 +136,10 @@ namespace Kairos
 	void EditorLayer::OnUpdate(float DeltaTime)
 	{
 		Layer::OnUpdate(DeltaTime);
-		
+
+		// Always propagate transforms in editor so WorldTransform stays current
+		m_ActiveScene->OnUpdate(DeltaTime);
+
 		m_SceneCameraController->SetViewportFocused(m_ViewportPanel->IsFocused());
 		m_SceneCameraController->SetViewportHovered(m_ViewportPanel->IsHovered());
 		

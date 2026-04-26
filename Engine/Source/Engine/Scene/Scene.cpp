@@ -3,6 +3,7 @@
 
 #include "Components.h"
 #include "Entity.h"
+#include "SceneGraph.h"
 #include "Engine/Renderer/SceneRenderer.h"
 #include "Systems/MeshRenderSystem.h"
 
@@ -29,17 +30,57 @@ namespace Engine
 		entity.AddComponent<TransformComponent>();
 		auto& tag = entity.AddComponent<TagComponent>();
 		tag.Tag = name;
+
+		m_SceneGraph.AddEntity(static_cast<entt::entity>(entity));
 		
 		return entity;
 	}
 
 	void Scene::DestroyEntity(Entity entity)
 	{
+		m_SceneGraph.RemoveEntity(static_cast<entt::entity>(entity));
 		m_Registry.destroy(entity);
 	}
 
 	void Scene::OnUpdate(float deltaTime)
 	{
+		PropagateTransforms();
+	}
+
+	uint64_t Scene::GetParentUUID(EntityID id) const
+	{
+		const SceneNode* node = m_SceneGraph.GetNode(id);
+		if (!node || node->Parent == INVALID_ENTITY) return 0;
+
+		auto parentEntt = static_cast<entt::entity>(node->Parent);
+		if (!m_Registry.valid(parentEntt)) return 0;
+
+		const auto* parentID = m_Registry.try_get<IDComponent>(parentEntt);
+		return parentID ? static_cast<uint64_t>(parentID->ID) : 0;
+	}
+
+	void Scene::PropagateTransforms()
+	{
+		// Recursive lambda — walks SceneGraph depth-first from roots
+		auto propagate = [&](auto& self, EntityID id, const glm::mat4& parentWorld) -> void
+		{
+			SceneNode* node = m_SceneGraph.GetNode(id);
+			if (!node) return;
+
+			auto enttID = static_cast<entt::entity>(id);
+			if (!m_Registry.valid(enttID)) return;
+
+			auto* tc = m_Registry.try_get<TransformComponent>(enttID);
+			if (!tc) return;
+
+			tc->WorldTransform = parentWorld * tc->GetTransform();
+
+			for (EntityID child : node->Children)
+				self(self, child, tc->WorldTransform);
+		};
+
+		for (EntityID root : m_SceneGraph.GetRootNodes())
+			propagate(propagate, root, glm::mat4(1.0f));
 	}
 
 	void Scene::OnRender(SceneRenderer& renderer)

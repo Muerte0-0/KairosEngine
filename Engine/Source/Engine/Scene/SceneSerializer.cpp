@@ -81,12 +81,19 @@ namespace Engine
 	
 	SceneSerializer::SceneSerializer(const Ref<Scene> scene) : m_Scene(scene) {}
 	
-	static void SerializeEntity(YAML::Emitter& out, Entity entity)
+	static void SerializeEntity(YAML::Emitter& out, Entity entity, Scene* scene)
 	{
 		ASSERT(entity.HasComponent<IDComponent>(), "Entity does not have an ID Component!")
 		
 		out << YAML::BeginMap;
 		out << YAML::Key << "Entity" << YAML::Value << entity.GetUUID();
+
+		// --- Hierarchy ---
+		{
+			EntityID id = entity;
+			uint64_t parentUUID = scene->GetParentUUID(id);
+			out << YAML::Key << "ParentUUID" << YAML::Value << parentUUID;
+		}
 
 		if (entity.HasComponent<TagComponent>())
 		{
@@ -164,7 +171,7 @@ namespace Engine
 		{
 			Entity entity { entt, m_Scene.get() };
 			if (!entity) return;
-			SerializeEntity(out, entity);
+			SerializeEntity(out, entity, m_Scene.get());
 		}
 		
 		out << YAML::EndSeq;
@@ -195,75 +202,97 @@ namespace Engine
 
 		if (auto entities = data["Entities"])
 		{
-			for (auto entity : entities)
+		// --- Pass 1: create all entities ---
+		// Map UUID → entt handle for parent wiring
+		std::unordered_map<uint64_t, EntityID> uuidToEntityID;
+
+		for (auto entity : entities)
+		{
+			uint64_t uuid = entity["Entity"].as<uint64_t>();
+			std::string name;
+			if (auto tc = entity["TagComponent"]) name = tc["Tag"].as<std::string>();
+
+			LOG(LogLevel::Trace, "Deserializing Entity ID={0} name={1}", uuid, name);
+			Entity deserialized = m_Scene->CreateEntityWithUUID(uuid, name);
+			uuidToEntityID[uuid] = static_cast<EntityID>((entt::entity)deserialized);
+
+			if (auto transformNode = entity["TransformComponent"])
 			{
-				uint64_t uuid = entity["Entity"].as<uint64_t>();
-				std::string name;
-				if (auto tc = entity["TagComponent"]) name = tc["Tag"].as<std::string>();
+				auto& tc = deserialized.GetComponent<TransformComponent>();
+				tc.Translation = transformNode["Translation"].as<glm::vec3>();
+				tc.Rotation    = transformNode["Rotation"].as<glm::vec3>();
+				tc.Scale       = transformNode["Scale"].as<glm::vec3>();
+			}
 
-				LOG(LogLevel::Trace, "Deserializing Entity ID={0} name={1}", uuid, name);
-				Entity deserialized = m_Scene->CreateEntityWithUUID(uuid, name);
-
-				if (auto transformNode = entity["TransformComponent"])
+			if (auto meshNode = entity["MeshComponent"])
+			{
+				auto& mc = deserialized.AddComponent<MeshComponent>();
+				if (auto handleNode = meshNode["MeshAssetHandle"])
 				{
-					auto& tc = deserialized.GetComponent<TransformComponent>();
-					tc.Translation = transformNode["Translation"].as<glm::vec3>();
-					tc.Rotation    = transformNode["Rotation"].as<glm::vec3>();
-					tc.Scale       = transformNode["Scale"].as<glm::vec3>();
+					AssetHandle handle(handleNode.as<uint64_t>());
+					Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
+					if (mesh)
+						mc.SetMeshAsset(handle, mesh, mesh->GetMaterials());
+					else
+						LOG(LogLevel::Warning, "SceneSerializer: handle {} not resolvable — asset missing?", handleNode.as<uint64_t>());
 				}
-
-				if (auto meshNode = entity["MeshComponent"])
+				else if (auto primNode = meshNode["PrimitiveKey"])
 				{
-					auto& mc = deserialized.AddComponent<MeshComponent>();
-					if (auto handleNode = meshNode["MeshAssetHandle"])
-					{
-						AssetHandle handle(handleNode.as<uint64_t>());
-						Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
-						if (mesh)
-							mc.SetMeshAsset(handle, mesh, mesh->GetMaterials());
-						else
-							LOG(LogLevel::Warning, "SceneSerializer: handle {} not resolvable — asset missing?", handleNode.as<uint64_t>());
-					}
-					else if (auto primNode = meshNode["PrimitiveKey"])
-					{
-						std::string key = primNode.as<std::string>();
-						Ref<Mesh> mesh = PrimitiveMeshFactory::GetOrCreate(key);
-						if (mesh)
-							mc.SetPrimitiveMesh(key, mesh);
-						else
-							LOG(LogLevel::Warning, "SceneSerializer: unknown primitive key '{}'", key);
-					}
-					if (auto matHandleNode = meshNode["MaterialAssetHandle"])
-						mc.MaterialAssetHandle = AssetHandle(matHandleNode.as<uint64_t>());
-					if (auto castShadowsNode = meshNode["CastShadows"])
-						mc.CastShadows = castShadowsNode.as<bool>();
+					std::string key = primNode.as<std::string>();
+					Ref<Mesh> mesh = PrimitiveMeshFactory::GetOrCreate(key);
+					if (mesh)
+						mc.SetPrimitiveMesh(key, mesh);
+					else
+						LOG(LogLevel::Warning, "SceneSerializer: unknown primitive key '{}'", key);
 				}
+				if (auto matHandleNode = meshNode["MaterialAssetHandle"])
+					mc.MaterialAssetHandle = AssetHandle(matHandleNode.as<uint64_t>());
+				if (auto castShadowsNode = meshNode["CastShadows"])
+					mc.CastShadows = castShadowsNode.as<bool>();
+			}
 
-				if (auto lightNode = entity["LightComponent"])
+			if (auto lightNode = entity["LightComponent"])
+			{
+				auto& lc    = deserialized.AddComponent<LightComponent>();
+				lc.Type      = static_cast<LightType>(lightNode["Type"].as<int>());
+				lc.Color     = lightNode["Color"].as<glm::vec3>();
+				lc.Intensity = lightNode["Intensity"].as<float>();
+
+				if (lc.Type == LightType::Directional)
 				{
-					auto& lc    = deserialized.AddComponent<LightComponent>();
-					lc.Type      = static_cast<LightType>(lightNode["Type"].as<int>());
-					lc.Color     = lightNode["Color"].as<glm::vec3>();
-					lc.Intensity = lightNode["Intensity"].as<float>();
-
-					if (lc.Type == LightType::Directional)
-					{
-						// Direction driven by entity rotation — no fields to read.
-						// Legacy keys "Direction", "UseCustomDirection", "CustomDirection" are silently ignored.
-					}
-					else if (lc.Type == LightType::Point)
-					{
-						if (auto n = lightNode["Range"]) lc.Point.Range = n.as<float>();
-					}
-					else if (lc.Type == LightType::Spot)
-					{
-						if (auto n = lightNode["Direction"])      lc.Spot.Direction      = n.as<glm::vec3>();
-						if (auto n = lightNode["Range"])          lc.Spot.Range          = n.as<float>();
-						if (auto n = lightNode["InnerConeAngle"]) lc.Spot.InnerConeAngle = n.as<float>();
-						if (auto n = lightNode["OuterConeAngle"]) lc.Spot.OuterConeAngle = n.as<float>();
-					}
+					// Direction driven by entity rotation — no fields to read.
+				}
+				else if (lc.Type == LightType::Point)
+				{
+					if (auto n = lightNode["Range"]) lc.Point.Range = n.as<float>();
+				}
+				else if (lc.Type == LightType::Spot)
+				{
+					if (auto n = lightNode["Direction"])      lc.Spot.Direction      = n.as<glm::vec3>();
+					if (auto n = lightNode["Range"])          lc.Spot.Range          = n.as<float>();
+					if (auto n = lightNode["InnerConeAngle"]) lc.Spot.InnerConeAngle = n.as<float>();
+					if (auto n = lightNode["OuterConeAngle"]) lc.Spot.OuterConeAngle = n.as<float>();
 				}
 			}
+		}
+
+		// --- Pass 2: wire parent relationships ---
+		for (auto entity : entities)
+		{
+			uint64_t uuid       = entity["Entity"].as<uint64_t>();
+			uint64_t parentUUID = 0;
+			if (auto p = entity["ParentUUID"]) parentUUID = p.as<uint64_t>();
+
+			if (parentUUID != 0)
+			{
+				auto childIt  = uuidToEntityID.find(uuid);
+				auto parentIt = uuidToEntityID.find(parentUUID);
+				if (childIt != uuidToEntityID.end() && parentIt != uuidToEntityID.end())
+					m_Scene->GetSceneGraph().SetParent(childIt->second, parentIt->second);
+				else
+					LOG(LogLevel::Warning, "SceneSerializer: could not resolve parent {} for entity {}", parentUUID, uuid);
+			}
+		}
 		}
 		
 		return true;
