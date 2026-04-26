@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Renderer/Renderer.h"
+#include "Engine/Utils/PrimitiveMeshFactory.h"
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -209,6 +210,9 @@ namespace Engine
 
 		// Drop all loaded assets (Mesh VkBuffers held by EditorAssetManager).
 		Project::SetActive(nullptr);
+
+		// Release primitive mesh cache before device teardown.
+		PrimitiveMeshFactory::Shutdown();
 
 		// Drop default material + backend fallback textures, then destroy device.
 		Renderer::Shutdown();

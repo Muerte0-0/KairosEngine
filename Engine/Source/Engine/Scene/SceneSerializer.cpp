@@ -6,6 +6,7 @@
 #include "Engine/Assets/AssetManager.h"
 #include "Engine/Project/Project.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
+#include "Engine/Utils/PrimitiveMeshFactory.h"
 #include "Components.h"
 #include "Entity.h"
 
@@ -113,6 +114,8 @@ namespace Engine
 			auto& mc = entity.GetComponent<MeshComponent>();
 			if (mc.HasMeshAsset())
 				out << YAML::Key << "MeshAssetHandle" << YAML::Value << static_cast<uint64_t>(mc.MeshAssetHandle);
+			if (mc.IsPrimitive())
+				out << YAML::Key << "PrimitiveKey" << YAML::Value << mc.PrimitiveKey;
 			if (static_cast<uint64_t>(mc.MaterialAssetHandle) != NullAssetHandle)
 				out << YAML::Key << "MaterialAssetHandle" << YAML::Value << static_cast<uint64_t>(mc.MaterialAssetHandle);
 			out << YAML::Key << "CastShadows" << YAML::Value << mc.CastShadows;
@@ -221,11 +224,19 @@ namespace Engine
 						else
 							LOG(LogLevel::Warning, "SceneSerializer: handle {} not resolvable — asset missing?", handleNode.as<uint64_t>());
 					}
+					else if (auto primNode = meshNode["PrimitiveKey"])
+					{
+						std::string key = primNode.as<std::string>();
+						Ref<Mesh> mesh = PrimitiveMeshFactory::GetOrCreate(key);
+						if (mesh)
+							mc.SetPrimitiveMesh(key, mesh);
+						else
+							LOG(LogLevel::Warning, "SceneSerializer: unknown primitive key '{}'", key);
+					}
 					if (auto matHandleNode = meshNode["MaterialAssetHandle"])
 						mc.MaterialAssetHandle = AssetHandle(matHandleNode.as<uint64_t>());
 					if (auto castShadowsNode = meshNode["CastShadows"])
 						mc.CastShadows = castShadowsNode.as<bool>();
-					// else: default true — old scenes cast shadows
 				}
 
 				if (auto lightNode = entity["LightComponent"])

@@ -140,7 +140,7 @@ namespace Engine
 
 		if (m_Pipeline != nullptr && !m_DrawQueue.empty())
 		{
-			// Build SceneData — pack lights from submission queue
+			// Build Scene Data — pack lights from submission queue
 			SceneData sceneData{};
 			sceneData.View = m_View;
 			sceneData.Proj = m_Projection;

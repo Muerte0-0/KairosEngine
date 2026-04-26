@@ -112,6 +112,7 @@ namespace Engine
 	{
 		AssetHandle                MeshAssetHandle     = AssetHandle(NullAssetHandle);
 		AssetHandle                MaterialAssetHandle = AssetHandle(NullAssetHandle); // optional .kmat override
+		std::string                PrimitiveKey;  // non-empty when mesh is a built-in primitive
 		Ref<Mesh>                  MeshRef;
 		std::vector<Ref<Material>> Materials;     // indexed by SubMesh::MaterialIndex
 		bool                       CastShadows   = true;
@@ -123,23 +124,39 @@ namespace Engine
 				return false;
 
 			MeshAssetHandle = handle;
+			PrimitiveKey.clear();
 			MeshRef         = mesh;
 			Materials       = std::move(materials);
 			return true;
 		}
 
+		// Set a built-in primitive mesh by key (see PrimitiveKey::*).
+		bool SetPrimitiveMesh(const std::string& key, const Ref<Mesh>& mesh)
+		{
+			if (PrimitiveKey == key && MeshRef == mesh)
+				return false;
+
+			PrimitiveKey    = key;
+			MeshAssetHandle = AssetHandle(NullAssetHandle);
+			MeshRef         = mesh;
+			Materials.clear();
+			return true;
+		}
+
 		bool ClearMesh()
 		{
-			if (static_cast<uint64_t>(MeshAssetHandle) == NullAssetHandle && MeshRef == nullptr)
+			if (static_cast<uint64_t>(MeshAssetHandle) == NullAssetHandle && PrimitiveKey.empty() && MeshRef == nullptr)
 				return false;
 
 			MeshAssetHandle = AssetHandle(NullAssetHandle);
+			PrimitiveKey.clear();
 			MeshRef.reset();
 			Materials.clear();
 			return true;
 		}
 
-		bool HasMesh()      const { return MeshRef != nullptr; }
-		bool HasMeshAsset() const { return static_cast<uint64_t>(MeshAssetHandle) != NullAssetHandle; }
+		bool HasMesh()        const { return MeshRef != nullptr; }
+		bool HasMeshAsset()   const { return static_cast<uint64_t>(MeshAssetHandle) != NullAssetHandle; }
+		bool IsPrimitive()    const { return !PrimitiveKey.empty(); }
 	};
 }

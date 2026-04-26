@@ -36,20 +36,20 @@ namespace Kairos
 			// ---- Mesh Entities ----
 			if (ImGui::BeginMenu("Mesh Entity"))
 			{
-				auto CreatePrimitive = [&](const char* name, Engine::Ref<Engine::Mesh> mesh)
+				auto CreatePrimitive = [&](const char* name, const char* key)
 				{
 					Engine::Entity e = m_Context->CreateEntity(name);
 					auto& mc = e.AddComponent<Engine::MeshComponent>();
-					mc.MeshRef = mesh;
+					mc.SetPrimitiveMesh(key, Engine::PrimitiveMeshFactory::GetOrCreate(key));
 					m_SelectionContext = e;
 				};
 
 				if (ImGui::MenuItem("Cube"))
-					CreatePrimitive("Cube", Engine::PrimitiveMeshFactory::CreateCube());
+					CreatePrimitive("Cube", Engine::PrimitiveKey::Cube);
 				if (ImGui::MenuItem("Plane"))
-					CreatePrimitive("Plane", Engine::PrimitiveMeshFactory::CreatePlane());
+					CreatePrimitive("Plane", Engine::PrimitiveKey::Plane);
 				if (ImGui::MenuItem("Sphere"))
-					CreatePrimitive("Sphere", Engine::PrimitiveMeshFactory::CreateSphere());
+					CreatePrimitive("Sphere", Engine::PrimitiveKey::Sphere);
 
 				ImGui::EndMenu();
 			}

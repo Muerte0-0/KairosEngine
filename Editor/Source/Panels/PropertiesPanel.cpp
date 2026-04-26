@@ -12,18 +12,80 @@
 #include "Engine/Project/Project.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "Engine/Scene/Components.h"
+#include "Engine/Utils/PrimitiveMeshFactory.h"
 
 #include <algorithm>
 #include <cstring>
 
 namespace Kairos
 {
+	// Returns true if primitive selection changed
+	static bool DrawPrimitivePicker(Engine::MeshComponent& mc)
+	{
+		using namespace Engine;
+
+		const auto& registry = PrimitiveMeshFactory::GetRegistry();
+
+		// Find current selection index (-1 = not a primitive / "None")
+		int currentIdx = -1;
+		for (int i = 0; i < static_cast<int>(registry.size()); ++i)
+		{
+			if (mc.PrimitiveKey == registry[i].Key)
+			{
+				currentIdx = i;
+				break;
+			}
+		}
+
+		// Build preview string
+		const char* preview = (currentIdx >= 0) ? registry[currentIdx].DisplayName : "None";
+
+		bool changed = false;
+		ImGui::SetNextItemWidth(ImGui::CalcItemWidth());
+		if (ImGui::BeginCombo("##PrimitivePicker", preview))
+		{
+			// "None" option — clears primitive (leaves mesh as-is for drag-drop)
+			bool noneSelected = (currentIdx < 0);
+			if (ImGui::Selectable("None", noneSelected) && !noneSelected)
+			{
+				mc.ClearMesh();
+				changed = true;
+			}
+
+			for (int i = 0; i < static_cast<int>(registry.size()); ++i)
+			{
+				bool selected = (i == currentIdx);
+				if (ImGui::Selectable(registry[i].DisplayName, selected) && !selected)
+				{
+					Ref<Mesh> mesh = PrimitiveMeshFactory::GetOrCreate(registry[i].Key);
+					changed = mc.SetPrimitiveMesh(registry[i].Key, mesh);
+				}
+				if (selected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+		return changed;
+	}
+
 	static bool DrawMeshAssetField(Engine::MeshComponent& meshComponent)
 	{
 		using namespace Engine;
 
+		// When a primitive is set, show its name; otherwise show asset filename or "None"
 		std::string displayName = "None";
-		if (meshComponent.HasMeshAsset())
+		if (meshComponent.IsPrimitive())
+		{
+			for (const auto& entry : PrimitiveMeshFactory::GetRegistry())
+			{
+				if (meshComponent.PrimitiveKey == entry.Key)
+				{
+					displayName = entry.DisplayName;
+					break;
+				}
+			}
+		}
+		else if (meshComponent.HasMeshAsset())
 		{
 			auto editorAM = Project::GetActive()->GetEditorAssetManager();
 			const AssetMetadata* meta = editorAM->GetRegistry().Get(meshComponent.MeshAssetHandle);
@@ -360,9 +422,17 @@ namespace Kairos
 				auto& mc = entity.GetComponent<MeshComponent>();
 				ImGui::Columns(2);
 				ImGui::SetColumnWidth(0, 100.0f);
+
+				// Row 1: Primitive picker
+				ImGui::Text("Primitive");
+				ImGui::NextColumn();
+				bool changed = DrawPrimitivePicker(mc);
+				ImGui::NextColumn();
+
+				// Row 2: Asset drag-drop (only relevant when no primitive selected)
 				ImGui::Text("Asset");
 				ImGui::NextColumn();
-				DrawMeshAssetField(mc);
+				changed |= DrawMeshAssetField(mc);
 				ImGui::Columns(1);
 
 				ImGui::Checkbox("Cast Shadows", &mc.CastShadows);
