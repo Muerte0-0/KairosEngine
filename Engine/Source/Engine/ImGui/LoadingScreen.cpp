@@ -2,6 +2,7 @@
 #include "LoadingScreen.h"
 
 #include "imgui.h"
+#include <im_anim.h>
 #include <glm/glm.hpp>
 #include <cmath>
 
@@ -133,8 +134,8 @@ namespace Engine
 		const ImGuiViewport* vp  = ImGui::GetMainViewport();
 		const ImVec2 displaySize = vp->Size;
 
-		constexpr float kPanelW = 460.0f;
-		constexpr float kPanelH = 180.0f;
+		constexpr float kPanelW = 480.0f;
+		constexpr float kPanelH = 80.0f;
 
 		const ImVec2 panelPos = {
 			vp->Pos.x + (displaySize.x - kPanelW) * 0.5f,
@@ -152,7 +153,7 @@ namespace Engine
 			ImGuiWindowFlags_NoNav           |
 			ImGuiWindowFlags_NoInputs;
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 8.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
 		ImGui::Begin("##LoadingPanel", nullptr, kPanelFlags);
 		ImGui::PopStyleVar(2);
@@ -193,52 +194,90 @@ namespace Engine
 	// -----------------------------------------------------------------------
 	// LoadingScreen — status / title text
 	// -----------------------------------------------------------------------
-	void LoadingScreen::RenderStatusText(LoadingPhase phase, const std::string& statusText,
-	                                     float time, float panelAlpha)
+	void LoadingScreen::RenderStatusText(LoadingPhase phase, const std::string& statusText, float time, float panelAlpha)
 	{
-		// Title
-		const char* title = (phase == LoadingPhase::EditorStartup)
-			? "Initializing Engine"
-			: "Loading Scene";
-
-		// Pulsing alpha for title
-		const float pulse = 0.85f + 0.15f * std::sin(time * 2.5f);
-		ImGui::PushStyleColor(ImGuiCol_Text,
-			ImVec4(1.0f, 1.0f, 1.0f, panelAlpha * pulse));
-		ImGui::SetCursorPosX((ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(title).x) * 0.5f);
-		ImGui::TextUnformatted(title);
-		ImGui::PopStyleColor();
-
-		// Animated dots
-		const int dots      = (static_cast<int>(time * 2.0f) % 4);
-		const char* dotStr  = (dots == 0) ? ""   :
-		                      (dots == 1) ? "."  :
-		                      (dots == 2) ? ".." : "...";
-
-		ImGui::Spacing();
-
-		// Status sub-text (startup phase shows current step)
-		if (phase == LoadingPhase::EditorStartup && !statusText.empty())
-		{
-			const std::string sub = statusText + dotStr;
-			ImGui::PushStyleColor(ImGuiCol_Text,
-				ImVec4(0.7f, 0.7f, 0.7f, panelAlpha * 0.9f));
-			ImGui::SetCursorPosX(
-				(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(sub.c_str()).x) * 0.5f);
-			ImGui::TextUnformatted(sub.c_str());
-			ImGui::PopStyleColor();
-		}
-		else
-		{
-			const std::string sub = std::string("Loading") + dotStr;
-			ImGui::PushStyleColor(ImGuiCol_Text,
-				ImVec4(0.6f, 0.6f, 0.6f, panelAlpha * 0.8f));
-			ImGui::SetCursorPosX(
-				(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(sub.c_str()).x) * 0.5f);
-			ImGui::TextUnformatted(sub.c_str());
-			ImGui::PopStyleColor();
-		}
-
-		ImGui::Spacing();
+	    const float dt = ImGui::GetIO().DeltaTime;
+	
+	    // -----------------------------
+	    // Title
+	    // -----------------------------
+	    const char* title = (phase == LoadingPhase::EditorStartup)
+	        ? "Initializing Engine"
+	        : "Loading Scene";
+	
+	    float pulse = 0.85f + 0.15f * std::sin(time * 2.5f);
+	
+	    ImGui::PushStyleColor(ImGuiCol_Text,
+	        ImVec4(1.0f, 1.0f, 1.0f, panelAlpha * pulse));
+	
+	    ImGui::SetCursorPosX(
+	        (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(title).x) * 0.5f);
+	
+	    ImGui::TextUnformatted(title);
+	    ImGui::PopStyleColor();
+	
+	    ImGui::Spacing();
+	
+	    // -----------------------------
+	    // Base text
+	    // -----------------------------
+	    const std::string base =
+	        (phase == LoadingPhase::EditorStartup && !statusText.empty())
+	        ? statusText
+	        : "Loading";
+	
+	    const std::string preview = base + "...";
+	
+	    ImGui::PushStyleColor(ImGuiCol_Text,
+	        ImVec4(0.7f, 0.7f, 0.7f, panelAlpha * 0.9f));
+	
+	    ImGui::SetCursorPosX(
+	        (ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(preview.c_str()).x) * 0.5f);
+	
+	    ImGui::TextUnformatted(base.c_str());
+	    ImGui::SameLine(0.0f, 0.0f);
+	
+	    // -----------------------------
+	    // Animated dots (ImAnim oscillation)
+	    // -----------------------------
+	    // This creates a looping value between -1 and +1
+	    float wave = iam_oscillate(
+	        ImGui::GetID("loading_dots"),
+	        1.0f,               // amplitude
+	        1.2f,               // frequency
+	        iam_wave_sine,      // smooth wave
+	        0.0f,               // phase
+	        dt
+	    );
+	
+	    // Normalize to 0 → 1
+	    float t = (wave + 1.0f) * 0.5f;
+	
+	    for (int i = 0; i < 3; i++)
+	    {
+	        float offset = i * 0.33f;
+	
+	        float local = fmod(t + offset, 1.0f);
+	
+	        // Smooth fade curve
+	        float alpha = 0.0f;
+	        if (local < 0.5f)
+	            alpha = local * 2.0f;
+	        else
+	            alpha = 1.0f - (local - 0.5f) * 2.0f;
+	
+	        ImGui::PushStyleColor(ImGuiCol_Text,
+	            ImVec4(1.0f, 1.0f, 1.0f, panelAlpha * alpha));
+	
+	        ImGui::TextUnformatted(".");
+	        ImGui::SameLine(0.0f, 0.0f);
+	
+	        ImGui::PopStyleColor();
+	    }
+	
+	    ImGui::NewLine();
+	    ImGui::PopStyleColor();
+	
+	    ImGui::Spacing();
 	}
-} // namespace Engine
+}

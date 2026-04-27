@@ -324,9 +324,17 @@ namespace Engine
 		if (index < total)
 		{
 			const float t = static_cast<float>(index) / static_cast<float>(total);
-			LoadingSystem::SetStatusTextMainThread(
-				"Initializing editor (" + std::to_string(index) + "/" + std::to_string(total) + ")...");
-			LoadingSystem::SetStartupProgressMainThread(0.95f + 0.05f * t);
+			
+			if (total == 1)
+			{
+				LoadingSystem::SetStatusTextMainThread("Initializing editor");
+				LoadingSystem::SetStartupProgressMainThread(0.95f + 0.05f * t);
+			}
+			else
+			{
+				LoadingSystem::SetStatusTextMainThread("Initializing editor (" + std::to_string(index) + "/" + std::to_string(total) + ")");
+				LoadingSystem::SetStartupProgressMainThread(0.95f + 0.05f * t);	
+			}
 
 			if (!m_LayerAttachPrimed)
 			{

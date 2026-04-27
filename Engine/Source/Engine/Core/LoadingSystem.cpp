@@ -59,13 +59,13 @@ namespace Engine
 		// IMPORTANT: No Vulkan calls here. GPU work happens in FinalizeStartup().
 
 		// CPU-only (spawns external process if compilation is needed).
-		SetStatus("Checking shaders...");
+		SetStatus("Checking shaders");
 		Application::Get().EnsureApplicationShadersCompiled();
 		s_StartupProgress.store(0.20f);
 
 		// Keep remaining progress budget for main-thread editor initialization
 		// (project selection, asset scan, scene deserialize, layer OnAttach).
-		SetStatus("Waiting for editor initialization...");
+		SetStatus("Waiting for editor initialization");
 		
 		// Cap worker at 0.60; main thread owns 0.60 -> 1.00.
 		s_StartupProgress.store(0.60f);
@@ -80,7 +80,7 @@ namespace Engine
 		}
 		s_StartupProgress.store(0.0f);
 		s_StartupDone.store(false);
-		SetStatus("Initializing Engine...");
+		SetStatus("Initializing Engine");
 
 		// Reset main-thread startup queues
 		s_StartupScene = nullptr;
@@ -167,7 +167,7 @@ namespace Engine
 			--meshBudget;
 
 			SetStatusTextMainThread(
-				"Loading mesh assets (" + std::to_string(s_StartupMeshIndex) + "/" + std::to_string(s_StartupMeshQueue.size()) + ")...");
+				"Loading mesh assets (" + std::to_string(s_StartupMeshIndex) + "/" + std::to_string(s_StartupMeshQueue.size()) + ")");
 
 			Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle); // may import + upload (main thread only)
 			if (!mesh)
@@ -192,7 +192,7 @@ namespace Engine
 			--primBudget;
 
 			SetStatusTextMainThread(
-				"Building primitives (" + std::to_string(s_StartupPrimIndex) + "/" + std::to_string(s_StartupPrimitiveQueue.size()) + ")...");
+				"Building primitives (" + std::to_string(s_StartupPrimIndex) + "/" + std::to_string(s_StartupPrimitiveQueue.size()) + ")");
 
 			Ref<Mesh> mesh = PrimitiveMeshFactory::GetOrCreate(key);
 			if (!mesh)
@@ -229,7 +229,7 @@ namespace Engine
 
 	void LoadingSystem::FinalizeStartup()
 	{
-		ASSERT(s_StartupDone.load(), "FinalizeStartup called before startup worker finished");
+		ASSERT(s_StartupDone.load(), "FinalizeStartup called before startup worker finished")
 		if (s_StartupThread.joinable())
 			s_StartupThread.join();
 		// GPU-side init (pipeline warm-up, fallback texture upload, etc.) goes here.
@@ -317,7 +317,7 @@ namespace Engine
 			--meshBudget;
 
 			SetStatusTextMainThread(
-				"Loading mesh assets (" + std::to_string(s_SceneResolveMeshIndex) + "/" + std::to_string(s_SceneResolveMeshQueue.size()) + ")...");
+				"Loading mesh assets (" + std::to_string(s_SceneResolveMeshIndex) + "/" + std::to_string(s_SceneResolveMeshQueue.size()) + ")");
 
 			Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
 			if (!mesh)
@@ -340,7 +340,7 @@ namespace Engine
 			--primBudget;
 
 			SetStatusTextMainThread(
-				"Building primitives (" + std::to_string(s_SceneResolvePrimIndex) + "/" + std::to_string(s_SceneResolvePrimitiveQueue.size()) + ")...");
+				"Building primitives (" + std::to_string(s_SceneResolvePrimIndex) + "/" + std::to_string(s_SceneResolvePrimitiveQueue.size()) + ")");
 
 			Ref<Mesh> mesh = PrimitiveMeshFactory::GetOrCreate(key);
 			if (!mesh)
@@ -377,7 +377,7 @@ namespace Engine
 
 	Ref<Scene> LoadingSystem::FinalizeSceneLoad()
 	{
-		ASSERT(s_SceneCtx.IsDone.load(), "FinalizeSceneLoad called before scene worker finished");
+		ASSERT(s_SceneCtx.IsDone.load(), "FinalizeSceneLoad called before scene worker finished")
 		if (s_SceneThread.joinable())
 			s_SceneThread.join();
 		Ref<Scene> result = std::move(s_SceneCtx.LoadedScene);
