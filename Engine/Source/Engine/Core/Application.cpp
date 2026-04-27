@@ -167,8 +167,6 @@ namespace Engine
 
 	void Application::Initialize()
 	{		
-		EnsureApplicationShadersCompiled();
-
 		glfwSetErrorCallback(GLFWErrorCallback);
 		glfwInit();
 
@@ -198,9 +196,6 @@ namespace Engine
 		m_LoadingPhase = LoadingPhase::EditorStartup;
 		m_LoadingScreen.OnLoadingStarted();
 		LoadingSystem::StartStartupLoading();
-		
-		for (auto& layer : m_LayerStack)
-			layer->OnAttach();
 	}
 
 	void Application::Shutdown()
@@ -233,6 +228,9 @@ namespace Engine
 		m_EngineState  = EngineState::Loading;
 		m_LoadingPhase = LoadingPhase::SceneTransition;
 		m_LoadingScreen.OnLoadingStarted();
+		m_PendingSceneTransition = nullptr;
+		m_SceneTransitionResolveStarted = false;
+		m_SceneTransitionPrimed = false;
 		LoadingSystem::LoadSceneAsync(path);
 	}
 
@@ -244,28 +242,108 @@ namespace Engine
 		{
 			if (LoadingSystem::IsStartupDone())
 			{
-				m_LoadingScreen.OnLoadingFinished();
-				if (!m_LoadingScreen.IsFadingOut())
+				// NOTE: Some layers perform heavy CPU work in OnAttach (project open,
+				// asset scan, scene deserialize). Defer that work until after first
+				// frames so loading screen can present immediately.
+				AttachLayersDuringLoading();
+
+				if (m_LayersAttached)
 				{
-					LoadingSystem::FinalizeStartup();
-					m_EngineState = EngineState::Running;
+					// Incrementally resolve scene assets (imports + GPU uploads) on main thread
+					// so loading UI keeps rendering.
+					const bool assetsDone = LoadingSystem::PumpStartupMainThreadWork(1, 1);
+					if (assetsDone)
+					{
+						LoadingSystem::SetStatusTextMainThread("Ready.");
+						LoadingSystem::SetStartupProgressMainThread(1.0f);
+
+						m_LoadingScreen.OnLoadingFinished();
+						if (!m_LoadingScreen.IsFadingOut())
+						{
+							LoadingSystem::FinalizeStartup();
+							m_EngineState = EngineState::Running;
+						}
+					}
 				}
 			}
 		}
 		else if (m_LoadingPhase == LoadingPhase::SceneTransition)
 		{
-			if (LoadingSystem::IsSceneLoadDone())
+			if (!m_SceneTransitionResolveStarted && LoadingSystem::IsSceneLoadDone())
 			{
-				m_LoadingScreen.OnLoadingFinished();
-				if (!m_LoadingScreen.IsFadingOut())
+				// Join worker + capture scene. Asset resolve happens incrementally on main thread.
+				m_PendingSceneTransition = LoadingSystem::FinalizeSceneLoad();
+				LoadingSystem::StartSceneTransitionResolve(m_PendingSceneTransition);
+				m_SceneTransitionResolveStarted = true;
+
+				LoadingSystem::SetStatusTextMainThread("Resolving scene assets...");
+				if (!m_SceneTransitionPrimed)
 				{
-					// Deliver loaded scene to all layers that care.
-					Ref<Scene> newScene = LoadingSystem::FinalizeSceneLoad();
-					for (auto& layer : m_LayerStack)
-						layer->OnSceneLoaded(newScene);
-					m_EngineState = EngineState::Running;
+					m_SceneTransitionPrimed = true;
+					return; // let UI render status once before first blocking import
 				}
 			}
+
+			if (m_SceneTransitionResolveStarted)
+			{
+				const bool done = LoadingSystem::PumpSceneTransitionMainThreadWork(1, 1);
+				if (done)
+				{
+					m_LoadingScreen.OnLoadingFinished();
+					if (!m_LoadingScreen.IsFadingOut())
+					{
+						for (auto& layer : m_LayerStack)
+							layer->OnSceneLoaded(m_PendingSceneTransition);
+						m_PendingSceneTransition = nullptr;
+						m_EngineState = EngineState::Running;
+					}
+				}
+			}
+		}
+	}
+
+	void Application::AttachLayersDuringLoading()
+	{
+		if (m_LayersAttached)
+			return;
+
+		const size_t total = m_LayerStack.size();
+		if (total == 0)
+		{
+			m_LayersAttached = true;
+			return;
+		}
+
+		// Two-phase attach:
+		// - frame N: publish status/progress so UI can render it
+		// - frame N+1: run potentially blocking OnAttach()
+		//
+		// This avoids the "stuck at old status then jump" feel when OnAttach
+		// does heavy synchronous work (project open, asset scan, scene load).
+		const size_t index = m_NextLayerToAttach;
+		if (index < total)
+		{
+			const float t = static_cast<float>(index) / static_cast<float>(total);
+			LoadingSystem::SetStatusTextMainThread(
+				"Initializing editor (" + std::to_string(index) + "/" + std::to_string(total) + ")...");
+			LoadingSystem::SetStartupProgressMainThread(0.95f + 0.05f * t);
+
+			if (!m_LayerAttachPrimed)
+			{
+				m_LayerAttachPrimed = true;
+				return;
+			}
+
+			m_LayerAttachPrimed = false;
+			m_LayerStack[index]->OnAttach();
+			++m_NextLayerToAttach;
+		}
+
+		if (m_NextLayerToAttach >= total)
+		{
+			LoadingSystem::SetStatusTextMainThread("Ready.");
+			LoadingSystem::SetStartupProgressMainThread(1.0f);
+			m_LayersAttached = true;
 		}
 	}
 
@@ -275,7 +353,7 @@ namespace Engine
 			? LoadingSystem::GetStartupProgress()
 			: LoadingSystem::GetSceneLoadProgress();
 
-		const std::string& status = (m_LoadingPhase == LoadingPhase::EditorStartup)
+		const std::string status = (m_LoadingPhase == LoadingPhase::EditorStartup)
 			? LoadingSystem::GetCurrentStatusText()
 			: std::string{};
 

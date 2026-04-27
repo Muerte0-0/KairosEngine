@@ -3,6 +3,7 @@
 #include "AssetImporter.h"
 #include "AssetSerializer.h"
 #include "Engine/Project/Project.h"
+#include "Engine/Core/LoadingSystem.h"
 
 namespace Engine
 {
@@ -25,6 +26,9 @@ namespace Engine
 			return;
 
 		const std::filesystem::path& assetDir = Project::GetAssetDirectory();
+
+		LoadingSystem::SetStatusTextMainThread("Scanning assets: loading metadata...");
+		LoadingSystem::SetStartupProgressMainThread(0.70f);
 
 		// ------------------------------------------------------------------
 		// Pass 1: load existing .kasset files
@@ -67,9 +71,13 @@ namespace Engine
 			}
 
 			++loaded;
+			if ((loaded % 100) == 0)
+				LoadingSystem::SetStatusTextMainThread("Scanning assets: loaded " + std::to_string(loaded) + " metadata...");
 		}
 
 		LOG(LogLevel::Info, "EditorAssetManager: loaded {} Asset(s).", loaded);
+		LoadingSystem::SetStatusTextMainThread("Scanning assets: validating sources...");
+		LoadingSystem::SetStartupProgressMainThread(0.78f);
 
 		// ------------------------------------------------------------------
 		// find source files with no Metadata, create the Metadata
@@ -116,10 +124,15 @@ namespace Engine
 
 			LOG(LogLevel::Info, "EditorAssetManager: Created Metadata for '{}' (handle {}).",
 				relative.string(), static_cast<uint64_t>(written.Handle));
+			if ((created % 25) == 0)
+				LoadingSystem::SetStatusTextMainThread("Scanning assets: created " + std::to_string(created) + " metadata...");
 		}
 
 		if (created > 0)
 			LOG(LogLevel::Info, "EditorAssetManager: Auto-Created {} Metadata file(s).", created);
+
+		LoadingSystem::SetStatusTextMainThread("Scanning assets: done (" + std::to_string(loaded) + " loaded, " + std::to_string(created) + " created).");
+		LoadingSystem::SetStartupProgressMainThread(0.82f);
 	}
 
 	// -----------------------------------------------------------------------

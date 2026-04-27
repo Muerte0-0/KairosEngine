@@ -13,6 +13,7 @@
 
 #include "ImGuizmo.h"
 #include "Windows/MaterialEditorWindow.h"
+#include "Engine/Core/LoadingSystem.h"
 
 constexpr const char* KPROJ_FILTER = "Kairos Project\0*.kproj\0\0";
 
@@ -28,7 +29,9 @@ namespace Kairos
 		m_SceneCameraController = CreateScope<SceneCameraController>(*m_SceneCamera);
 		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
 		m_CameraManager.SetMode(CameraManagerMode::Editor);
-		
+
+		LoadingSystem::SetStatusTextMainThread("Select project...");
+		LoadingSystem::SetStartupProgressMainThread(0.60f);
 		OpenProject();
 		
 		m_SceneHierarchyPanel->SetContext(m_ActiveScene);
@@ -598,6 +601,8 @@ namespace Kairos
 
 	void EditorLayer::OpenProject()
 	{
+		LoadingSystem::SetStatusTextMainThread("Opening project...");
+		LoadingSystem::SetStartupProgressMainThread(0.62f);
 		auto projectPath = PlatformUtils::OpenFileDialog(KPROJ_FILTER);
 		
 		if (projectPath.empty())
@@ -608,10 +613,14 @@ namespace Kairos
 		
 		if (Project::Load(projectPath))
 		{
+			LoadingSystem::SetStatusTextMainThread("Scanning assets...");
+			LoadingSystem::SetStartupProgressMainThread(0.65f);
 			auto am= CreateRef<EditorAssetManager>();
 			Project::GetActive()->SetAssetManager(am);
 			
 			auto startScenePath = Project::GetAssetPath(Project::GetActive()->GetConfig().StartupScene);
+			LoadingSystem::SetStatusTextMainThread("Deserializing startup scene...");
+			LoadingSystem::SetStartupProgressMainThread(0.85f);
 			OpenScene(startScenePath);
 			
 			m_SceneHierarchyPanel = CreateScope<SceneHierarchyPanel>();
@@ -650,6 +659,7 @@ namespace Kairos
 	
 	void EditorLayer::OpenScene(const std::filesystem::path& filepath)
 	{
+		LoadingSystem::SetStatusTextMainThread("Loading scene (deserialize + assets): " + filepath.stem().string() + "...");
 		// Clear previous scene — reset registry by replacing with a fresh instance
 		m_ActiveScene = CreateRef<Scene>();
 		if (m_SceneHierarchyPanel)
@@ -660,6 +670,8 @@ namespace Kairos
 		{
 			m_ActiveScenePath = filepath;
 			m_ActiveScene->SetName(filepath.stem().string());
+			// Allow incremental startup pump to resolve scene asset handles to live GPU resources.
+			LoadingSystem::SetStartupScene(m_ActiveScene);
 		}
 	}
 	

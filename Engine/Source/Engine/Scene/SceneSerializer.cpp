@@ -7,6 +7,7 @@
 #include "Engine/Project/Project.h"
 #include "Engine/Renderer/RHI/Resources/Mesh.h"
 #include "Engine/Utils/PrimitiveMeshFactory.h"
+#include "Engine/Core/LoadingSystem.h"
 #include "Components.h"
 #include "Entity.h"
 
@@ -232,20 +233,17 @@ namespace Engine
 				if (auto handleNode = meshNode["MeshAssetHandle"])
 				{
 					AssetHandle handle(handleNode.as<uint64_t>());
-					Ref<Mesh> mesh = AssetManager::GetAsset<Mesh>(handle);
-					if (mesh)
-						mc.SetMeshAsset(handle, mesh, mesh->GetMaterials());
-					else
-						LOG(LogLevel::Warning, "SceneSerializer: handle {} not resolvable — asset missing?", handleNode.as<uint64_t>());
+					// Defer asset import + GPU upload to main thread incremental startup pump
+					// so loading screen can keep updating.
+					mc.MeshAssetHandle = handle;
+					LoadingSystem::EnqueueStartupMeshAsset(handle);
 				}
 				else if (auto primNode = meshNode["PrimitiveKey"])
 				{
 					std::string key = primNode.as<std::string>();
-					Ref<Mesh> mesh = PrimitiveMeshFactory::GetOrCreate(key);
-					if (mesh)
-						mc.SetPrimitiveMesh(key, mesh);
-					else
-						LOG(LogLevel::Warning, "SceneSerializer: unknown primitive key '{}'", key);
+					// Primitive meshes also upload on creation; defer to startup pump.
+					mc.PrimitiveKey = key;
+					LoadingSystem::EnqueueStartupPrimitive(key);
 				}
 				if (auto matHandleNode = meshNode["MaterialAssetHandle"])
 					mc.MaterialAssetHandle = AssetHandle(matHandleNode.as<uint64_t>());

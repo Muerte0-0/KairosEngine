@@ -84,6 +84,7 @@ namespace Engine
 		void EnsureApplicationShadersCompiled() const;
 		void RenderLoadingScreen();
 		void TickLoadingState(float deltaTime);
+		void AttachLayersDuringLoading();
 		
 		Ref<Window> m_Window;
 
@@ -96,8 +97,21 @@ namespace Engine
 		LoadingScreen m_LoadingScreen;
 		
 		bool m_IsMinimized = false;
+
+		// Deferred layer attach so first loading frames can render.
+		bool   m_LayersAttached     = false;
+		size_t m_NextLayerToAttach  = 0;
+		bool   m_LayerAttachPrimed  = false;
+
+		// Scene transition: keep scene in loading until assets resolved.
+		Ref<Scene> m_PendingSceneTransition{ nullptr };
+		bool       m_SceneTransitionResolveStarted = false;
+		bool       m_SceneTransitionPrimed = false;
 		
 		friend class Layer;
+		// Allow loading worker to trigger CPU-only shader compilation without
+		// exposing this startup detail on the public API.
+		friend class LoadingSystem;
 	};
 	
 	Application* CreateApplication(int argc, char** argv);
