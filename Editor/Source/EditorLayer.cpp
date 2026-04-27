@@ -16,64 +16,6 @@
 
 constexpr const char* KPROJ_FILTER = "Kairos Project\0*.kproj\0\0";
 
-namespace
-{
-	Ref<Mesh> CreateDefaultCubeMesh()
-	{
-		// Per-face normals for a unit cube.
-		// Vertex layout: Position, Normal, Tangent, Bitangent, TexCoord
-		// matching Kairos::Vertex / GetVertexLayout() exactly.
-		std::vector<Vertex> vertices = {
-			// +Z face (front) — normal  0, 0, 1
-			{ { -0.5f, -0.5f,  0.5f }, {  0.f,  0.f,  1.f }, {  1.f,  0.f,  0.f }, {  0.f,  1.f,  0.f }, { 0.f, 0.f } },
-			{ {  0.5f, -0.5f,  0.5f }, {  0.f,  0.f,  1.f }, {  1.f,  0.f,  0.f }, {  0.f,  1.f,  0.f }, { 1.f, 0.f } },
-			{ {  0.5f,  0.5f,  0.5f }, {  0.f,  0.f,  1.f }, {  1.f,  0.f,  0.f }, {  0.f,  1.f,  0.f }, { 1.f, 1.f } },
-			{ { -0.5f,  0.5f,  0.5f }, {  0.f,  0.f,  1.f }, {  1.f,  0.f,  0.f }, {  0.f,  1.f,  0.f }, { 0.f, 1.f } },
-
-			// -Z face (back) — normal  0, 0,-1
-			{ {  0.5f, -0.5f, -0.5f }, {  0.f,  0.f, -1.f }, { -1.f,  0.f,  0.f }, {  0.f,  1.f,  0.f }, { 0.f, 0.f } },
-			{ { -0.5f, -0.5f, -0.5f }, {  0.f,  0.f, -1.f }, { -1.f,  0.f,  0.f }, {  0.f,  1.f,  0.f }, { 1.f, 0.f } },
-			{ { -0.5f,  0.5f, -0.5f }, {  0.f,  0.f, -1.f }, { -1.f,  0.f,  0.f }, {  0.f,  1.f,  0.f }, { 1.f, 1.f } },
-			{ {  0.5f,  0.5f, -0.5f }, {  0.f,  0.f, -1.f }, { -1.f,  0.f,  0.f }, {  0.f,  1.f,  0.f }, { 0.f, 1.f } },
-
-			// -X face (left) — normal -1, 0, 0
-			{ { -0.5f, -0.5f, -0.5f }, { -1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, {  0.f,  1.f,  0.f }, { 0.f, 0.f } },
-			{ { -0.5f, -0.5f,  0.5f }, { -1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, {  0.f,  1.f,  0.f }, { 1.f, 0.f } },
-			{ { -0.5f,  0.5f,  0.5f }, { -1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, {  0.f,  1.f,  0.f }, { 1.f, 1.f } },
-			{ { -0.5f,  0.5f, -0.5f }, { -1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, {  0.f,  1.f,  0.f }, { 0.f, 1.f } },
-
-			// +X face (right) — normal  1, 0, 0
-			{ {  0.5f, -0.5f,  0.5f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f, -1.f }, {  0.f,  1.f,  0.f }, { 0.f, 0.f } },
-			{ {  0.5f, -0.5f, -0.5f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f, -1.f }, {  0.f,  1.f,  0.f }, { 1.f, 0.f } },
-			{ {  0.5f,  0.5f, -0.5f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f, -1.f }, {  0.f,  1.f,  0.f }, { 1.f, 1.f } },
-			{ {  0.5f,  0.5f,  0.5f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f, -1.f }, {  0.f,  1.f,  0.f }, { 0.f, 1.f } },
-
-			// +Y face (top) — normal  0, 1, 0
-			{ { -0.5f,  0.5f,  0.5f }, {  0.f,  1.f,  0.f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f, -1.f }, { 0.f, 0.f } },
-			{ {  0.5f,  0.5f,  0.5f }, {  0.f,  1.f,  0.f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f, -1.f }, { 1.f, 0.f } },
-			{ {  0.5f,  0.5f, -0.5f }, {  0.f,  1.f,  0.f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f, -1.f }, { 1.f, 1.f } },
-			{ { -0.5f,  0.5f, -0.5f }, {  0.f,  1.f,  0.f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f, -1.f }, { 0.f, 1.f } },
-
-			// -Y face (bottom) — normal  0,-1, 0
-			{ { -0.5f, -0.5f, -0.5f }, {  0.f, -1.f,  0.f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, { 0.f, 0.f } },
-			{ {  0.5f, -0.5f, -0.5f }, {  0.f, -1.f,  0.f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, { 1.f, 0.f } },
-			{ {  0.5f, -0.5f,  0.5f }, {  0.f, -1.f,  0.f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, { 1.f, 1.f } },
-			{ { -0.5f, -0.5f,  0.5f }, {  0.f, -1.f,  0.f }, {  1.f,  0.f,  0.f }, {  0.f,  0.f,  1.f }, { 0.f, 1.f } },
-		};
-
-		std::vector<uint32_t> indices = {
-			 0,  1,  2,   2,  3,  0,   // +Z
-			 4,  5,  6,   6,  7,  4,   // -Z
-			 8,  9, 10,  10, 11,  8,   // -X
-			12, 13, 14,  14, 15, 12,   // +X
-			16, 17, 18,  18, 19, 16,   // +Y
-			20, 21, 22,  22, 23, 20,   // -Y
-		};
-
-		return Mesh::Create(std::move(vertices), std::move(indices));
-	}
-}
-
 namespace Kairos
 {
 	void EditorLayer::OnAttach()
@@ -97,7 +39,8 @@ namespace Kairos
 
 		m_ViewportPanel->OnSceneDrop = [this](const std::filesystem::path& path)
 		{
-			OpenScene(path);
+			m_ActiveScenePath = path;
+			Application::Get().RequestSceneChange(path.string());
 		};
 
 		m_ViewportPanel->OnMeshDrop = [this](const std::filesystem::path& path)
@@ -235,7 +178,7 @@ namespace Kairos
 		// Show scene name as text inside the window
 		std::string sceneName = m_ActiveScenePath.empty()
 			? "Untitled"
-			: m_ActiveScenePath.stem().string();
+			: m_ActiveScene->GetName();
 		ImGui::TextDisabled("Scene: %s", sceneName.c_str());
 		ImGui::Separator();
 
@@ -467,10 +410,11 @@ namespace Kairos
 
 	void EditorLayer::OpenAssetEditor(const std::filesystem::path& path)
 	{
-		// Scene — load directly, no tab
+		// Scene — load async, no tab
 		if (path.extension() == ".kscn")
 		{
-			OpenScene(path);
+			m_ActiveScenePath = path;
+			Application::Get().RequestSceneChange(path.string());
 			return;
 		}
 
@@ -695,6 +639,13 @@ namespace Kairos
 
 	void EditorLayer::SaveProject()
 	{
+	}
+
+	void EditorLayer::OnSceneLoaded(const Ref<Scene>& scene)
+	{
+		m_ActiveScene = scene;
+		if (m_SceneHierarchyPanel)
+			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
 	
 	void EditorLayer::OpenScene(const std::filesystem::path& filepath)

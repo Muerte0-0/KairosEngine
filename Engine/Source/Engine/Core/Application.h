@@ -3,8 +3,11 @@
 
 #include "Layer.h"
 #include "Window.h"
+#include "EngineState.h"
+#include "LoadingSystem.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Events/WindowEvents.h"
+#include "Engine/ImGui/LoadingScreen.h"
 
 #include <filesystem>
 #include <glm/glm.hpp>
@@ -38,6 +41,13 @@ namespace Engine
 		void Stop();
 		
 		void RaiseEvent(Event& event);
+
+		// Loading system integration
+		// Call to trigger an async scene transition (sets state to Loading).
+		void RequestSceneChange(const std::string& path);
+
+		EngineState   GetEngineState()    const { return m_EngineState; }
+		LoadingPhase  GetLoadingPhase()   const { return m_LoadingPhase; }
 		
 		template<typename TLayer>
 		requires(std::is_base_of_v<Layer, TLayer>)
@@ -72,11 +82,18 @@ namespace Engine
 
 	private:
 		void EnsureApplicationShadersCompiled() const;
+		void RenderLoadingScreen();
+		void TickLoadingState(float deltaTime);
 		
 		Ref<Window> m_Window;
 
 		std::vector<Scope<Layer>> m_LayerStack;
 		Scope<ImGuiLayer> m_ImGuiLayer;
+
+		// Engine state
+		EngineState  m_EngineState  = EngineState::Loading;
+		LoadingPhase m_LoadingPhase = LoadingPhase::EditorStartup;
+		LoadingScreen m_LoadingScreen;
 		
 		bool m_IsMinimized = false;
 		

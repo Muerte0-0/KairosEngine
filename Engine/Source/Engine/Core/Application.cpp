@@ -1,5 +1,6 @@
 ﻿#include "kepch.h"
 #include "Application.h"
+#include "Engine/Core/LoadingSystem.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Utils/PrimitiveMeshFactory.h"
@@ -165,7 +166,7 @@ namespace Engine
 	}
 
 	void Application::Initialize()
-	{
+	{		
 		EnsureApplicationShadersCompiled();
 
 		glfwSetErrorCallback(GLFWErrorCallback);
@@ -176,6 +177,12 @@ namespace Engine
 
 		m_Window = CreateRef<Window>(spec);
 		m_Window->Create();
+		
+		// Kick async startup loading — engine starts in Loading state.
+		m_EngineState  = EngineState::Loading;
+		m_LoadingPhase = LoadingPhase::EditorStartup;
+		m_LoadingScreen.OnLoadingStarted();
+		LoadingSystem::StartStartupLoading();
 
 		// Resolve shader directory relative to the workspace root when the
 		// configured path is relative.
@@ -188,7 +195,7 @@ namespace Engine
 		shaderDirectory /= "Compiled";
 
 		Renderer::Init(API::Vulkan, m_Window->GetHandle(), shaderDirectory);
-
+		
 		for (auto& layer : m_LayerStack)
 			layer->OnAttach();
 
@@ -221,6 +228,60 @@ namespace Engine
 		glfwTerminate();
 	}
 
+	void Application::RequestSceneChange(const std::string& path)
+	{
+		m_EngineState  = EngineState::Loading;
+		m_LoadingPhase = LoadingPhase::SceneTransition;
+		m_LoadingScreen.OnLoadingStarted();
+		LoadingSystem::LoadSceneAsync(path);
+	}
+
+	void Application::TickLoadingState(float deltaTime)
+	{
+		m_LoadingScreen.Update(deltaTime);
+
+		if (m_LoadingPhase == LoadingPhase::EditorStartup)
+		{
+			if (LoadingSystem::IsStartupDone())
+			{
+				m_LoadingScreen.OnLoadingFinished();
+				if (!m_LoadingScreen.IsFadingOut())
+				{
+					LoadingSystem::FinalizeStartup();
+					m_EngineState = EngineState::Running;
+				}
+			}
+		}
+		else if (m_LoadingPhase == LoadingPhase::SceneTransition)
+		{
+			if (LoadingSystem::IsSceneLoadDone())
+			{
+				m_LoadingScreen.OnLoadingFinished();
+				if (!m_LoadingScreen.IsFadingOut())
+				{
+					// Deliver loaded scene to all layers that care.
+					Ref<Scene> newScene = LoadingSystem::FinalizeSceneLoad();
+					for (auto& layer : m_LayerStack)
+						layer->OnSceneLoaded(newScene);
+					m_EngineState = EngineState::Running;
+				}
+			}
+		}
+	}
+
+	void Application::RenderLoadingScreen()
+	{
+		const float progress   = (m_LoadingPhase == LoadingPhase::EditorStartup)
+			? LoadingSystem::GetStartupProgress()
+			: LoadingSystem::GetSceneLoadProgress();
+
+		const std::string& status = (m_LoadingPhase == LoadingPhase::EditorStartup)
+			? LoadingSystem::GetCurrentStatusText()
+			: std::string{};
+
+		m_LoadingScreen.Render(m_LoadingPhase, progress, status);
+	}
+
 	void Application::Run()
 	{
 		g_ApplicationRunning = true;
@@ -250,8 +311,11 @@ namespace Engine
 				if (!m_IsMinimized)
 				{
 					m_ImGuiLayer->OnFixedUpdate(FIXED_FRAME_TIME);
-					for (const auto& layer : m_LayerStack)
-						layer->OnFixedUpdate(FIXED_FRAME_TIME);
+					if (m_EngineState == EngineState::Running)
+					{
+						for (const auto& layer : m_LayerStack)
+							layer->OnFixedUpdate(FIXED_FRAME_TIME);
+					}
 				}
 				accumulator -= FIXED_FRAME_TIME;
 			}
@@ -260,22 +324,41 @@ namespace Engine
 			if (!m_IsMinimized)
 			{
 				m_ImGuiLayer->OnUpdate(deltaTime);
-				for (const auto& layer : m_LayerStack)
-					layer->OnUpdate(deltaTime);
+
+				if (m_EngineState == EngineState::Running)
+				{
+					for (const auto& layer : m_LayerStack)
+						layer->OnUpdate(deltaTime);
+				}
+				else
+				{
+					TickLoadingState(deltaTime);
+				}
 
 				Renderer::BeginScene();
 
-				for (const auto& layer : m_LayerStack)
-					layer->OnRender();
+				if (m_EngineState == EngineState::Running)
+				{
+					for (const auto& layer : m_LayerStack)
+						layer->OnRender();
+				}
 				m_ImGuiLayer->OnRender();
 
 				m_ImGuiLayer->Begin(deltaTime);
 
 				Renderer::DrawFrame();
 
-				m_ImGuiLayer->OnImGuiRender();
-				for (const auto& layer : m_LayerStack)
-					layer->OnImGuiRender();
+				if (m_EngineState == EngineState::Running)
+				{
+					m_ImGuiLayer->OnImGuiRender();
+					for (const auto& layer : m_LayerStack)
+						layer->OnImGuiRender();
+				}
+				else
+				{
+					// Render loading screen on top; suppress editor UI.
+					RenderLoadingScreen();
+				}
 
 				m_ImGuiLayer->End();
 				Renderer::EndScene();
@@ -302,6 +385,10 @@ namespace Engine
 
 		m_ImGuiLayer->OnEvent(event);
 		if (event.Handled)
+			return;
+
+		// Suppress all layer input while loading.
+		if (m_EngineState == EngineState::Loading)
 			return;
 
 		for (auto& layer : views::reverse(m_LayerStack))

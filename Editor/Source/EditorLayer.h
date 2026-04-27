@@ -30,6 +30,9 @@ namespace Kairos
 		void OnImGuiRender() override;
 
 		void OnEvent(Engine::Event& event) override;
+
+		// Receives a newly loaded scene from the Application after async transition.
+		void OnSceneLoaded(const Ref<Scene>& scene) override;
 	private:
 		Ref<Scene> m_ActiveScene;
 		std::filesystem::path m_ActiveScenePath;

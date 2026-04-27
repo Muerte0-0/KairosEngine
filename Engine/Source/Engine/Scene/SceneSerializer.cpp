@@ -164,7 +164,7 @@ namespace Engine
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap; 
-		out << YAML::Key << "Scene"    << YAML::Value << "Untitled Scene"; 
+		out << YAML::Key << "Scene"    << YAML::Value << m_Scene->GetName(); 
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		
 		for (auto entt : std::views::reverse(m_Scene->m_Registry.view<entt::entity>()))
@@ -198,7 +198,9 @@ namespace Engine
 		
 		if (!data["Scene"]) return false;
 
-		LOG(LogLevel::Trace, "Deserializing scene '{0}'", data["Scene"].as<std::string>());
+		m_Scene->SetName(data["Scene"].as<std::string>());
+		
+		LOG(LogLevel::Trace, "Deserializing scene '{0}'", m_Scene->GetName());
 
 		if (auto entities = data["Entities"])
 		{
