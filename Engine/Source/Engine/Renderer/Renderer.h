@@ -16,6 +16,8 @@ namespace Engine
 
 		static void WindowResized();
 
+		static bool IsFrameValid();
+		
 		static ShaderLibrary* GetShaderLibrary();
 
 		static RenderAPI* GetAPI() { return s_API.get(); }

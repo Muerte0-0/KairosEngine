@@ -59,8 +59,12 @@ namespace Engine
 		virtual void ReleaseStaticResources() = 0;
 
 		virtual API GetType() = 0;
-
+		virtual bool IsFrameValid() { return m_FrameValid; }
+		
 		// Material factory — implemented by each backend.
 		virtual Ref<Material> CreateMaterial() = 0;
+		
+	protected:
+		bool m_FrameValid = true;
 	};
 }

@@ -102,7 +102,6 @@ namespace Engine
 
 		uint32_t m_CurrentImageIndex = 0;
 		uint32_t m_CurrentFrameIndex = 0;
-		bool     m_FrameValid        = true;
 		bool     m_SwapchainDirty    = false;
 		bool     m_OffscreenPassActive = false;
 		VulkanFramebuffer* m_ActiveFramebuffer = nullptr;
