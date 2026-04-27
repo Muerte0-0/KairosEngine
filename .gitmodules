@@ -28,3 +28,7 @@
 	path = Vendor/ocornut/Extensions/ImNodeFlow
 	url = https://github.com/Muerte0-0/ImNodeFlow-premake.git
 	branch = master
+[submodule "Vendor/ocornut/Extensions/ImAnim"]
+	path = Vendor/ocornut/Extensions/ImAnim
+	url = https://github.com/soufianekhiat/ImAnim.git
+	branch = main

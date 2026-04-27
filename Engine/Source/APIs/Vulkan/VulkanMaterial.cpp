@@ -34,7 +34,7 @@ namespace Engine
         {
             constexpr uint8_t px[4] = { 255, 255, 255, 255 };
             TextureSpecification spec; spec.Width = 1; spec.Height = 1;
-            s_FallbackAlbedo = CreateRef<VulkanTexture>(px, sizeof(px), spec);
+            s_FallbackAlbedo = CreateRef<VulkanTexture>(px, static_cast<uint32_t>(sizeof(px)), spec);
         }
         return s_FallbackAlbedo;
     }
@@ -45,7 +45,7 @@ namespace Engine
         {
             constexpr uint8_t px[4] = { 128, 128, 255, 255 };
             TextureSpecification spec; spec.Width = 1; spec.Height = 1;
-            s_FallbackNormal = CreateRef<VulkanTexture>(px, sizeof(px), spec);
+            s_FallbackNormal = CreateRef<VulkanTexture>(px, static_cast<uint32_t>(sizeof(px)), spec);
         }
         return s_FallbackNormal;
     }
@@ -56,7 +56,7 @@ namespace Engine
         {
             constexpr uint8_t px[4] = { 0, 0, 0, 255 };
             TextureSpecification spec; spec.Width = 1; spec.Height = 1;
-            s_FallbackBlack = CreateRef<VulkanTexture>(px, sizeof(px), spec);
+            s_FallbackBlack = CreateRef<VulkanTexture>(px, static_cast<uint32_t>(sizeof(px)), spec);
         }
         return s_FallbackBlack;
     }
@@ -70,7 +70,7 @@ namespace Engine
         {
             constexpr uint8_t px[4] = { 0, 255, 0, 255 };   // G=255→rough=1, B=0→metal=0
             TextureSpecification spec; spec.Width = 1; spec.Height = 1;
-            s_FallbackMetallicRough = CreateRef<VulkanTexture>(px, sizeof(px), spec);
+            s_FallbackMetallicRough = CreateRef<VulkanTexture>(px, static_cast<uint32_t>(sizeof(px)), spec);
         }
         return s_FallbackMetallicRough;
     }

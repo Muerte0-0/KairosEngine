@@ -14,13 +14,13 @@ pchsource "Source/kepch.cpp"
 filter {}
     enablepch "on"
 
--- Disable PCH for C files
+-- Disable PCH for C Files
 filter "files:**.c"
     enablepch "off"
     compileas "C"
 
--- Disable PCH for ImGuizmo
-filter "files:**/Vendor/ocornut/ImGuizmo/*.cpp"
+-- Disable PCH for Third Party CPP Files
+filter "files:**/Vendor/**.cpp"
     enablepch "off"
 
 filter {}
@@ -45,6 +45,10 @@ files {
 	-- ImGuizmo
 	"%{wks.location}/Vendor/ocornut/ImGuizmo/*.cpp",
 	"%{wks.location}/Vendor/ocornut/ImGuizmo/*.h",
+	
+	-- ImAnim
+	"%{wks.location}/Vendor/ocornut/Extensions/ImAnim/im_anim.cpp",
+	"%{wks.location}/Vendor/ocornut/Extensions/ImAnim/im_anim.h",
 }
 
 includedirs {
@@ -54,6 +58,7 @@ includedirs {
 	"%{IncludeDir.Vulkan}",
 	"%{IncludeDir.ImGui}",
 	"%{IncludeDir.ImGuizmo}",
+	"%{IncludeDir.ImAnim}",
 	"%{IncludeDir.GLM}",
 	"%{IncludeDir.stb_image}",
 	"%{IncludeDir.EnTT}",

@@ -269,7 +269,7 @@ namespace Engine
 					layer->OnRender();
 				m_ImGuiLayer->OnRender();
 
-				m_ImGuiLayer->Begin();
+				m_ImGuiLayer->Begin(deltaTime);
 
 				Renderer::DrawFrame();
 

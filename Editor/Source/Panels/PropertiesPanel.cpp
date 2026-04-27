@@ -2,6 +2,7 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
+#include <algorithm>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Engine/Assets/AssetManager.h"
@@ -524,8 +525,7 @@ namespace Kairos
 					if (ImGui::DragFloat("Outer Cone", &outerDeg, 0.5f, 0.0f, 89.0f, "%.1f deg"))
 						lc.Spot.OuterConeAngle = glm::radians(outerDeg);
 					// Clamp inner <= outer
-					if (lc.Spot.InnerConeAngle > lc.Spot.OuterConeAngle)
-						lc.Spot.InnerConeAngle = lc.Spot.OuterConeAngle;
+					lc.Spot.InnerConeAngle = std::min(lc.Spot.InnerConeAngle, lc.Spot.OuterConeAngle);
 				}
 
 				ImGui::TreePop();

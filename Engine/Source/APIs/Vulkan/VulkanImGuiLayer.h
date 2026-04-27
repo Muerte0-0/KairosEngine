@@ -14,7 +14,7 @@ namespace Engine
 		void OnAttach() override;
 		void OnDetach() override;
         
-		void Begin() override;
+		void Begin(float deltaTime) override;
 		void End() override;
         
 		void OnImGuiRender() override;

@@ -10,6 +10,7 @@
 #include "Engine/Renderer/Renderer.h"
 
 #include <ImGuizmo.h>
+#include <im_anim.h>
 
 #include "Engine/ImGui/ImGuiUtils.h"
 
@@ -65,12 +66,16 @@ namespace Engine
 		ImGui::DestroyContext();
 	}
 
-	void VulkanImGuiLayer::Begin()
+	void VulkanImGuiLayer::Begin(float deltaTime)
 	{
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		
 		ImGuizmo::BeginFrame();
+		
+		iam_update_begin_frame();
+		iam_clip_update(deltaTime);
 	}
 
 	void VulkanImGuiLayer::End()

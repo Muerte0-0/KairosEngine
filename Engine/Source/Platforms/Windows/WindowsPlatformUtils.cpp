@@ -85,7 +85,7 @@ namespace Engine
 		
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
-		if (GetOpenFileNameA(&ofn) == true)
+		if (GetOpenFileNameA(&ofn))
 			return { ofn.lpstrFile };
 
 		return {};
@@ -109,7 +109,7 @@ namespace Engine
 		
 		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
 
-		if (GetSaveFileNameA(&ofn) == true)
+		if (GetSaveFileNameA(&ofn))
 			return { ofn.lpstrFile };
 
 		return {};
