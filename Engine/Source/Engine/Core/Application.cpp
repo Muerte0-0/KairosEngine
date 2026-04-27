@@ -177,12 +177,6 @@ namespace Engine
 
 		m_Window = CreateRef<Window>(spec);
 		m_Window->Create();
-		
-		// Kick async startup loading — engine starts in Loading state.
-		m_EngineState  = EngineState::Loading;
-		m_LoadingPhase = LoadingPhase::EditorStartup;
-		m_LoadingScreen.OnLoadingStarted();
-		LoadingSystem::StartStartupLoading();
 
 		// Resolve shader directory relative to the workspace root when the
 		// configured path is relative.
@@ -196,11 +190,17 @@ namespace Engine
 
 		Renderer::Init(API::Vulkan, m_Window->GetHandle(), shaderDirectory);
 		
-		for (auto& layer : m_LayerStack)
-			layer->OnAttach();
-
 		m_ImGuiLayer = ImGuiLayer::Create();
 		m_ImGuiLayer->OnAttach();
+		
+		// Kick async startup loading — engine starts in Loading state.
+		m_EngineState  = EngineState::Loading;
+		m_LoadingPhase = LoadingPhase::EditorStartup;
+		m_LoadingScreen.OnLoadingStarted();
+		LoadingSystem::StartStartupLoading();
+		
+		for (auto& layer : m_LayerStack)
+			layer->OnAttach();
 	}
 
 	void Application::Shutdown()
