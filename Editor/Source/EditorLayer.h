@@ -67,7 +67,7 @@ namespace Kairos
 		void OpenAssetEditor(const std::filesystem::path& path);
 
 		// Debug
-		void DrawImGuiDebug();
+		void DrawDebugWindow();
 
 		bool m_ShowConsole = true;
 		void DrawConsole();

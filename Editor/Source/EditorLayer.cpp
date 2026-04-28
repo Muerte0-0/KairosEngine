@@ -318,7 +318,7 @@ namespace Kairos
 		}
 	}
 
-	void EditorLayer::DrawImGuiDebug()
+	void EditorLayer::DrawDebugWindow()
 	{
 		ImGuiIO& io = ImGui::GetIO();
 

@@ -80,6 +80,9 @@ namespace Engine
 		CreateUniformBuffers();
 		CreateMaterialDescriptorSetLayout();
 
+		// Initialize deferred deletion scheduler (must come after device + command creation).
+		m_FrameScheduler.Init(m_VulkanDevice.get(), m_VulkanCommand.get());
+
 		constexpr uint8_t shadowFallbackPixel[4] = { 255, 255, 255, 255 };
 		TextureSpecification shadowFallbackSpec;
 		shadowFallbackSpec.Width = 1;
@@ -117,6 +120,9 @@ namespace Engine
 		m_CurrentImageIndex = imageIndex;
 		m_VulkanDevice->GetDevice().resetFences(
 			*m_VulkanCommand->GetInFlightFences()[m_CurrentFrameIndex]);
+
+		// Flush deferred deletions for this frame slot (GPU is done with it).
+		m_FrameScheduler.OnBeginFrame(m_CurrentFrameIndex);
 
 		commandBuffer.reset();
 		commandBuffer.begin({});
@@ -448,6 +454,7 @@ namespace Engine
 	void VulkanRenderAPI::WaitIdle()
 	{
 		m_VulkanDevice->WaitIdle();
+		m_FrameScheduler.OnShutdown(); // flush all pending deferred deletions
 	}
 
 	void VulkanRenderAPI::ReleaseStaticResources()

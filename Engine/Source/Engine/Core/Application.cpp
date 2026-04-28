@@ -1,6 +1,7 @@
 ﻿#include "kepch.h"
 #include "Application.h"
 #include "Engine/Core/LoadingSystem.h"
+#include "Engine/Core/Threading/JobSystem.h"
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Renderer/Renderer.h"
 #include "Engine/Utils/PrimitiveMeshFactory.h"
@@ -166,7 +167,10 @@ namespace Engine
 	}
 
 	void Application::Initialize()
-	{		
+	{
+		// Boot job system first — LoadingSystem worker needs it.
+		JobSystem::Init();
+
 		glfwSetErrorCallback(GLFWErrorCallback);
 		glfwInit();
 
@@ -215,6 +219,10 @@ namespace Engine
 
 		// Release primitive mesh cache before device teardown.
 		PrimitiveMeshFactory::Shutdown();
+
+		// Drain and shut down job system — must happen before Renderer/device teardown
+		// since IO jobs may hold asset refs.
+		JobSystem::Shutdown();
 
 		// Drop default material + backend fallback textures, then destroy device.
 		Renderer::Shutdown();
@@ -413,8 +421,37 @@ namespace Engine
 
 				if (m_EngineState == EngineState::Running)
 				{
-					for (const auto& layer : m_LayerStack)
-						layer->OnUpdate(deltaTime);
+					// -------------------------------------------------------
+					// CPU FRAME PIPELINE
+					// Dispatch ECS, Simulation, RenderExtract, CommandBuild
+					// stages in parallel where deps allow. GPU submit below.
+					// -------------------------------------------------------
+					m_FramePipeline.SetECSUpdate([this](float dt)
+					{
+						for (const auto& layer : m_LayerStack)
+							layer->OnUpdate(dt);
+					});
+
+					// Simulation and RenderExtract run after ECSUpdate (declared
+					// as deps in FramePipeline), concurrently with each other.
+					m_FramePipeline.SetSimulation([this](float dt)
+					{
+						for (const auto& layer : m_LayerStack)
+							layer->OnSimulate(dt);
+					});
+					m_FramePipeline.SetRenderExtract([this]
+					{
+						for (const auto& layer : m_LayerStack)
+							layer->OnRenderExtract();
+					});
+					// CommandBuild: reserved for future multi-threaded secondary cmd buf recording.
+					m_FramePipeline.SetCommandBuild(nullptr);
+
+					m_FramePipeline.Dispatch(deltaTime);
+
+					// Wait for all CPU stages to complete before GPU submission.
+					m_FramePipeline.Wait();
+					m_FramePipeline.Reset();
 				}
 				else
 				{

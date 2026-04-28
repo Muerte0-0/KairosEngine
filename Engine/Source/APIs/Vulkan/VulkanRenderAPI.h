@@ -6,6 +6,7 @@
 #include "Components/VulkanDevice.h"
 #include "Components/VulkanCommand.h"
 #include "Components/VulkanSwapchain.h"
+#include "GPUFrameScheduler.h"
 
 #include "Engine/Renderer/RenderPass.h"
 #include "Engine/Renderer/RHI/Shader.h"
@@ -77,6 +78,10 @@ namespace Engine
 
 		uint32_t GetCurrentFrameIndex() const { return m_CurrentFrameIndex; }
 
+		// Defer GPU resource destruction until the current frame slot is safe to reuse.
+		void DeferDelete(std::function<void()> fn) { m_FrameScheduler.DeferDelete(std::move(fn)); }
+		GPUFrameScheduler& GetFrameScheduler()     { return m_FrameScheduler; }
+
 		const std::vector<vk::raii::Buffer>& GetUniformBuffers() const { return m_UniformBuffers; }
 		const std::vector<void*>& GetMappedUniformBuffers() const { return m_UniformBuffersMapped; }
 		vk::DescriptorImageInfo GetShadowDescriptorImageInfo() const;
@@ -90,6 +95,9 @@ namespace Engine
 		Scope<VulkanDevice>    m_VulkanDevice    = nullptr;
 		Scope<VulkanCommand>   m_VulkanCommand   = nullptr;
 		Scope<VulkanSwapchain> m_VulkanSwapchain = nullptr;
+
+		// Deferred GPU resource deletion — safe destruction after fence wait.
+		GPUFrameScheduler m_FrameScheduler;
 
 		ShaderLibrary m_ShaderLibrary;
 		Ref<Texture>  m_DefaultShadowTexture;

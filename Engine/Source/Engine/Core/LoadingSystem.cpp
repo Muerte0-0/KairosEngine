@@ -20,8 +20,8 @@ namespace Engine
 	std::atomic<float>  LoadingSystem::s_StartupProgress{ 0.0f };
 	std::atomic<bool>   LoadingSystem::s_StartupDone{ false };
 	std::string         LoadingSystem::s_StatusText = "Initializing...";
-	std::thread         LoadingSystem::s_StartupThread;
-	std::thread         LoadingSystem::s_SceneThread;
+	JobHandle           LoadingSystem::s_StartupJob;
+	JobHandle           LoadingSystem::s_SceneJob;
 	std::function<void(const std::string&)> LoadingSystem::s_StatusCallback;
 	std::mutex          LoadingSystem::s_StatusMutex;
 	Ref<Scene>          LoadingSystem::s_StartupScene = nullptr;
@@ -89,7 +89,7 @@ namespace Engine
 		s_StartupMeshIndex = 0;
 		s_StartupPrimIndex = 0;
 
-		s_StartupThread = std::thread(&LoadingSystem::StartupWorker);
+		s_StartupJob = JobSystem::Submit(&LoadingSystem::StartupWorker, JobPriority::IO);
 	}
 
 	bool  LoadingSystem::IsStartupDone()       { return s_StartupDone.load(); }
@@ -230,9 +230,7 @@ namespace Engine
 	void LoadingSystem::FinalizeStartup()
 	{
 		ASSERT(s_StartupDone.load(), "FinalizeStartup called before startup worker finished")
-		if (s_StartupThread.joinable())
-			s_StartupThread.join();
-		// GPU-side init (pipeline warm-up, fallback texture upload, etc.) goes here.
+		s_StartupJob.Wait(); // JobHandle wait — no-op if already done
 		LOG(LogLevel::Info, "Engine startup finalized.");
 	}
 
@@ -283,7 +281,7 @@ namespace Engine
 		s_SceneCtx.MeshAssets.clear();
 		s_SceneCtx.Primitives.clear();
 
-		s_SceneThread = std::thread(&LoadingSystem::SceneWorker, path);
+		s_SceneJob = JobSystem::Submit([path]() { LoadingSystem::SceneWorker(path); }, JobPriority::IO);
 	}
 
 	bool  LoadingSystem::IsSceneLoadDone()    { return s_SceneCtx.IsDone.load(); }
@@ -378,8 +376,7 @@ namespace Engine
 	Ref<Scene> LoadingSystem::FinalizeSceneLoad()
 	{
 		ASSERT(s_SceneCtx.IsDone.load(), "FinalizeSceneLoad called before scene worker finished")
-		if (s_SceneThread.joinable())
-			s_SceneThread.join();
+		s_SceneJob.Wait(); // ensure worker fully retired
 		Ref<Scene> result = std::move(s_SceneCtx.LoadedScene);
 		s_SceneCtx.LoadedScene = nullptr;
 		return result;

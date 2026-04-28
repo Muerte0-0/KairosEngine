@@ -19,6 +19,15 @@ namespace Engine
 		
 		virtual void OnUpdate(float deltaTime) {}
 		virtual void OnFixedUpdate(float deltaTime) {}
+
+		// Called by FramePipeline on a worker thread — NO Vulkan calls allowed.
+		// Override to run physics, animation, or other simulation work.
+		virtual void OnSimulate(float deltaTime) {}
+
+		// Called by FramePipeline on a worker thread after OnUpdate — NO Vulkan calls.
+		// Override to snapshot transforms, run visibility culling, build render lists.
+		virtual void OnRenderExtract() {}
+
 		virtual void OnRender() {}
 		virtual void OnImGuiRender() {}
 

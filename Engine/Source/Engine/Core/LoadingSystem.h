@@ -3,13 +3,13 @@
 #include <atomic>
 #include <string>
 #include <memory>
-#include <thread>
 #include <mutex>
 #include <functional>
 #include <vector>
 
 #include "Engine/Assets/Asset.h"
 #include "Engine/Core/Base.h"
+#include "Engine/Core/Threading/JobSystem.h"
 
 namespace Engine
 {
@@ -91,8 +91,8 @@ namespace Engine
 		static std::atomic<float>  s_StartupProgress;
 		static std::atomic<bool>   s_StartupDone;
 		static std::string         s_StatusText;
-		static std::thread         s_StartupThread;
-		static std::thread         s_SceneThread;
+		static JobHandle           s_StartupJob;
+		static JobHandle           s_SceneJob;
 
 		static std::function<void(const std::string&)> s_StatusCallback;
 		static std::mutex          s_StatusMutex;

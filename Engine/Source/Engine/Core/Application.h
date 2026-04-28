@@ -5,6 +5,7 @@
 #include "Window.h"
 #include "EngineState.h"
 #include "LoadingSystem.h"
+#include "Threading/FramePipeline.h"
 #include "Engine/Events/Event.h"
 #include "Engine/Events/WindowEvents.h"
 #include "Engine/ImGui/LoadingScreen.h"
@@ -107,6 +108,10 @@ namespace Engine
 		Ref<Scene> m_PendingSceneTransition{ nullptr };
 		bool       m_SceneTransitionResolveStarted = false;
 		bool       m_SceneTransitionPrimed = false;
+
+		// CPU frame pipeline — dispatches ECS/Simulation/RenderExtract/CommandBuild
+		// stages to JobSystem workers each frame. GPU submit stays on main thread.
+		FramePipeline m_FramePipeline;
 		
 		friend class Layer;
 		// Allow loading worker to trigger CPU-only shader compilation without
