@@ -466,7 +466,42 @@ namespace Kairos
 			}
 
 			if (open)
+			{
+				auto& cc = entity.GetComponent<CameraComponent>();
+				auto& cam = cc.Camera;
+
+				// Primary camera toggle — enforces single-primary via Scene
+				bool primary = cc.Primary;
+				if (ImGui::Checkbox("Primary Camera", &primary))
+				{
+					if (primary)
+					{
+						// Use Scene helper to clear all other primaries
+						m_SelectionContext.GetScene()->SetPrimaryCamera(m_SelectionContext);
+					}
+					else
+					{
+						cc.Primary = false;
+					}
+				}
+
+				ImGui::Separator();
+
+				// FOV
+				float fov = cam.GetFOV();
+				if (ImGui::DragFloat("FOV", &fov, 0.5f, 1.0f, 179.0f, "%.1f deg"))
+					cam.SetFOV(fov);
+
+				// Near / Far
+				float nearPlane = cam.GetNear();
+				float farPlane  = cam.GetFar();
+				if (ImGui::DragFloat("Near Plane", &nearPlane, 0.1f, 0.1f, 10.0f, "%.1f"))
+					cam.SetNearFar(nearPlane, cam.GetFar());
+				if (ImGui::DragFloat("Far Plane",  &farPlane,  1.0f,   0.1f,  10000.0f, "%.1f"))
+					cam.SetNearFar(cam.GetNear(), farPlane);
+
 				ImGui::TreePop();
+			}
 
 			if (removeComponent)
 				entity.RemoveComponent<CameraComponent>();

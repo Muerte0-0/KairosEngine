@@ -94,6 +94,29 @@ namespace Engine
 			fn(Entity{ entity, this });
 	}
 
+	Entity Scene::GetPrimaryCamera()
+	{
+		auto view = m_Registry.view<CameraComponent>();
+		for (auto entity : view)
+		{
+			if (view.get<CameraComponent>(entity).Primary)
+				return Entity{ entity, this };
+		}
+		return Entity{}; // null entity
+	}
+
+	void Scene::SetPrimaryCamera(Entity entity)
+	{
+		// Clear all primaries first.
+		auto view = m_Registry.view<CameraComponent>();
+		for (auto e : view)
+			view.get<CameraComponent>(e).Primary = false;
+
+		// Set the requested one.
+		if (entity && entity.HasComponent<CameraComponent>())
+			entity.GetComponent<CameraComponent>().Primary = true;
+	}
+
 	template <typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{

@@ -86,20 +86,23 @@ namespace Kairos
 		// Always propagate transforms in editor so WorldTransform stays current
 		m_ActiveScene->OnUpdate(DeltaTime);
 
+		// Sync primary game camera view matrix from entity world transform.
+		m_CameraManager.UpdateFromRegistry(m_ActiveScene->GetRegistry());
+
 		m_SceneCameraController->SetViewportFocused(m_ViewportPanel->IsFocused());
 		m_SceneCameraController->SetViewportHovered(m_ViewportPanel->IsHovered());
 		
 		m_SceneCameraController->OnUpdate(DeltaTime);
-	
-		if (m_SceneCameraController->GetMode() != SceneCameraMode::None)
-			Input::SetCursorLockMode(CursorMode::Locked);
-		else
-			Input::SetCursorLockMode(CursorMode::Normal);
 	}
 
 	void EditorLayer::OnFixedUpdate(float DeltaTime)
 	{
 		Layer::OnFixedUpdate(DeltaTime);
+		
+		if (m_SceneCameraController->GetMode() != SceneCameraMode::None)
+			Input::SetCursorLockMode(CursorMode::Locked);
+		else
+			Input::SetCursorLockMode(CursorMode::Normal);
 	}
 
 	void EditorLayer::OnRender()

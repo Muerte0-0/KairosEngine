@@ -41,7 +41,7 @@ namespace Engine
 		float distance = glm::length(direction);
 
 		m_Yaw   += delta.x * m_Props.OrbitSpeed;
-		m_Pitch += delta.y * m_Props.OrbitSpeed;
+		m_Pitch -= delta.y * m_Props.OrbitSpeed; // invert Y to match FreeFly feel
 		m_Pitch = glm::clamp(m_Pitch, -89.0f, 89.0f);
 
 		// Recalculate direction from yaw/pitch
@@ -65,7 +65,7 @@ namespace Engine
 		glm::vec3 right = GetRight();
 		glm::vec3 up    = GetUp();
 
-		glm::vec3 offset = (right * delta.x + up * delta.y) * panSpeed;
+		glm::vec3 offset = (right * delta.x + up * -delta.y) * panSpeed;
 
 		m_Position   += offset;
 		m_FocalPoint += offset;

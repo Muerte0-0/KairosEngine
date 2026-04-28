@@ -137,7 +137,10 @@ namespace Kairos
 		}
 
 		m_Focused = ImGui::IsWindowFocused();
-		m_Hovered = ImGui::IsWindowHovered();
+		// AllowWhenBlockedByActiveItem: stays true while RMB is held (active item = drag).
+		// AllowWhenBlockedByPopup: stays true when a popup is open elsewhere.
+		m_Hovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem |
+		                                   ImGuiHoveredFlags_AllowWhenBlockedByPopup);
 
 		if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && m_Hovered && !m_Focused)
 		{

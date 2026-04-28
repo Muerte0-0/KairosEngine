@@ -11,12 +11,12 @@ namespace Engine
 	{
 		glm::vec2 mousePos = Input::GetMousePos();
 
-		// While a mode is active the cursor is locked — ImGui's hovered/focused
-		// flags become unreliable (cursor sits at lock pos, may read as outside
-		// viewport). Keep running so the camera doesn't freeze mid-flight.
-		// Only bail out when no mode is active AND focus/hover are lost.
+		// A mode is active → keep running regardless of focus/hover flags
+		// (cursor lock makes those unreliable mid-flight).
+		// No active mode → only run when hovered (hover is enough to enter any mode;
+		// focus is only needed for keyboard and is set reactively by the viewport).
 		bool modeActive = (m_Mode != SceneCameraMode::None);
-		if (!modeActive && (!m_ViewportFocused || !m_ViewportHovered))
+		if (!modeActive && !m_ViewportHovered)
 		{
 			m_LastMousePos = mousePos;
 			return;
@@ -39,14 +39,13 @@ namespace Engine
             newMode = SceneCameraMode::None;
 
         // Seed m_LastMousePos on the frame a mode first becomes active so the
-        // very first delta is always zero — prevents camera snapping when
-        // re-entering the viewport after clicking elsewhere.
+        // very first delta is always zero — prevents camera snapping.
         if (newMode != SceneCameraMode::None && m_Mode == SceneCameraMode::None)
             m_LastMousePos = mousePos;
 
         m_Mode = newMode;
 
-        // Compute delta AFTER seeding so the first frame of any mode is zero.
+        // Compute delta AFTER seeding.
         glm::vec2 delta = mousePos - m_LastMousePos;
         m_LastMousePos = mousePos;
 
@@ -57,33 +56,37 @@ namespace Engine
         switch (m_Mode)
         {
         case SceneCameraMode::FreeFly:
-        	{        		
-        		// Rotate camera
-        		m_Camera.FreeFly_Rotate(delta);
+        	{
+        		// Only rotate if there is meaningful mouse movement.
+        		if (glm::length(delta) > 0.0f)
+        			m_Camera.FreeFly_Rotate(delta);
 
-        		// Movement (WASD + QE)
-        		glm::vec3 direction(0.0f);
-
-        		if (Input::IsKeyPressed(KeyBoard::W)) direction.z += 1.0f;
-        		if (Input::IsKeyPressed(KeyBoard::S)) direction.z -= 1.0f;
-        		if (Input::IsKeyPressed(KeyBoard::D)) direction.x += 1.0f;
-        		if (Input::IsKeyPressed(KeyBoard::A)) direction.x -= 1.0f;
-        		if (Input::IsKeyPressed(KeyBoard::E)) direction.y += 1.0f;
-        		if (Input::IsKeyPressed(KeyBoard::Q)) direction.y -= 1.0f;
-
-        		m_Camera.FreeFly_Move(direction, deltaTime);
+        		// Movement — WASD only makes sense when viewport has keyboard focus.
+        		if (m_ViewportFocused)
+        		{
+        			glm::vec3 direction(0.0f);
+        			if (Input::IsKeyPressed(KeyBoard::W)) direction.z += 1.0f;
+        			if (Input::IsKeyPressed(KeyBoard::S)) direction.z -= 1.0f;
+        			if (Input::IsKeyPressed(KeyBoard::D)) direction.x += 1.0f;
+        			if (Input::IsKeyPressed(KeyBoard::A)) direction.x -= 1.0f;
+        			if (Input::IsKeyPressed(KeyBoard::E)) direction.y += 1.0f;
+        			if (Input::IsKeyPressed(KeyBoard::Q)) direction.y -= 1.0f;
+        			m_Camera.FreeFly_Move(direction, deltaTime);
+        		}
         		break;
         	}
 
         case SceneCameraMode::Orbit:
         	{
-        		m_Camera.Orbit(delta);
+        		if (glm::length(delta) > 0.0f)
+        			m_Camera.Orbit(delta);
         		break;
         	}
 
         case SceneCameraMode::Pan:
         	{
-        		m_Camera.Pan(delta);
+        		if (glm::length(delta) > 0.0f)
+        			m_Camera.Pan(delta);
         		break;
         	}
 
@@ -95,23 +98,16 @@ namespace Engine
 	void SceneCameraController::OnEvent(Event& event)
 	{
         EventDispatcher dispatcher(event);
-
         dispatcher.Dispatch<MouseScrolledEvent>(BIND_EVENT_FN(&SceneCameraController::OnMouseScrolled));
-
-        dispatcher.Dispatch<MouseMovedEvent>(BIND_EVENT_FN(&SceneCameraController::OnMouseMoved));
 	}
 
 	bool SceneCameraController::OnMouseScrolled(MouseScrolledEvent& e)
 	{
-		if (!m_ViewportHovered)
+		// Accept scroll whenever the viewport is hovered or a mode is active.
+		if (!m_ViewportHovered && m_Mode == SceneCameraMode::None)
 			return false;
 
 		m_Camera.Zoom(static_cast<float>(e.GetYOffset()));
 		return true;
-	}
-
-	bool SceneCameraController::OnMouseMoved(MouseMovedEvent& e)
-	{
-		return false;
 	}
 }

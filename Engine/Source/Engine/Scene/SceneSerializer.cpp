@@ -158,6 +158,18 @@ namespace Engine
 			out << YAML::EndMap;
 		}
 
+		if (entity.HasComponent<CameraComponent>())
+		{
+			out << YAML::Key << "CameraComponent";
+			out << YAML::BeginMap;
+			auto& cc = entity.GetComponent<CameraComponent>();
+			out << YAML::Key << "Primary"  << YAML::Value << cc.Primary;
+			out << YAML::Key << "FOV"      << YAML::Value << cc.Camera.GetFOV();
+			out << YAML::Key << "Near"     << YAML::Value << cc.Camera.GetNear();
+			out << YAML::Key << "Far"      << YAML::Value << cc.Camera.GetFar();
+			out << YAML::EndMap;
+		}
+
 		out << YAML::EndMap;
 	}
 
@@ -273,6 +285,17 @@ namespace Engine
 					if (auto n = lightNode["InnerConeAngle"]) lc.Spot.InnerConeAngle = n.as<float>();
 					if (auto n = lightNode["OuterConeAngle"]) lc.Spot.OuterConeAngle = n.as<float>();
 				}
+			}
+
+			if (auto camNode = entity["CameraComponent"])
+			{
+				auto& cc = deserialized.AddComponent<CameraComponent>();
+				cc.Primary = camNode["Primary"] ? camNode["Primary"].as<bool>() : false;
+				float fov  = camNode["FOV"]  ? camNode["FOV"].as<float>()  : 45.0f;
+				float nearPlane = camNode["Near"] ? camNode["Near"].as<float>() : 0.1f;
+				float farPlane  = camNode["Far"]  ? camNode["Far"].as<float>()  : 1000.0f;
+				cc.Camera.SetFOV(fov);
+				cc.Camera.SetNearFar(nearPlane, farPlane);
 			}
 		}
 

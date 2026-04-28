@@ -36,7 +36,13 @@ namespace Engine
 
 		void EachEntity(const std::function<void(Entity)>& fn);
 
+		// Primary camera queries. Only one CameraComponent can have Primary == true.
+		Entity GetPrimaryCamera();
+		// Sets entity as primary; clears Primary flag on all others.
+		void   SetPrimaryCamera(Entity entity);
+
 		SceneGraph& GetSceneGraph() { return m_SceneGraph; }
+		entt::registry& GetRegistry() { return m_Registry; }
 
 		// Returns the UUID of entity's parent, or 0 if root.
 		uint64_t GetParentUUID(EntityID id) const;

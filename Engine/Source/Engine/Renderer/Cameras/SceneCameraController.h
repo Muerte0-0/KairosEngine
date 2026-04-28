@@ -33,7 +33,6 @@ namespace Engine
 
 	private:
 		bool OnMouseScrolled(MouseScrolledEvent& e);
-		bool OnMouseMoved(MouseMovedEvent& e);
 
 		SceneCamera&		m_Camera;
 		SceneCameraMode		m_Mode				= SceneCameraMode::None;
