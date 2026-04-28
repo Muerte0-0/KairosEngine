@@ -29,6 +29,9 @@ namespace Engine
 
 		void OnUpdate(float deltaTime);
 
+		// Deep-copies all entities and components. No shared pointers between scenes.
+		Ref<Scene> Clone() const;
+
 		const std::string& GetName() const { return m_Name; }
 		void               SetName(const std::string& name) { m_Name = name; }
 

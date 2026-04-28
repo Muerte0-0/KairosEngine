@@ -1,16 +1,11 @@
 ﻿#pragma once
 #include "SceneCamera.h"
 #include "GameCamera.h"
+#include "Engine/Core/EngineMode.h"
 #include <entt.hpp>
 
 namespace Engine
 {
-	enum class CameraManagerMode : uint8_t
-	{
-		Editor,  // SceneCamera drives viewport
-		Play,    // Primary GameCamera drives rendering
-	};
-
 	class CameraManager
 	{
 	public:
@@ -22,10 +17,10 @@ namespace Engine
 		// Call once per frame.
 		void UpdateFromRegistry(entt::registry& registry);
 
-		void SetMode(CameraManagerMode mode) { m_Mode = mode; }
-		CameraManagerMode GetMode() const    { return m_Mode; }
+		void SetMode(EngineMode mode) { m_Mode = mode; }
+		EngineMode GetMode() const    { return m_Mode; }
 
-		// Returns SceneCamera in Editor mode, primary GameCamera in Play mode.
+		// Returns SceneCamera in Editor mode, primary GameCamera in Play/Paused mode.
 		[[nodiscard]] const Camera* GetActiveCamera() const;
 
 		[[nodiscard]] bool HasActiveCamera() const { return GetActiveCamera() != nullptr; }
@@ -34,8 +29,8 @@ namespace Engine
 		[[nodiscard]] const SceneCamera* GetSceneCamera() const { return m_SceneCamera; }
 
 	private:
-		CameraManagerMode  m_Mode        = CameraManagerMode::Editor;
-		SceneCamera*       m_SceneCamera = nullptr;
-		GameCamera*        m_ActiveGameCamera = nullptr;  // non-owning; points into CameraComponent
+		EngineMode   m_Mode             = EngineMode::Editor;
+		SceneCamera* m_SceneCamera      = nullptr;
+		GameCamera*  m_ActiveGameCamera = nullptr;  // non-owning; points into CameraComponent
 	};
 }

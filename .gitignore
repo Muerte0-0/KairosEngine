@@ -413,3 +413,5 @@ Makefile
 /.continue
 mempalace.yaml
 entities.json
+/.codex
+/.agent

@@ -117,6 +117,77 @@ namespace Engine
 			entity.GetComponent<CameraComponent>().Primary = true;
 	}
 
+	Ref<Scene> Scene::Clone() const
+	{
+		auto clone = CreateRef<Scene>();
+		clone->m_Name = m_Name;
+
+		// Map old entity → new entity for SceneGraph parent/child reconstruction.
+		std::unordered_map<entt::entity, entt::entity> entityMap;
+
+		// Pass 1: create entities preserving UUIDs.
+		m_Registry.each([&](entt::entity src)
+		{
+			const auto* id  = m_Registry.try_get<IDComponent>(src);
+			const auto* tag = m_Registry.try_get<TagComponent>(src);
+
+			std::string name = tag ? tag->Tag : "Entity";
+			UUID uuid        = id  ? id->ID   : UUID();
+
+			Entity dst = clone->CreateEntityWithUUID(uuid, name);
+			entityMap[src] = static_cast<entt::entity>(dst);
+		});
+
+		// Pass 2: copy all components (except IDComponent / TagComponent already set).
+		for (auto [src, dst] : entityMap)
+		{
+			if (const auto* tc = m_Registry.try_get<TransformComponent>(src))
+			{
+				auto& c       = clone->m_Registry.get_or_emplace<TransformComponent>(dst);
+				c.Translation = tc->Translation;
+				c.Rotation    = tc->Rotation;
+				c.Scale       = tc->Scale;
+				c.WorldTransform = tc->WorldTransform;
+			}
+			if (const auto* mc = m_Registry.try_get<MeshComponent>(src))
+			{
+				auto& c            = clone->m_Registry.emplace_or_replace<MeshComponent>(dst);
+				c.MeshAssetHandle  = mc->MeshAssetHandle;
+				c.MaterialAssetHandle = mc->MaterialAssetHandle;
+				c.PrimitiveKey     = mc->PrimitiveKey;
+				c.MeshRef          = mc->MeshRef;       // shared GPU resource — intentional
+				c.Materials        = mc->Materials;
+				c.CastShadows      = mc->CastShadows;
+			}
+			if (const auto* cc = m_Registry.try_get<CameraComponent>(src))
+			{
+				auto& c    = clone->m_Registry.emplace_or_replace<CameraComponent>(dst);
+				c.Camera   = cc->Camera;
+				c.Primary  = cc->Primary;
+			}
+			if (const auto* lc = m_Registry.try_get<LightComponent>(src))
+				clone->m_Registry.emplace_or_replace<LightComponent>(dst, *lc);
+		}
+
+		// Pass 3: rebuild SceneGraph hierarchy.
+		for (auto [src, dst] : entityMap)
+		{
+			const SceneNode* node = m_SceneGraph.GetNode(static_cast<EntityID>(src));
+			if (!node || node->Parent == INVALID_ENTITY)
+				continue;
+
+			auto it = entityMap.find(static_cast<entt::entity>(node->Parent));
+			if (it == entityMap.end())
+				continue;
+
+			clone->m_SceneGraph.SetParent(
+				static_cast<EntityID>(dst),
+				static_cast<EntityID>(it->second));
+		}
+
+		return clone;
+	}
+
 	template <typename T>
 	void Scene::OnComponentAdded(Entity entity, T& component)
 	{

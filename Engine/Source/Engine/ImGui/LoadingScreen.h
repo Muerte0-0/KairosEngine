@@ -3,10 +3,17 @@
 #include <string>
 #include <unordered_map>
 
-#include "Engine/Core/EngineState.h"
-
 namespace Engine
 {
+	// Used only by LoadingScreen to tweak animation speed per phase.
+	enum class LoadingPhase
+	{
+		EditorStartup,
+		SceneTransition,
+		PlayMode
+	};
+
+
 	// -----------------------------------------------------------------------
 	// UIAnimationSystem
 	// Lightweight lerp-based animation state store (ImAnim-compatible API).

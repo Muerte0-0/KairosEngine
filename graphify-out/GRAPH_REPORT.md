@@ -1,0 +1,901 @@
+# Graph Report - .  (2026-04-28)
+
+## Corpus Check
+- 194 files · ~56,226 words
+- Verdict: corpus is large enough that graph structure adds value.
+
+## Summary
+- 858 nodes · 1519 edges · 127 communities detected
+- Extraction: 64% EXTRACTED · 36% INFERRED · 0% AMBIGUOUS · INFERRED: 552 edges (avg confidence: 0.8)
+- Token cost: 0 input · 0 output
+
+## Community Hubs (Navigation)
+- [[_COMMUNITY_Vulkan Commands & GPU Scheduling|Vulkan Commands & GPU Scheduling]]
+- [[_COMMUNITY_Editor Camera & Viewport Panels|Editor Camera & Viewport Panels]]
+- [[_COMMUNITY_Application Lifecycle & GLFW Windowing|Application Lifecycle & GLFW Windowing]]
+- [[_COMMUNITY_Asset Import & Registry System|Asset Import & Registry System]]
+- [[_COMMUNITY_Scene Management & UUIDs|Scene Management & UUIDs]]
+- [[_COMMUNITY_Vulkan Graphics Pipelines & Materials|Vulkan Graphics Pipelines & Materials]]
+- [[_COMMUNITY_Project Loading & Initialization Flow|Project Loading & Initialization Flow]]
+- [[_COMMUNITY_Vulkan Framebuffers & Texture Resources|Vulkan Framebuffers & Texture Resources]]
+- [[_COMMUNITY_Material Graph Editor|Material Graph Editor]]
+- [[_COMMUNITY_Scene Rendering & Shadow Mapping|Scene Rendering & Shadow Mapping]]
+- [[_COMMUNITY_Shader Compilation & Build Utilities|Shader Compilation & Build Utilities]]
+- [[_COMMUNITY_Content Browser & Editor Core|Content Browser & Editor Core]]
+- [[_COMMUNITY_Camera Controllers (OrbitFreeFly)|Camera Controllers (Orbit/FreeFly)]]
+- [[_COMMUNITY_ImGui Layer & Visual Themes|ImGui Layer & Visual Themes]]
+- [[_COMMUNITY_Platform Abstraction & Logging|Platform Abstraction & Logging]]
+- [[_COMMUNITY_Community 15|Community 15]]
+- [[_COMMUNITY_Community 16|Community 16]]
+- [[_COMMUNITY_Community 17|Community 17]]
+- [[_COMMUNITY_Community 18|Community 18]]
+- [[_COMMUNITY_Community 19|Community 19]]
+- [[_COMMUNITY_Community 20|Community 20]]
+- [[_COMMUNITY_Community 21|Community 21]]
+- [[_COMMUNITY_Community 22|Community 22]]
+- [[_COMMUNITY_Community 23|Community 23]]
+- [[_COMMUNITY_Community 24|Community 24]]
+- [[_COMMUNITY_Community 25|Community 25]]
+- [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 35|Community 35]]
+- [[_COMMUNITY_Community 36|Community 36]]
+- [[_COMMUNITY_Community 37|Community 37]]
+- [[_COMMUNITY_Community 38|Community 38]]
+- [[_COMMUNITY_Community 39|Community 39]]
+- [[_COMMUNITY_Community 40|Community 40]]
+- [[_COMMUNITY_Community 41|Community 41]]
+- [[_COMMUNITY_Community 42|Community 42]]
+- [[_COMMUNITY_Community 43|Community 43]]
+- [[_COMMUNITY_Community 44|Community 44]]
+- [[_COMMUNITY_Community 45|Community 45]]
+- [[_COMMUNITY_Community 46|Community 46]]
+- [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
+- [[_COMMUNITY_Community 49|Community 49]]
+- [[_COMMUNITY_Community 50|Community 50]]
+- [[_COMMUNITY_Community 51|Community 51]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 53|Community 53]]
+- [[_COMMUNITY_Community 54|Community 54]]
+- [[_COMMUNITY_Community 55|Community 55]]
+- [[_COMMUNITY_Community 56|Community 56]]
+- [[_COMMUNITY_Community 57|Community 57]]
+- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 59|Community 59]]
+- [[_COMMUNITY_Community 60|Community 60]]
+- [[_COMMUNITY_Community 61|Community 61]]
+- [[_COMMUNITY_Community 62|Community 62]]
+- [[_COMMUNITY_Community 63|Community 63]]
+- [[_COMMUNITY_Community 64|Community 64]]
+- [[_COMMUNITY_Community 65|Community 65]]
+- [[_COMMUNITY_Community 66|Community 66]]
+- [[_COMMUNITY_Community 67|Community 67]]
+- [[_COMMUNITY_Community 68|Community 68]]
+- [[_COMMUNITY_Community 69|Community 69]]
+- [[_COMMUNITY_Community 70|Community 70]]
+- [[_COMMUNITY_Community 71|Community 71]]
+- [[_COMMUNITY_Community 72|Community 72]]
+- [[_COMMUNITY_Community 73|Community 73]]
+- [[_COMMUNITY_Community 74|Community 74]]
+- [[_COMMUNITY_Community 75|Community 75]]
+- [[_COMMUNITY_Community 76|Community 76]]
+- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 78|Community 78]]
+- [[_COMMUNITY_Community 79|Community 79]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 81|Community 81]]
+- [[_COMMUNITY_Community 82|Community 82]]
+- [[_COMMUNITY_Community 83|Community 83]]
+- [[_COMMUNITY_Community 84|Community 84]]
+- [[_COMMUNITY_Community 85|Community 85]]
+- [[_COMMUNITY_Community 86|Community 86]]
+- [[_COMMUNITY_Community 87|Community 87]]
+- [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 89|Community 89]]
+- [[_COMMUNITY_Community 90|Community 90]]
+- [[_COMMUNITY_Community 91|Community 91]]
+- [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
+- [[_COMMUNITY_Community 94|Community 94]]
+- [[_COMMUNITY_Community 95|Community 95]]
+- [[_COMMUNITY_Community 96|Community 96]]
+- [[_COMMUNITY_Community 97|Community 97]]
+- [[_COMMUNITY_Community 98|Community 98]]
+- [[_COMMUNITY_Community 99|Community 99]]
+- [[_COMMUNITY_Community 100|Community 100]]
+- [[_COMMUNITY_Community 101|Community 101]]
+- [[_COMMUNITY_Community 102|Community 102]]
+- [[_COMMUNITY_Community 103|Community 103]]
+- [[_COMMUNITY_Community 104|Community 104]]
+- [[_COMMUNITY_Community 105|Community 105]]
+- [[_COMMUNITY_Community 106|Community 106]]
+- [[_COMMUNITY_Community 107|Community 107]]
+- [[_COMMUNITY_Community 108|Community 108]]
+- [[_COMMUNITY_Community 109|Community 109]]
+- [[_COMMUNITY_Community 110|Community 110]]
+- [[_COMMUNITY_Community 111|Community 111]]
+- [[_COMMUNITY_Community 112|Community 112]]
+- [[_COMMUNITY_Community 113|Community 113]]
+- [[_COMMUNITY_Community 114|Community 114]]
+- [[_COMMUNITY_Community 115|Community 115]]
+- [[_COMMUNITY_Community 116|Community 116]]
+- [[_COMMUNITY_Community 117|Community 117]]
+- [[_COMMUNITY_Community 118|Community 118]]
+- [[_COMMUNITY_Community 119|Community 119]]
+- [[_COMMUNITY_Community 120|Community 120]]
+- [[_COMMUNITY_Community 121|Community 121]]
+- [[_COMMUNITY_Community 122|Community 122]]
+- [[_COMMUNITY_Community 123|Community 123]]
+- [[_COMMUNITY_Community 124|Community 124]]
+- [[_COMMUNITY_Community 125|Community 125]]
+- [[_COMMUNITY_Community 126|Community 126]]
+
+## God Nodes (most connected - your core abstractions)
+1. `End()` - 59 edges
+2. `Get()` - 40 edges
+3. `Begin()` - 38 edges
+4. `GetAPI()` - 29 edges
+5. `Clear()` - 24 edges
+6. `Run()` - 23 edges
+7. `Create()` - 18 edges
+8. `TickLoadingState()` - 16 edges
+9. `Run()` - 16 edges
+10. `ImportAsset()` - 15 edges
+
+## Surprising Connections (you probably didn't know these)
+- `DrawComponents()` --calls--> `SetPrimaryCamera()`  [INFERRED]
+  Editor\Source\Panels\PropertiesPanel.cpp → Engine\Source\Engine\Scene\Scene.cpp
+- `Init()` --calls--> `Resize()`  [INFERRED]
+  Engine\Source\APIs\Vulkan\CommandBufferSystem.cpp → Engine\Source\Engine\Renderer\SceneRenderer.cpp
+- `CreatePipeline()` --calls--> `GetStages()`  [INFERRED]
+  Engine\Source\APIs\Vulkan\VulkanGraphicsPipeline.cpp → Engine\Source\Engine\Renderer\RHI\Shader.cpp
+- `VulkanImGuiLayer()` --calls--> `GetAPI()`  [INFERRED]
+  Engine\Source\APIs\Vulkan\VulkanImGuiLayer.cpp → Engine\Source\APIs\Vulkan\VulkanMaterial.cpp
+- `Run()` --calls--> `OnImGuiRender()`  [INFERRED]
+  Engine\Source\Engine\Core\Application.cpp → Engine\Source\APIs\Vulkan\VulkanImGuiLayer.cpp
+
+## Communities
+
+### Community 0 - "Vulkan Commands & GPU Scheduling"
+Cohesion: 0.04
+Nodes (62): Shutdown(), Init(), Record(), Shutdown(), FlushSlot(), OnBeginFrame(), OnShutdown(), Shutdown() (+54 more)
+
+### Community 1 - "Editor Camera & Viewport Panels"
+Cohesion: 0.04
+Nodes (44): SetView(), GetActiveCamera(), UpdateFromRegistry(), BuildLevelEditorLayout(), DrawConsole(), DrawDebugWindow(), DrawLevelEditorWindow(), DrawMenuBar() (+36 more)
+
+### Community 2 - "Application Lifecycle & GLFW Windowing"
+Cohesion: 0.05
+Nodes (50): Application(), EnsureApplicationShadersCompiled(), GetShaderCompilerBinaryName(), GetTime(), Initialize(), JoinCommand(), OnWindowClosed(), OnWindowResize() (+42 more)
+
+### Community 3 - "Asset Import & Registry System"
+Cohesion: 0.06
+Nodes (54): DeduceTypeFromPath(), Import(), ImportMaterial(), ImportMesh(), ImportTexture(), Add(), Get(), GetHandleForPath() (+46 more)
+
+### Community 4 - "Scene Management & UUIDs"
+Cohesion: 0.08
+Nodes (33): Contains(), Remove(), GetAsset(), GetAssetType(), IsAssetLoaded(), IsAssetValid(), CreateEntity(), CreateEntityWithUUID() (+25 more)
+
+### Community 5 - "Vulkan Graphics Pipelines & Materials"
+Cohesion: 0.07
+Nodes (36): Create(), Create(), Create(), EndFrameCapture(), LoadRenderDocAPI(), StartFrameCapture(), TriggerCapture(), Create() (+28 more)
+
+### Community 6 - "Project Loading & Initialization Flow"
+Cohesion: 0.09
+Nodes (39): AttachLayersDuringLoading(), RenderLoadingScreen(), TickLoadingState(), OnAttach(), OnSceneLoaded(), OpenProject(), OpenScene(), BeginLoading() (+31 more)
+
+### Community 7 - "Vulkan Framebuffers & Texture Resources"
+Cohesion: 0.11
+Nodes (33): EnsureFormats(), CreateColorAttachment(), CreateColorSampler(), CreateDepthAttachment(), CreateDepthSampler(), CreateMSAAColorAttachment(), Engine(), FindDepthFormat() (+25 more)
+
+### Community 8 - "Material Graph Editor"
+Cohesion: 0.1
+Nodes (34): Update(), AddNodeToCanvas(), DrawAddNodePopup(), DrawNodeCanvas(), DrawParamsSidebar(), DrawToolbar(), GraphNodeWrapper, MakePinStyle() (+26 more)
+
+### Community 9 - "Scene Rendering & Shadow Mapping"
+Cohesion: 0.08
+Nodes (30): GetLayout(), Render(), ResolveMaterialAsset(), GetShaderLibrary(), Execute(), GetShadowMapFramebuffer(), RenderPipeline(), OnRender() (+22 more)
+
+### Community 10 - "Shader Compilation & Build Utilities"
+Cohesion: 0.15
+Nodes (29): Exists(), CollectShaderFiles(), CompileEntryPoint(), DiscoverAnnotatedEntryPoints(), FileTimeToUtcString(), GetCurrentUtcString(), HashFileContents(), InferStageInfoFromFileName() (+21 more)
+
+### Community 11 - "Content Browser & Editor Core"
+Cohesion: 0.12
+Nodes (19): ContentBrowserPanel(), CreateNewAsset(), DrawEmptySpaceContextMenu(), GetIconForPath(), OnImGuiRender(), RenderFolderTree(), TryLoadIcon(), CreateApplication() (+11 more)
+
+### Community 12 - "Camera Controllers (Orbit/FreeFly)"
+Cohesion: 0.21
+Nodes (16): FreeFly_Move(), FreeFly_Rotate(), GetForward(), GetRight(), GetUp(), Orbit(), Pan(), RecalculateView() (+8 more)
+
+### Community 13 - "ImGui Layer & Visual Themes"
+Cohesion: 0.2
+Nodes (15): HexToImVec4(), LoadFonts(), ResolveFontDirectory(), SetImGuiStyle(), SetTheme_CatppuccinFrappé(), SetTheme_CatppuccinLatte(), SetTheme_CatppuccinMacchiato(), SetTheme_CatppuccinMocha() (+7 more)
+
+### Community 14 - "Platform Abstraction & Logging"
+Cohesion: 0.17
+Nodes (13): FindWorkspaceRoot(), GetExecutablePath(), ResolveWorkspaceRoot(), GetExecutableDirectory(), Init(), Shutdown(), Resize(), CreateModule() (+5 more)
+
+### Community 15 - "Community 15"
+Cohesion: 0.22
+Nodes (0): 
+
+### Community 16 - "Community 16"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 17 - "Community 17"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 18 - "Community 18"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 19 - "Community 19"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 20 - "Community 20"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 21 - "Community 21"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 22 - "Community 22"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 23 - "Community 23"
+Cohesion: 0.67
+Nodes (0): 
+
+### Community 24 - "Community 24"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 25 - "Community 25"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 26 - "Community 26"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 27 - "Community 27"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 28 - "Community 28"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 29 - "Community 29"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 30 - "Community 30"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 31 - "Community 31"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 32 - "Community 32"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 33 - "Community 33"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 34 - "Community 34"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 35 - "Community 35"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 36 - "Community 36"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 37 - "Community 37"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 38 - "Community 38"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 39 - "Community 39"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 40 - "Community 40"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 41 - "Community 41"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 42 - "Community 42"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 43 - "Community 43"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 44 - "Community 44"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 45 - "Community 45"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 46 - "Community 46"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 47 - "Community 47"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 48 - "Community 48"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 49 - "Community 49"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 50 - "Community 50"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 51 - "Community 51"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 52 - "Community 52"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 53 - "Community 53"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 54 - "Community 54"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 55 - "Community 55"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 56 - "Community 56"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 57 - "Community 57"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 58 - "Community 58"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 59 - "Community 59"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 60 - "Community 60"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 61 - "Community 61"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 62 - "Community 62"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 63 - "Community 63"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 64 - "Community 64"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 65 - "Community 65"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 66 - "Community 66"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 67 - "Community 67"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 68 - "Community 68"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 69 - "Community 69"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 70 - "Community 70"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 71 - "Community 71"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 72 - "Community 72"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 73 - "Community 73"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 74 - "Community 74"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 75 - "Community 75"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 76 - "Community 76"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 77 - "Community 77"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 78 - "Community 78"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 79 - "Community 79"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 80 - "Community 80"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 81 - "Community 81"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 82 - "Community 82"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 83 - "Community 83"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 84 - "Community 84"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 85 - "Community 85"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 86 - "Community 86"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 87 - "Community 87"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 88 - "Community 88"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 89 - "Community 89"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 90 - "Community 90"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 91 - "Community 91"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 92 - "Community 92"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 93 - "Community 93"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 94 - "Community 94"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 95 - "Community 95"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 96 - "Community 96"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 97 - "Community 97"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 98 - "Community 98"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 99 - "Community 99"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 100 - "Community 100"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 101 - "Community 101"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 102 - "Community 102"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 103 - "Community 103"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 104 - "Community 104"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 105 - "Community 105"
+Cohesion: 1.0
+Nodes (2): Open Sans OFL License, KairosEngine README
+
+### Community 106 - "Community 106"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 107 - "Community 107"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 108 - "Community 108"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 109 - "Community 109"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 110 - "Community 110"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 111 - "Community 111"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 112 - "Community 112"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 113 - "Community 113"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 114 - "Community 114"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 115 - "Community 115"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 116 - "Community 116"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 117 - "Community 117"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 118 - "Community 118"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 119 - "Community 119"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 120 - "Community 120"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 121 - "Community 121"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 122 - "Community 122"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 123 - "Community 123"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 124 - "Community 124"
+Cohesion: 1.0
+Nodes (1): Directory Icon
+
+### Community 125 - "Community 125"
+Cohesion: 1.0
+Nodes (1): File Icon
+
+### Community 126 - "Community 126"
+Cohesion: 1.0
+Nodes (1): Kairos Engine Logo
+
+## Knowledge Gaps
+- **5 isolated node(s):** `KairosEngine README`, `Open Sans OFL License`, `Directory Icon`, `File Icon`, `Kairos Engine Logo`
+  These have ≤1 connection - possible missing edges or undocumented components.
+- **Thin community `Community 24`** (2 nodes): `CheckVulkanSDK()`, `ProjectDependencies.lua`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 25`** (2 nodes): `EditorLayer.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 26`** (2 nodes): `Kairos()`, `ContentBrowserPanel.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 27`** (2 nodes): `Panel.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 28`** (2 nodes): `PropertiesPanel.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 29`** (2 nodes): `SceneHierarchyPanel.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 30`** (2 nodes): `ViewportPanel.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 31`** (2 nodes): `EditorWindow.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 32`** (2 nodes): `MaterialEditorWindow.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 33`** (2 nodes): `MeshEditorWindow.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 34`** (2 nodes): `TextureEditorWindow.h`, `Kairos()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 35`** (2 nodes): `Engine()`, `CommandBufferSystem.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 36`** (2 nodes): `GPUFrameScheduler.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 37`** (2 nodes): `VulkanImGuiLayer.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 38`** (2 nodes): `VulkanRenderAPI.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 39`** (2 nodes): `VulkanTexture.h`, `m_TextureID()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 40`** (2 nodes): `VulkanUtils.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 41`** (2 nodes): `VulkanCommand.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 42`** (2 nodes): `VulkanDevice.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 43`** (2 nodes): `VulkanSwapchain.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 44`** (2 nodes): `Engine()`, `Asset.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 45`** (2 nodes): `Engine()`, `AssetManager.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 46`** (2 nodes): `Engine()`, `AssetManagerBase.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 47`** (2 nodes): `Engine()`, `AssetMetadata.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 48`** (2 nodes): `Engine()`, `AssetRegistry.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 49`** (2 nodes): `Engine()`, `AssetImporter.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 50`** (2 nodes): `Engine()`, `AssetSerializer.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 51`** (2 nodes): `Engine()`, `EditorAssetManager.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 52`** (2 nodes): `RuntimeAssetManager.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 53`** (2 nodes): `Engine()`, `Base.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 54`** (2 nodes): `Engine()`, `Core.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 55`** (2 nodes): `EngineState.h`, `LoadingPhase()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 56`** (2 nodes): `Layer.cpp`, `Layer()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 57`** (2 nodes): `Layer.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 58`** (2 nodes): `LoadingSystem.h`, `LoadingSystem()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 59`** (2 nodes): `Window.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 60`** (2 nodes): `Fence.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 61`** (2 nodes): `TaskGraph.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 62`** (2 nodes): `ThreadPool.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 63`** (2 nodes): `Log.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 64`** (2 nodes): `RenderDocDebugSystem.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 65`** (2 nodes): `Event.h`, `Event()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 66`** (2 nodes): `WindowEvents.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 67`** (2 nodes): `ImGuiLayer.cpp`, `Create()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 68`** (2 nodes): `ImGuiLayer.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 69`** (2 nodes): `ImGuiLogSink.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 70`** (2 nodes): `ImGuiUtils.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 71`** (2 nodes): `LoadingScreen.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 72`** (2 nodes): `Input.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 73`** (2 nodes): `MaterialGraph.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 74`** (2 nodes): `MaterialGraphCompiler.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 75`** (2 nodes): `Math.cpp`, `DecomposeTransform()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 76`** (2 nodes): `Math.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 77`** (2 nodes): `Project.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 78`** (2 nodes): `ProjectSerializer.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 79`** (2 nodes): `Renderer.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 80`** (2 nodes): `RenderPass.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 81`** (2 nodes): `RenderPipeline.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 82`** (2 nodes): `ShadowPass.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 83`** (2 nodes): `Engine()`, `CameraManager.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 84`** (2 nodes): `GameCamera.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 85`** (2 nodes): `ProjectionCamera.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 86`** (2 nodes): `Framebuffer.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 87`** (2 nodes): `GraphicsPipeline.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 88`** (2 nodes): `RenderAPI.h`, `API()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 89`** (2 nodes): `Shader.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 90`** (2 nodes): `MaterialFactory.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 91`** (2 nodes): `ModelFactory.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 92`** (2 nodes): `Material.h`, `_pad1()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 93`** (2 nodes): `Texture.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 94`** (2 nodes): `Engine()`, `Components.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 95`** (2 nodes): `Entity.cpp`, `Entity()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 96`** (2 nodes): `Entity.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 97`** (2 nodes): `SceneGraph.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 98`** (2 nodes): `SceneSerializer.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 99`** (2 nodes): `MeshRenderSystem.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 100`** (2 nodes): `ParallelSystemExecutor.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 101`** (2 nodes): `PlatformUtils.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 102`** (2 nodes): `PrimitiveMeshFactory.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 103`** (2 nodes): `WindowsInput.h`, `Engine()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 104`** (2 nodes): `ShaderCompiler()`, `ShaderCompiler.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 105`** (2 nodes): `Open Sans OFL License`, `KairosEngine README`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 106`** (1 nodes): `KairosEngine-Setup.lua`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 107`** (1 nodes): `Build-Editor.lua`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 108`** (1 nodes): `Build-Engine.lua`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 109`** (1 nodes): `Engine.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 110`** (1 nodes): `kepch.cpp`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 111`** (1 nodes): `kepch.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 112`** (1 nodes): `VulkanDispatch.cpp`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 113`** (1 nodes): `AssetManager.cpp`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 114`** (1 nodes): `PlatformDetection.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 115`** (1 nodes): `Assert.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 116`** (1 nodes): `SceneCamera.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 117`** (1 nodes): `Buffer.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 118`** (1 nodes): `RenderAPI.cpp`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 119`** (1 nodes): `ShadowRenderSystem.h`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 120`** (1 nodes): `RendererUtils.cpp`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 121`** (1 nodes): `_detect.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 122`** (1 nodes): `_read_detect.py`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 123`** (1 nodes): `Build-ShaderCompiler.lua`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 124`** (1 nodes): `Directory Icon`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 125`** (1 nodes): `File Icon`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 126`** (1 nodes): `Kairos Engine Logo`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+
+## Suggested Questions
+_Questions this graph is uniquely positioned to answer:_
+
+- **Why does `End()` connect `Scene Management & UUIDs` to `Vulkan Commands & GPU Scheduling`, `Editor Camera & Viewport Panels`, `Application Lifecycle & GLFW Windowing`, `Asset Import & Registry System`, `Vulkan Graphics Pipelines & Materials`, `Project Loading & Initialization Flow`, `Vulkan Framebuffers & Texture Resources`, `Material Graph Editor`, `Scene Rendering & Shadow Mapping`, `Shader Compilation & Build Utilities`, `Content Browser & Editor Core`, `Platform Abstraction & Logging`?**
+  _High betweenness centrality (0.152) - this node is a cross-community bridge._
+- **Why does `Get()` connect `Asset Import & Registry System` to `Vulkan Commands & GPU Scheduling`, `Editor Camera & Viewport Panels`, `Application Lifecycle & GLFW Windowing`, `Scene Management & UUIDs`, `Vulkan Graphics Pipelines & Materials`, `Project Loading & Initialization Flow`, `Vulkan Framebuffers & Texture Resources`, `Material Graph Editor`, `Scene Rendering & Shadow Mapping`, `Shader Compilation & Build Utilities`, `ImGui Layer & Visual Themes`?**
+  _High betweenness centrality (0.101) - this node is a cross-community bridge._
+- **Why does `GetAPI()` connect `Vulkan Graphics Pipelines & Materials` to `Vulkan Commands & GPU Scheduling`, `Application Lifecycle & GLFW Windowing`, `Scene Management & UUIDs`, `Vulkan Framebuffers & Texture Resources`, `Scene Rendering & Shadow Mapping`, `Content Browser & Editor Core`, `ImGui Layer & Visual Themes`, `Platform Abstraction & Logging`?**
+  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+- **Are the 58 inferred relationships involving `End()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
+  _`End()` has 58 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 38 inferred relationships involving `Get()` (e.g. with `OnAttach()` and `OpenAssetEditor()`) actually correct?**
+  _`Get()` has 38 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 37 inferred relationships involving `Begin()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
+  _`Begin()` has 37 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 26 inferred relationships involving `GetAPI()` (e.g. with `CreateBuffer_Static()` and `CreateBuffer_Dynamic()`) actually correct?**
+  _`GetAPI()` has 26 INFERRED edges - model-reasoned connections that need verification._

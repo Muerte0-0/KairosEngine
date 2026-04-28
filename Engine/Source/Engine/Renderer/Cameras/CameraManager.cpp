@@ -8,29 +8,36 @@ namespace Engine
 	{
 		m_ActiveGameCamera = nullptr;
 
-		// Find first CameraComponent marked Primary, sync its view from world transform.
+		GameCamera* firstFound = nullptr;
+
 		auto view = registry.view<CameraComponent, TransformComponent>();
 		for (auto [entity, cam, tc] : view.each())
 		{
+			if (!firstFound)
+				firstFound = &cam.Camera;
+
 			if (!cam.Primary)
 				continue;
 
-			// Sync view matrix from the entity's world transform.
 			if (cam.Camera.IsBound())
 				cam.Camera.SyncFromEntityTransform(tc.WorldTransform);
 			else
 				cam.Camera.SyncFromEntityTransform(tc.GetTransform());
 
 			m_ActiveGameCamera = &cam.Camera;
-			break; // only one primary
+			break;
 		}
+
+		// Fallback to first available camera if no primary is set.
+		if (!m_ActiveGameCamera && firstFound)
+			m_ActiveGameCamera = firstFound;
 	}
 
 	const Camera* CameraManager::GetActiveCamera() const
 	{
-		if (m_Mode == CameraManagerMode::Play && m_ActiveGameCamera)
+		if ((m_Mode == EngineMode::Play || m_Mode == EngineMode::Paused) && m_ActiveGameCamera)
 			return m_ActiveGameCamera;
-		
+
 		return m_SceneCamera;
 	}
 }
