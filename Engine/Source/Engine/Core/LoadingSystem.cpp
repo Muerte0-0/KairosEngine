@@ -22,6 +22,9 @@ namespace Engine
 	std::string         LoadingSystem::s_StatusText = "Initializing...";
 	JobHandle           LoadingSystem::s_StartupJob;
 	JobHandle           LoadingSystem::s_SceneJob;
+	LoadingMode         LoadingSystem::s_CurrentMode = LoadingMode::Fullscreen;
+	std::atomic<bool>   LoadingSystem::s_GenericIsLoading{ false };
+	std::atomic<float>  LoadingSystem::s_GenericProgress{ 0.0f };
 	std::function<void(const std::string&)> LoadingSystem::s_StatusCallback;
 	std::mutex          LoadingSystem::s_StatusMutex;
 	Ref<Scene>          LoadingSystem::s_StartupScene = nullptr;
@@ -80,6 +83,7 @@ namespace Engine
 		}
 		s_StartupProgress.store(0.0f);
 		s_StartupDone.store(false);
+		s_CurrentMode = LoadingMode::Fullscreen;
 		SetStatus("Initializing Engine");
 
 		// Reset main-thread startup queues
@@ -280,6 +284,7 @@ namespace Engine
 		s_SceneCtx.LoadedScene.reset();
 		s_SceneCtx.MeshAssets.clear();
 		s_SceneCtx.Primitives.clear();
+		s_CurrentMode = LoadingMode::Overlay;
 
 		s_SceneJob = JobSystem::Submit([path]() { LoadingSystem::SceneWorker(path); }, JobPriority::IO);
 	}
@@ -383,13 +388,45 @@ namespace Engine
 	}
 
 	// -----------------------------------------------------------------------
-	// Generic queries
+	// Generic queries & Manual API
 	// -----------------------------------------------------------------------
-	float LoadingSystem::GetProgress() { return s_StartupDone.load()
-		? s_SceneCtx.Progress.load()
-		: s_StartupProgress.load(); }
+	float LoadingSystem::GetProgress() {
+		if (s_GenericIsLoading.load()) return s_GenericProgress.load();
+		return s_StartupDone.load() ? s_SceneCtx.Progress.load() : s_StartupProgress.load();
+	}
 
-	bool  LoadingSystem::IsLoading()   { return !s_StartupDone.load() || !s_SceneCtx.IsDone.load(); }
+	bool  LoadingSystem::IsLoading()   {
+		return s_GenericIsLoading.load() || !s_StartupDone.load() || !s_SceneCtx.IsDone.load();
+	}
+
+	LoadingMode LoadingSystem::GetLoadingMode()
+	{
+		return s_CurrentMode;
+	}
+
+	void LoadingSystem::BeginLoading(LoadingMode mode)
+	{
+		s_CurrentMode = mode;
+		s_GenericProgress.store(0.0f);
+		SetStatus("Loading...");
+		s_GenericIsLoading.store(true);
+	}
+
+	void LoadingSystem::EndLoading()
+	{
+		s_GenericProgress.store(1.0f);
+		s_GenericIsLoading.store(false);
+	}
+
+	void LoadingSystem::SetLoadingText(const std::string& text)
+	{
+		SetStatus(text);
+	}
+
+	void LoadingSystem::SetProgress(float progress)
+	{
+		s_GenericProgress.store(glm::clamp(progress, 0.0f, 1.0f));
+	}
 
 	void  LoadingSystem::Reset()
 	{

@@ -465,23 +465,22 @@ namespace Engine
 					for (const auto& layer : m_LayerStack)
 						layer->OnRender();
 				}
+				
 				m_ImGuiLayer->OnRender();
 
 				m_ImGuiLayer->Begin(deltaTime);
 
 				Renderer::DrawFrame();
 
-				if (m_EngineState == EngineState::Running)
+				if (m_EngineState != EngineState::Loading || LoadingSystem::GetLoadingMode() == LoadingMode::Overlay)
 				{
 					m_ImGuiLayer->OnImGuiRender();
 					for (const auto& layer : m_LayerStack)
 						layer->OnImGuiRender();
 				}
-				else
-				{
-					// Render loading screen on top; suppress editor UI.
+				
+				if (m_EngineState == EngineState::Loading)
 					RenderLoadingScreen();
-				}
 
 				m_ImGuiLayer->End();
 				Renderer::EndScene();

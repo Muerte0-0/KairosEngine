@@ -13,6 +13,12 @@
 
 namespace Engine
 {
+	enum class LoadingMode
+	{
+		Fullscreen,
+		Overlay
+	};
+
 	class Scene;
 
 	// -----------------------------------------------------------------------
@@ -83,6 +89,13 @@ namespace Engine
 		// ----- Generic progress query (works for both phases) -----
 		static float GetProgress();
 		static bool  IsLoading();
+		static LoadingMode GetLoadingMode();
+
+		// ----- Generic Manual Loading API -----
+		static void BeginLoading(LoadingMode mode);
+		static void EndLoading();
+		static void SetLoadingText(const std::string& text);
+		static void SetProgress(float progress);
 
 		static void Reset();
 
@@ -93,6 +106,10 @@ namespace Engine
 		static std::string         s_StatusText;
 		static JobHandle           s_StartupJob;
 		static JobHandle           s_SceneJob;
+
+		static LoadingMode         s_CurrentMode;
+		static std::atomic<bool>   s_GenericIsLoading;
+		static std::atomic<float>  s_GenericProgress;
 
 		static std::function<void(const std::string&)> s_StatusCallback;
 		static std::mutex          s_StatusMutex;

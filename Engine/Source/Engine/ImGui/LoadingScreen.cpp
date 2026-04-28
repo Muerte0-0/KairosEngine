@@ -1,5 +1,6 @@
 #include "kepch.h"
 #include "LoadingScreen.h"
+#include "Engine/Core/LoadingSystem.h"
 
 #include "imgui.h"
 #include <im_anim.h>
@@ -78,10 +79,14 @@ namespace Engine
 			return;
 
 		ImGuiIO& io = ImGui::GetIO();
+		LoadingMode mode = LoadingSystem::GetLoadingMode();
 
-		// Block all input while the loading screen is visible.
-		io.WantCaptureMouse    = true;
-		io.WantCaptureKeyboard = true;
+		// Block all input while the loading screen is visible only in Fullscreen.
+		if (mode == LoadingMode::Fullscreen)
+		{
+			io.WantCaptureMouse    = true;
+			io.WantCaptureKeyboard = true;
+		}
 
 		const float fadeTarget    = m_LoadingFinished
 			? glm::max(0.0f, 1.0f - m_FadeOutTimer / FADE_OUT_DURATION)
@@ -90,13 +95,20 @@ namespace Engine
 		const float animSpeed     = (phase == LoadingPhase::SceneTransition) ? 14.0f : 8.0f;
 		const float overlayAlpha  = m_Anim.Lerp("OverlayAlpha", fadeTarget, animSpeed);
 		const float panelScale    = m_Anim.Lerp("PanelScale",   fadeTarget > 0.0f ? 1.0f : 0.92f, animSpeed);
-		const float panelAlpha    = overlayAlpha * panelScale; // rough compound
+		const float panelAlpha    = overlayAlpha * panelScale;
 
 		if (overlayAlpha < 0.01f && m_LoadingFinished)
 			return;
 
-		RenderOverlay(overlayAlpha);
-		RenderPanel(phase, progress, statusText, panelAlpha);
+		if (mode == LoadingMode::Fullscreen)
+		{
+			RenderOverlay(overlayAlpha);
+			RenderPanel(phase, progress, statusText, panelAlpha);
+		}
+		else
+		{
+			RenderOverlayPopup(phase, progress, statusText, panelAlpha);
+		}
 	}
 
 	// -----------------------------------------------------------------------
@@ -111,11 +123,11 @@ namespace Engine
 		ImGui::SetNextWindowBgAlpha(0.82f * overlayAlpha);
 
 		constexpr ImGuiWindowFlags kOverlayFlags =
-			ImGuiWindowFlags_NoDecoration     |
-			ImGuiWindowFlags_NoMove           |
-			ImGuiWindowFlags_NoSavedSettings  |
-			ImGuiWindowFlags_NoBringToFrontOnFocus |
-			ImGuiWindowFlags_NoNav            |
+			ImGuiWindowFlags_NoDecoration     		|
+			ImGuiWindowFlags_NoMove           		|
+			ImGuiWindowFlags_NoSavedSettings  		|
+			ImGuiWindowFlags_NoBringToFrontOnFocus	|
+			ImGuiWindowFlags_NoNav					|
 			ImGuiWindowFlags_NoInputs;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
@@ -128,8 +140,7 @@ namespace Engine
 	// -----------------------------------------------------------------------
 	// LoadingScreen — centered popup panel
 	// -----------------------------------------------------------------------
-	void LoadingScreen::RenderPanel(LoadingPhase phase, float progress,
-	                                const std::string& statusText, float panelAlpha)
+	void LoadingScreen::RenderPanel(LoadingPhase phase, float progress, const std::string& statusText, float panelAlpha)
 	{
 		const ImGuiViewport* vp  = ImGui::GetMainViewport();
 		const ImVec2 displaySize = vp->Size;
@@ -279,5 +290,50 @@ namespace Engine
 	    ImGui::PopStyleColor();
 	
 	    ImGui::Spacing();
+	}
+
+	// -----------------------------------------------------------------------
+	// LoadingScreen — minimal bottom-right popup
+	// -----------------------------------------------------------------------
+	void LoadingScreen::RenderOverlayPopup(LoadingPhase phase, float progress, const std::string& statusText, float panelAlpha)
+	{
+		const ImGuiViewport* vp = ImGui::GetMainViewport();
+
+		constexpr float kPanelW = 300.0f;
+		constexpr float kPanelH = 65.0f;
+		constexpr float kPadding = 20.0f;
+
+		const ImVec2 panelPos = {
+			vp->Pos.x + vp->Size.x - kPanelW - kPadding,
+			vp->Pos.y + vp->Size.y - kPanelH - kPadding
+		};
+
+		ImGui::SetNextWindowPos(panelPos, ImGuiCond_Always);
+		ImGui::SetNextWindowSize({ kPanelW, kPanelH }, ImGuiCond_Always);
+		ImGui::SetNextWindowBgAlpha(panelAlpha * 0.85f);
+
+		constexpr ImGuiWindowFlags kPanelFlags =
+			ImGuiWindowFlags_NoDecoration    |
+			ImGuiWindowFlags_NoMove          |
+			ImGuiWindowFlags_NoSavedSettings |
+			ImGuiWindowFlags_NoNav           |
+			ImGuiWindowFlags_NoFocusOnAppearing |
+			ImGuiWindowFlags_NoInputs;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 8.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+		ImGui::Begin("##LoadingOverlayPopup", nullptr, kPanelFlags);
+		ImGui::PopStyleVar(2);
+
+		const std::string text = statusText.empty() ? "Loading..." : statusText + "...";
+
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.9f, 0.9f, panelAlpha));
+		ImGui::TextUnformatted(text.c_str());
+		ImGui::PopStyleColor();
+
+		ImGui::Spacing();
+		RenderProgressBar(m_Anim.Lerp("Progress", progress, 5.0f), panelAlpha);
+
+		ImGui::End();
 	}
 }

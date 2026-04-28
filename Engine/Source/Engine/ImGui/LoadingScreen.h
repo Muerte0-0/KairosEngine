@@ -72,5 +72,9 @@ namespace Engine
 		void RenderProgressBar(float smoothProgress, float panelAlpha);
 		void RenderStatusText(LoadingPhase phase, const std::string& statusText,
 		                      float time, float panelAlpha);
+
+		// Overlay Mode specific
+		void RenderOverlayPopup(LoadingPhase phase, float progress,
+		                        const std::string& statusText, float panelAlpha);
 	};
 }
