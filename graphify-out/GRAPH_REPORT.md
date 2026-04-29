@@ -1,12 +1,12 @@
 # Graph Report - D:\Dev\Projects\KairosEngine  (2026-04-28)
 
 ## Corpus Check
-- 188 files · ~121,120 words
+- 187 files · ~121,024 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 859 nodes · 1526 edges · 128 communities detected
-- Extraction: 64% EXTRACTED · 36% INFERRED · 0% AMBIGUOUS · INFERRED: 556 edges (avg confidence: 0.8)
+- 860 nodes · 1547 edges · 127 communities detected
+- Extraction: 63% EXTRACTED · 37% INFERRED · 0% AMBIGUOUS · INFERRED: 569 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -137,85 +137,84 @@
 - [[_COMMUNITY_Community 124|Community 124]]
 - [[_COMMUNITY_Community 125|Community 125]]
 - [[_COMMUNITY_Community 126|Community 126]]
-- [[_COMMUNITY_Community 127|Community 127]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `End()` - 60 edges
-2. `Get()` - 40 edges
+2. `Get()` - 45 edges
 3. `Begin()` - 38 edges
 4. `GetAPI()` - 29 edges
-5. `Clear()` - 24 edges
-6. `Run()` - 23 edges
+5. `Run()` - 24 edges
+6. `Clear()` - 24 edges
 7. `Create()` - 18 edges
 8. `TickLoadingState()` - 16 edges
 9. `Run()` - 16 edges
 10. `ImportAsset()` - 15 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `OnFixedUpdate()` --calls--> `Run()`  [INFERRED]
+  D:\Dev\Projects\KairosEngine\Editor\Source\EditorLayer.cpp → D:\Dev\Projects\KairosEngine\Engine\Source\Engine\Core\Application.cpp
+- `OnSceneLoaded()` --calls--> `TickLoadingState()`  [INFERRED]
+  D:\Dev\Projects\KairosEngine\Editor\Source\EditorLayer.cpp → D:\Dev\Projects\KairosEngine\Engine\Source\Engine\Core\Application.cpp
 - `DrawComponents()` --calls--> `SetPrimaryCamera()`  [INFERRED]
   Editor\Source\Panels\PropertiesPanel.cpp → D:\Dev\Projects\KairosEngine\Engine\Source\Engine\Scene\Scene.cpp
 - `CreatePipeline()` --calls--> `GetStages()`  [INFERRED]
   Engine\Source\APIs\Vulkan\VulkanGraphicsPipeline.cpp → Engine\Source\Engine\Renderer\RHI\Shader.cpp
-- `VulkanImGuiLayer()` --calls--> `GetAPI()`  [INFERRED]
-  Engine\Source\APIs\Vulkan\VulkanImGuiLayer.cpp → Engine\Source\APIs\Vulkan\VulkanMaterial.cpp
-- `OnImGuiRender()` --calls--> `Run()`  [INFERRED]
-  Engine\Source\APIs\Vulkan\VulkanImGuiLayer.cpp → Engine\Source\Engine\Core\Application.cpp
-- `Get()` --calls--> `End()`  [INFERRED]
-  Engine\Source\Engine\Assets\AssetRegistry.cpp → Engine\Source\Engine\Renderer\ShadowPass.cpp
+- `CreatePipeline()` --calls--> `ToVkStage()`  [INFERRED]
+  Engine\Source\APIs\Vulkan\VulkanGraphicsPipeline.cpp → Engine\Source\APIs\Vulkan\VulkanShader.cpp
 
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.05
-Nodes (57): DeduceTypeFromPath(), Remove(), Record(), BuildLevelEditorLayout(), DrawConsole(), DrawDebugWindow(), DrawLevelEditorWindow(), DrawMenuBar() (+49 more)
+Cohesion: 0.06
+Nodes (54): DeduceTypeFromPath(), Import(), ImportMaterial(), ImportMesh(), ImportTexture(), Add(), Get(), GetHandleForPath() (+46 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.06
-Nodes (52): Import(), ImportMaterial(), ImportMesh(), ImportTexture(), Add(), Get(), GetHandleForPath(), IsPathRegistered() (+44 more)
+Cohesion: 0.07
+Nodes (55): Application(), AttachLayersDuringLoading(), EnsureApplicationShadersCompiled(), GetShaderCompilerBinaryName(), GetTime(), Initialize(), JoinCommand(), PrintCommandOutput() (+47 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (41): Application(), EnsureApplicationShadersCompiled(), GetShaderCompilerBinaryName(), GetTime(), Initialize(), JoinCommand(), OnWindowClosed(), OnWindowResize() (+33 more)
+Cohesion: 0.05
+Nodes (52): Create(), GetDefault(), GetLayout(), Render(), ResolveMaterialAsset(), GetShaderLibrary(), Execute(), GetShadowMapFramebuffer() (+44 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.07
-Nodes (41): FlushSlot(), OnBeginFrame(), OnShutdown(), Render(), Submit(), WaitIdle(), CreateCommandBuffers(), CreateCommandPool() (+33 more)
+Nodes (36): OnWindowClosed(), Stop(), SetView(), GetActiveCamera(), UpdateFromRegistry(), BuildLevelEditorLayout(), DrawConsole(), DrawDebugWindow() (+28 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.08
-Nodes (47): AttachLayersDuringLoading(), RenderLoadingScreen(), RequestSceneChange(), Shutdown(), TickLoadingState(), OnAttach(), OnSceneLoaded(), OpenAssetEditor() (+39 more)
+Cohesion: 0.06
+Nodes (25): OnWindowResize(), Run(), OnRender(), Dispatch(), SetCommandBuild(), SetECSUpdate(), SetRenderExtract(), SetSimulation() (+17 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.06
-Nodes (33): ComputeAABB(), GetLayout(), GetVertices(), OnImGuiRender(), Render(), ResolveMaterialAsset(), GetShaderLibrary(), Execute() (+25 more)
+Cohesion: 0.07
+Nodes (30): Shutdown(), Record(), Shutdown(), FlushSlot(), OnBeginFrame(), OnShutdown(), Shutdown(), Submit() (+22 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.07
-Nodes (36): Create(), Create(), Create(), Create(), GetDefault(), EndFrameCapture(), LoadRenderDocAPI(), StartFrameCapture() (+28 more)
+Cohesion: 0.12
+Nodes (37): Remove(), Get(), IsFadingOut(), Lerp(), OnLoadingFinished(), Render(), RenderOverlay(), RenderOverlayPopup() (+29 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.08
-Nodes (38): Contains(), IsAssetLoaded(), Update(), AddNodeToCanvas(), DrawAddNodePopup(), DrawNodeCanvas(), DrawParamsSidebar(), DrawToolbar() (+30 more)
+Nodes (39): Contains(), IsAssetLoaded(), Update(), AddNodeToCanvas(), DrawAddNodePopup(), DrawNodeCanvas(), DrawParamsSidebar(), DrawToolbar() (+31 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.11
-Nodes (33): EnsureFormats(), CreateColorAttachment(), CreateColorSampler(), CreateDepthAttachment(), CreateDepthSampler(), CreateMSAAColorAttachment(), Engine(), FindDepthFormat() (+25 more)
+Cohesion: 0.08
+Nodes (32): Create(), Create(), Create(), EndFrameCapture(), LoadRenderDocAPI(), StartFrameCapture(), TriggerCapture(), HasStage() (+24 more)
 
 ### Community 9 - "Community 9"
+Cohesion: 0.11
+Nodes (32): EnsureFormats(), CreateColorAttachment(), CreateColorSampler(), CreateDepthAttachment(), CreateDepthSampler(), CreateMSAAColorAttachment(), Engine(), FindDepthFormat() (+24 more)
+
+### Community 10 - "Community 10"
 Cohesion: 0.12
 Nodes (32): Create(), Exists(), GetStages(), Load(), StageToString(), CollectShaderFiles(), CompileEntryPoint(), DiscoverAnnotatedEntryPoints() (+24 more)
 
-### Community 10 - "Community 10"
+### Community 11 - "Community 11"
 Cohesion: 0.09
 Nodes (24): ContentBrowserPanel(), CreateNewAsset(), DrawEmptySpaceContextMenu(), GetIconForPath(), OnImGuiRender(), RenderFolderTree(), TryLoadIcon(), CreateApplication() (+16 more)
 
-### Community 11 - "Community 11"
-Cohesion: 0.11
-Nodes (18): SetView(), GetActiveCamera(), UpdateFromRegistry(), OnUpdate(), SetViewFromTransform(), SyncFromEntityTransform(), ProjectionCamera(), RecalculateProjection() (+10 more)
-
 ### Community 12 - "Community 12"
-Cohesion: 0.12
-Nodes (15): Init(), Shutdown(), FindWorkspaceRoot(), GetExecutablePath(), ResolveWorkspaceRoot(), GetExecutableDirectory(), Init(), Shutdown() (+7 more)
+Cohesion: 0.15
+Nodes (15): Init(), FindWorkspaceRoot(), GetExecutablePath(), ResolveWorkspaceRoot(), GetExecutableDirectory(), Init(), Shutdown(), Resize() (+7 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.21
@@ -226,16 +225,16 @@ Cohesion: 0.2
 Nodes (15): HexToImVec4(), LoadFonts(), ResolveFontDirectory(), SetImGuiStyle(), SetTheme_CatppuccinFrappé(), SetTheme_CatppuccinLatte(), SetTheme_CatppuccinMacchiato(), SetTheme_CatppuccinMocha() (+7 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.31
-Nodes (6): Create(), Destroy(), RaiseEvent(), ResolveIconPath(), ShouldClose(), Window()
+Cohesion: 0.16
+Nodes (6): ComputeAABB(), GetVertices(), OnImGuiRender(), ComputeCasterBounds(), ComputeDown(), ExtractDirectionalLight()
 
 ### Community 16 - "Community 16"
 Cohesion: 0.22
-Nodes (0): 
+Nodes (12): ProjectionCamera(), RecalculateProjection(), SetAspectRatio(), SetFOV(), SetNearFar(), SetOrthographic(), SetPerspective(), OnViewportResize() (+4 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.32
-Nodes (4): Shutdown(), Submit(), SubmitAfter(), SubmitBatch()
+Cohesion: 0.22
+Nodes (0): 
 
 ### Community 18 - "Community 18"
 Cohesion: 0.5
@@ -595,11 +594,11 @@ Nodes (0):
 
 ### Community 107 - "Community 107"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): Open Sans OFL License, KairosEngine README
 
 ### Community 108 - "Community 108"
 Cohesion: 1.0
-Nodes (2): Open Sans OFL License, KairosEngine README
+Nodes (0): 
 
 ### Community 109 - "Community 109"
 Cohesion: 1.0
@@ -663,17 +662,13 @@ Nodes (0):
 
 ### Community 124 - "Community 124"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): Directory Icon
 
 ### Community 125 - "Community 125"
 Cohesion: 1.0
-Nodes (1): Directory Icon
-
-### Community 126 - "Community 126"
-Cohesion: 1.0
 Nodes (1): File Icon
 
-### Community 127 - "Community 127"
+### Community 126 - "Community 126"
 Cohesion: 1.0
 Nodes (1): Kairos Engine Logo
 
@@ -744,160 +739,158 @@ Nodes (1): Kairos Engine Logo
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 57`** (2 nodes): `EngineMode.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 58`** (2 nodes): `EngineState.h`, `LoadingPhase()`
+- **Thin community `Community 58`** (2 nodes): `Layer.cpp`, `Layer()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (2 nodes): `Layer.cpp`, `Layer()`
+- **Thin community `Community 59`** (2 nodes): `Layer.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (2 nodes): `Layer.h`, `Engine()`
+- **Thin community `Community 60`** (2 nodes): `LoadingSystem.h`, `LoadingSystem()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (2 nodes): `LoadingSystem.h`, `LoadingSystem()`
+- **Thin community `Community 61`** (2 nodes): `Window.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (2 nodes): `Window.h`, `Engine()`
+- **Thin community `Community 62`** (2 nodes): `Fence.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (2 nodes): `Fence.h`, `Engine()`
+- **Thin community `Community 63`** (2 nodes): `TaskGraph.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (2 nodes): `TaskGraph.h`, `Engine()`
+- **Thin community `Community 64`** (2 nodes): `ThreadPool.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (2 nodes): `ThreadPool.h`, `Engine()`
+- **Thin community `Community 65`** (2 nodes): `Log.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (2 nodes): `Log.h`, `Engine()`
+- **Thin community `Community 66`** (2 nodes): `RenderDocDebugSystem.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 67`** (2 nodes): `RenderDocDebugSystem.h`, `Engine()`
+- **Thin community `Community 67`** (2 nodes): `Event.h`, `Event()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (2 nodes): `Event.h`, `Event()`
+- **Thin community `Community 68`** (2 nodes): `WindowEvents.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (2 nodes): `WindowEvents.h`, `Engine()`
+- **Thin community `Community 69`** (2 nodes): `ImGuiLayer.cpp`, `Create()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (2 nodes): `ImGuiLayer.cpp`, `Create()`
+- **Thin community `Community 70`** (2 nodes): `ImGuiLayer.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (2 nodes): `ImGuiLayer.h`, `Engine()`
+- **Thin community `Community 71`** (2 nodes): `ImGuiLogSink.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (2 nodes): `ImGuiLogSink.h`, `Engine()`
+- **Thin community `Community 72`** (2 nodes): `ImGuiUtils.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (2 nodes): `ImGuiUtils.h`, `Engine()`
+- **Thin community `Community 73`** (2 nodes): `LoadingScreen.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (2 nodes): `LoadingScreen.h`, `Engine()`
+- **Thin community `Community 74`** (2 nodes): `Input.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (2 nodes): `Input.h`, `Engine()`
+- **Thin community `Community 75`** (2 nodes): `MaterialGraph.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (2 nodes): `MaterialGraph.h`, `Engine()`
+- **Thin community `Community 76`** (2 nodes): `MaterialGraphCompiler.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (2 nodes): `MaterialGraphCompiler.h`, `Engine()`
+- **Thin community `Community 77`** (2 nodes): `Math.cpp`, `DecomposeTransform()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 78`** (2 nodes): `Math.cpp`, `DecomposeTransform()`
+- **Thin community `Community 78`** (2 nodes): `Math.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 79`** (2 nodes): `Math.h`, `Engine()`
+- **Thin community `Community 79`** (2 nodes): `Project.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 80`** (2 nodes): `Project.h`, `Engine()`
+- **Thin community `Community 80`** (2 nodes): `ProjectSerializer.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 81`** (2 nodes): `ProjectSerializer.h`, `Engine()`
+- **Thin community `Community 81`** (2 nodes): `Renderer.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 82`** (2 nodes): `Renderer.h`, `Engine()`
+- **Thin community `Community 82`** (2 nodes): `RenderPass.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 83`** (2 nodes): `RenderPass.h`, `Engine()`
+- **Thin community `Community 83`** (2 nodes): `RenderPipeline.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 84`** (2 nodes): `RenderPipeline.h`, `Engine()`
+- **Thin community `Community 84`** (2 nodes): `ShadowPass.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 85`** (2 nodes): `ShadowPass.h`, `Engine()`
+- **Thin community `Community 85`** (2 nodes): `Engine()`, `CameraManager.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 86`** (2 nodes): `Engine()`, `CameraManager.h`
+- **Thin community `Community 86`** (2 nodes): `GameCamera.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 87`** (2 nodes): `GameCamera.h`, `Engine()`
+- **Thin community `Community 87`** (2 nodes): `ProjectionCamera.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 88`** (2 nodes): `ProjectionCamera.h`, `Engine()`
+- **Thin community `Community 88`** (2 nodes): `Framebuffer.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 89`** (2 nodes): `Framebuffer.h`, `Engine()`
+- **Thin community `Community 89`** (2 nodes): `GraphicsPipeline.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 90`** (2 nodes): `GraphicsPipeline.h`, `Engine()`
+- **Thin community `Community 90`** (2 nodes): `RenderAPI.h`, `API()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 91`** (2 nodes): `RenderAPI.h`, `API()`
+- **Thin community `Community 91`** (2 nodes): `Shader.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 92`** (2 nodes): `Shader.h`, `Engine()`
+- **Thin community `Community 92`** (2 nodes): `MaterialFactory.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 93`** (2 nodes): `MaterialFactory.h`, `Engine()`
+- **Thin community `Community 93`** (2 nodes): `ModelFactory.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 94`** (2 nodes): `ModelFactory.h`, `Engine()`
+- **Thin community `Community 94`** (2 nodes): `Material.h`, `_pad1()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 95`** (2 nodes): `Material.h`, `_pad1()`
+- **Thin community `Community 95`** (2 nodes): `Texture.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 96`** (2 nodes): `Texture.h`, `Engine()`
+- **Thin community `Community 96`** (2 nodes): `Engine()`, `Components.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 97`** (2 nodes): `Engine()`, `Components.h`
+- **Thin community `Community 97`** (2 nodes): `Entity.cpp`, `Entity()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 98`** (2 nodes): `Entity.cpp`, `Entity()`
+- **Thin community `Community 98`** (2 nodes): `Entity.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 99`** (2 nodes): `Entity.h`, `Engine()`
+- **Thin community `Community 99`** (2 nodes): `SceneGraph.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 100`** (2 nodes): `SceneGraph.h`, `Engine()`
+- **Thin community `Community 100`** (2 nodes): `SceneSerializer.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 101`** (2 nodes): `SceneSerializer.h`, `Engine()`
+- **Thin community `Community 101`** (2 nodes): `MeshRenderSystem.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 102`** (2 nodes): `MeshRenderSystem.h`, `Engine()`
+- **Thin community `Community 102`** (2 nodes): `ParallelSystemExecutor.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 103`** (2 nodes): `ParallelSystemExecutor.h`, `Engine()`
+- **Thin community `Community 103`** (2 nodes): `PlatformUtils.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 104`** (2 nodes): `PlatformUtils.h`, `Engine()`
+- **Thin community `Community 104`** (2 nodes): `PrimitiveMeshFactory.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 105`** (2 nodes): `PrimitiveMeshFactory.h`, `Engine()`
+- **Thin community `Community 105`** (2 nodes): `WindowsInput.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 106`** (2 nodes): `WindowsInput.h`, `Engine()`
+- **Thin community `Community 106`** (2 nodes): `ShaderCompiler()`, `ShaderCompiler.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 107`** (2 nodes): `ShaderCompiler()`, `ShaderCompiler.h`
+- **Thin community `Community 107`** (2 nodes): `Open Sans OFL License`, `KairosEngine README`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 108`** (2 nodes): `Open Sans OFL License`, `KairosEngine README`
+- **Thin community `Community 108`** (1 nodes): `KairosEngine-Setup.lua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 109`** (1 nodes): `KairosEngine-Setup.lua`
+- **Thin community `Community 109`** (1 nodes): `Build-Editor.lua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 110`** (1 nodes): `Build-Editor.lua`
+- **Thin community `Community 110`** (1 nodes): `Build-Engine.lua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 111`** (1 nodes): `Build-Engine.lua`
+- **Thin community `Community 111`** (1 nodes): `Engine.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 112`** (1 nodes): `Engine.h`
+- **Thin community `Community 112`** (1 nodes): `kepch.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 113`** (1 nodes): `kepch.cpp`
+- **Thin community `Community 113`** (1 nodes): `kepch.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 114`** (1 nodes): `kepch.h`
+- **Thin community `Community 114`** (1 nodes): `VulkanDispatch.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 115`** (1 nodes): `VulkanDispatch.cpp`
+- **Thin community `Community 115`** (1 nodes): `AssetManager.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 116`** (1 nodes): `AssetManager.cpp`
+- **Thin community `Community 116`** (1 nodes): `PlatformDetection.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 117`** (1 nodes): `PlatformDetection.h`
+- **Thin community `Community 117`** (1 nodes): `Assert.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 118`** (1 nodes): `Assert.h`
+- **Thin community `Community 118`** (1 nodes): `SceneCamera.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 119`** (1 nodes): `SceneCamera.h`
+- **Thin community `Community 119`** (1 nodes): `Buffer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 120`** (1 nodes): `Buffer.h`
+- **Thin community `Community 120`** (1 nodes): `RenderAPI.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 121`** (1 nodes): `RenderAPI.cpp`
+- **Thin community `Community 121`** (1 nodes): `ShadowRenderSystem.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 122`** (1 nodes): `ShadowRenderSystem.h`
+- **Thin community `Community 122`** (1 nodes): `RendererUtils.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 123`** (1 nodes): `RendererUtils.cpp`
+- **Thin community `Community 123`** (1 nodes): `Build-ShaderCompiler.lua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 124`** (1 nodes): `Build-ShaderCompiler.lua`
+- **Thin community `Community 124`** (1 nodes): `Directory Icon`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 125`** (1 nodes): `Directory Icon`
+- **Thin community `Community 125`** (1 nodes): `File Icon`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 126`** (1 nodes): `File Icon`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 127`** (1 nodes): `Kairos Engine Logo`
+- **Thin community `Community 126`** (1 nodes): `Kairos Engine Logo`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `End()` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`?**
-  _High betweenness centrality (0.158) - this node is a cross-community bridge._
-- **Why does `Get()` connect `Community 1` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 14`?**
-  _High betweenness centrality (0.100) - this node is a cross-community bridge._
-- **Why does `GetAPI()` connect `Community 6` to `Community 0`, `Community 2`, `Community 3`, `Community 5`, `Community 8`, `Community 9`, `Community 10`, `Community 12`, `Community 14`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+- **Why does `End()` connect `Community 6` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 15`, `Community 16`?**
+  _High betweenness centrality (0.156) - this node is a cross-community bridge._
+- **Why does `Get()` connect `Community 0` to `Community 1`, `Community 2`, `Community 3`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 14`?**
+  _High betweenness centrality (0.113) - this node is a cross-community bridge._
+- **Why does `GetAPI()` connect `Community 8` to `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 14`?**
+  _High betweenness centrality (0.073) - this node is a cross-community bridge._
 - **Are the 59 inferred relationships involving `End()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
   _`End()` has 59 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 38 inferred relationships involving `Get()` (e.g. with `OnAttach()` and `OpenAssetEditor()`) actually correct?**
-  _`Get()` has 38 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 43 inferred relationships involving `Get()` (e.g. with `OnAttach()` and `DrawMenuBar()`) actually correct?**
+  _`Get()` has 43 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 37 inferred relationships involving `Begin()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
   _`Begin()` has 37 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 26 inferred relationships involving `GetAPI()` (e.g. with `CreateBuffer_Static()` and `CreateBuffer_Dynamic()`) actually correct?**
