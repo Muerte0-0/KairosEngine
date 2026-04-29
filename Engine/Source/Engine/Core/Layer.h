@@ -34,6 +34,10 @@ namespace Engine
 		// Called by Application on the main thread after a scene transition completes.
 		// Override in EditorLayer (or game layer) to swap the active scene.
 		virtual void OnSceneLoaded(const Ref<Scene>& scene) {}
+
+		// Called by Application when entering/exiting play mode.
+		virtual void OnEnterPlayMode(const Ref<Scene>& runtimeScene) {}
+		virtual void OnExitPlayMode(const Ref<Scene>& editorScene) {}
 		
 	private:
 		std::string m_DebugName;

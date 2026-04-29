@@ -303,10 +303,43 @@ namespace Engine
 		constexpr float kPanelH = 65.0f;
 		constexpr float kPadding = 20.0f;
 
-		const ImVec2 panelPos = {
-			vp->Pos.x + vp->Size.x - kPanelW - kPadding,
-			vp->Pos.y + vp->Size.y - kPanelH - kPadding
-		};
+		const LoadingOverlayPosition pos = LoadingSystem::GetOverlayPosition();
+
+		ImVec2 panelPos;
+		switch (pos)
+		{
+		case LoadingOverlayPosition::Center:
+			panelPos = {
+				vp->Pos.x + (vp->Size.x - kPanelW) * 0.5f,
+				vp->Pos.y + (vp->Size.y - kPanelH) * 0.5f
+			};
+			break;
+		case LoadingOverlayPosition::BottomLeft:
+			panelPos = {
+				vp->Pos.x + kPadding,
+				vp->Pos.y + vp->Size.y - kPanelH - kPadding
+			};
+			break;
+		case LoadingOverlayPosition::TopRight:
+			panelPos = {
+				vp->Pos.x + vp->Size.x - kPanelW - kPadding,
+				vp->Pos.y + kPadding
+			};
+			break;
+		case LoadingOverlayPosition::TopLeft:
+			panelPos = {
+				vp->Pos.x + kPadding,
+				vp->Pos.y + kPadding
+			};
+			break;
+		case LoadingOverlayPosition::BottomRight:
+		default:
+			panelPos = {
+				vp->Pos.x + vp->Size.x - kPanelW - kPadding,
+				vp->Pos.y + vp->Size.y - kPanelH - kPadding
+			};
+			break;
+		}
 
 		ImGui::SetNextWindowPos(panelPos, ImGuiCond_Always);
 		ImGui::SetNextWindowSize({ kPanelW, kPanelH }, ImGuiCond_Always);

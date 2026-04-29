@@ -23,6 +23,7 @@ namespace Engine
 	JobHandle           LoadingSystem::s_StartupJob;
 	JobHandle           LoadingSystem::s_SceneJob;
 	LoadingMode         LoadingSystem::s_CurrentMode = LoadingMode::Fullscreen;
+	LoadingOverlayPosition LoadingSystem::s_OverlayPosition = LoadingOverlayPosition::BottomRight;
 	std::atomic<bool>   LoadingSystem::s_GenericIsLoading{ false };
 	std::atomic<float>  LoadingSystem::s_GenericProgress{ 0.0f };
 	std::function<void(const std::string&)> LoadingSystem::s_StatusCallback;
@@ -404,9 +405,15 @@ namespace Engine
 		return s_CurrentMode;
 	}
 
-	void LoadingSystem::BeginLoading(LoadingMode mode)
+	LoadingOverlayPosition LoadingSystem::GetOverlayPosition()
+	{
+		return s_OverlayPosition;
+	}
+
+	void LoadingSystem::BeginLoading(LoadingMode mode, LoadingOverlayPosition position)
 	{
 		s_CurrentMode = mode;
+		s_OverlayPosition = position;
 		s_GenericProgress.store(0.0f);
 		SetStatus("Loading...");
 		s_GenericIsLoading.store(true);

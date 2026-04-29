@@ -19,6 +19,15 @@ namespace Engine
 		Overlay
 	};
 
+	enum class LoadingOverlayPosition
+	{
+		Center,
+		BottomRight,
+		BottomLeft,
+		TopRight,
+		TopLeft
+	};
+
 	class Scene;
 
 	// -----------------------------------------------------------------------
@@ -90,9 +99,10 @@ namespace Engine
 		static float GetProgress();
 		static bool  IsLoading();
 		static LoadingMode GetLoadingMode();
+		static LoadingOverlayPosition GetOverlayPosition();
 
 		// ----- Generic Manual Loading API -----
-		static void BeginLoading(LoadingMode mode);
+		static void BeginLoading(LoadingMode mode, LoadingOverlayPosition position = LoadingOverlayPosition::BottomRight);
 		static void EndLoading();
 		static void SetLoadingText(const std::string& text);
 		static void SetProgress(float progress);
@@ -108,6 +118,7 @@ namespace Engine
 		static JobHandle           s_SceneJob;
 
 		static LoadingMode         s_CurrentMode;
+		static LoadingOverlayPosition s_OverlayPosition;
 		static std::atomic<bool>   s_GenericIsLoading;
 		static std::atomic<float>  s_GenericProgress;
 

@@ -14,4 +14,11 @@ namespace Engine
 		EditorStartup,
 		SceneTransition
 	};
+
+	enum class EngineMode
+	{
+		Editor,
+		Play,
+		Paused
+	};
 }

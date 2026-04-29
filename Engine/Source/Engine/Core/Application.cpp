@@ -8,6 +8,7 @@
 
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include "imgui.h"
 
 #include "Engine/Project/Project.h"
 
@@ -363,6 +364,43 @@ namespace Engine
 		}
 	}
 
+	void Application::EnterPlayMode()
+	{
+		m_FramePipeline.Wait();
+		m_FramePipeline.Reset();
+
+		if (!m_EditorScene)
+			return;
+
+		LoadingSystem::BeginLoading(LoadingMode::Overlay, LoadingOverlayPosition::Center);
+		LoadingSystem::SetLoadingText("Entering Play Mode...");
+
+		LoadingSystem::SetLoadingText("Cloning Scene...");
+		m_RuntimeScene = m_EditorScene->Clone();
+		assert(m_RuntimeScene != nullptr);
+
+		// Notify layers of the new runtime scene
+		for (auto& layer : m_LayerStack)
+			layer->OnEnterPlayMode(m_RuntimeScene);
+
+		m_EngineMode = EngineMode::Play;
+		LoadingSystem::EndLoading();
+	}
+
+	void Application::ExitPlayMode()
+	{
+		m_FramePipeline.Wait();
+		m_FramePipeline.Reset();
+
+		m_RuntimeScene.reset();
+
+		// Restore editor scene in layers
+		for (auto& layer : m_LayerStack)
+			layer->OnExitPlayMode(m_EditorScene);
+
+		m_EngineMode = EngineMode::Editor;
+	}
+
 	void Application::RenderLoadingScreen()
 	{
 		const float progress   = (m_LoadingPhase == LoadingPhase::EditorStartup)
@@ -374,6 +412,60 @@ namespace Engine
 			: std::string{};
 
 		m_LoadingScreen.Render(m_LoadingPhase, progress, status);
+	}
+
+	void Application::RenderGenericOverlay()
+	{
+		// Lightweight overlay for play-mode transitions (EnterPlayMode / ExitPlayMode).
+		// Does not use LoadingScreen lifecycle — renders directly via ImGui.
+		const ImGuiViewport* vp = ImGui::GetMainViewport();
+
+		constexpr float kW       = 300.0f;
+		constexpr float kH       = 60.0f;
+		constexpr float kPadding = 20.0f;
+
+		const LoadingOverlayPosition pos = LoadingSystem::GetOverlayPosition();
+		ImVec2 winPos;
+		switch (pos)
+		{
+		case LoadingOverlayPosition::Center:
+			winPos = { vp->Pos.x + (vp->Size.x - kW) * 0.5f, vp->Pos.y + (vp->Size.y - kH) * 0.5f };
+			break;
+		case LoadingOverlayPosition::BottomLeft:
+			winPos = { vp->Pos.x + kPadding, vp->Pos.y + vp->Size.y - kH - kPadding };
+			break;
+		case LoadingOverlayPosition::TopRight:
+			winPos = { vp->Pos.x + vp->Size.x - kW - kPadding, vp->Pos.y + kPadding };
+			break;
+		case LoadingOverlayPosition::TopLeft:
+			winPos = { vp->Pos.x + kPadding, vp->Pos.y + kPadding };
+			break;
+		case LoadingOverlayPosition::BottomRight: default:
+			winPos = { vp->Pos.x + vp->Size.x - kW - kPadding, vp->Pos.y + vp->Size.y - kH - kPadding };
+			break;
+		}
+
+		ImGui::SetNextWindowPos(winPos, ImGuiCond_Always);
+		ImGui::SetNextWindowSize({ kW, kH }, ImGuiCond_Always);
+		ImGui::SetNextWindowBgAlpha(0.85f);
+
+		constexpr ImGuiWindowFlags kFlags =
+			ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+			ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoNav |
+			ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoInputs;
+
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 8.0f);
+		ImGui::Begin("##GenericOverlay", nullptr, kFlags);
+		ImGui::PopStyleVar();
+
+		const std::string text = LoadingSystem::GetCurrentStatusText();
+		ImGui::TextUnformatted(text.empty() ? "Loading..." : text.c_str());
+		ImGui::Spacing();
+
+		const float progress = LoadingSystem::GetProgress();
+		ImGui::ProgressBar(progress, { ImGui::GetContentRegionAvail().x, 6.0f }, "");
+
+		ImGui::End();
 	}
 
 	void Application::Run()
@@ -426,23 +518,31 @@ namespace Engine
 					// Dispatch ECS, Simulation, RenderExtract, CommandBuild
 					// stages in parallel where deps allow. GPU submit below.
 					// -------------------------------------------------------
-					m_FramePipeline.SetECSUpdate([this](float dt)
+					// Snapshot raw ptrs — Scope<Layer> is non-copyable; raw ptrs
+					// are stable for the duration of this frame (layers only
+					// added/removed on main thread, never during Dispatch).
+					std::vector<Layer*> layers;
+					layers.reserve(m_LayerStack.size());
+					for (const auto& l : m_LayerStack)
+						layers.push_back(l.get());
+
+					m_FramePipeline.SetECSUpdate([layers](float dt)
 					{
-						for (const auto& layer : m_LayerStack)
-							layer->OnUpdate(dt);
+						for (Layer* layer : layers)
+							if (layer) layer->OnUpdate(dt);
 					});
 
 					// Simulation and RenderExtract run after ECSUpdate (declared
 					// as deps in FramePipeline), concurrently with each other.
-					m_FramePipeline.SetSimulation([this](float dt)
+					m_FramePipeline.SetSimulation([layers](float dt)
 					{
-						for (const auto& layer : m_LayerStack)
-							layer->OnSimulate(dt);
+						for (Layer* layer : layers)
+							if (layer) layer->OnSimulate(dt);
 					});
-					m_FramePipeline.SetRenderExtract([this]
+					m_FramePipeline.SetRenderExtract([layers]
 					{
-						for (const auto& layer : m_LayerStack)
-							layer->OnRenderExtract();
+						for (Layer* layer : layers)
+							if (layer) layer->OnRenderExtract();
 					});
 					// CommandBuild: reserved for future multi-threaded secondary cmd buf recording.
 					m_FramePipeline.SetCommandBuild(nullptr);
@@ -481,6 +581,10 @@ namespace Engine
 				
 				if (m_EngineState == EngineState::Loading)
 					RenderLoadingScreen();
+
+				// Generic overlay during Running state (e.g. play mode transitions)
+				if (m_EngineState == EngineState::Running && LoadingSystem::IsLoading())
+					RenderGenericOverlay();
 
 				m_ImGuiLayer->End();
 				Renderer::EndScene();

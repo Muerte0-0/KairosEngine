@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "SceneCamera.h"
 #include "GameCamera.h"
-#include "Engine/Core/EngineMode.h"
+#include "Engine/Core/EngineState.h"
 #include <entt.hpp>
 
 namespace Engine

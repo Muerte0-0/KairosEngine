@@ -28,7 +28,7 @@ namespace Kairos
 		m_SceneCamera = CreateScope<SceneCamera>();
 		m_SceneCameraController = CreateScope<SceneCameraController>(*m_SceneCamera);
 		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
-		m_CameraManager.SetMode(CameraManagerMode::Editor);
+		m_CameraManager.SetMode(EngineMode::Editor);
 
 		LoadingSystem::SetStatusTextMainThread("Select project...");
 		LoadingSystem::SetStartupProgressMainThread(0.60f);
@@ -318,6 +318,20 @@ namespace Kairos
 			}
 
 			ImGui::EndMenuBar();
+		}
+
+		// Play/Stop toolbar — rendered outside the menu bar, inside the outer window
+		const EngineMode mode = Application::Get().GetEngineMode();
+		ImGui::Separator();
+		if (mode == EngineMode::Editor)
+		{
+			if (ImGui::Button("  Play  "))
+				Application::Get().EnterPlayMode();
+		}
+		else
+		{
+			if (ImGui::Button("  Stop  "))
+				Application::Get().ExitPlayMode();
 		}
 	}
 
@@ -656,6 +670,21 @@ namespace Kairos
 	void EditorLayer::OnSceneLoaded(const Ref<Scene>& scene)
 	{
 		m_ActiveScene = scene;
+		Application::Get().SetEditorScene(scene);
+		if (m_SceneHierarchyPanel)
+			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::OnEnterPlayMode(const Ref<Scene>& runtimeScene)
+	{
+		m_ActiveScene = runtimeScene;
+		if (m_SceneHierarchyPanel)
+			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::OnExitPlayMode(const Ref<Scene>& editorScene)
+	{
+		m_ActiveScene = editorScene;
 		if (m_SceneHierarchyPanel)
 			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
 	}
@@ -675,6 +704,7 @@ namespace Kairos
 			m_ActiveScene->SetName(filepath.stem().string());
 			// Allow incremental startup pump to resolve scene asset handles to live GPU resources.
 			LoadingSystem::SetStartupScene(m_ActiveScene);
+			Application::Get().SetEditorScene(m_ActiveScene);
 		}
 	}
 	

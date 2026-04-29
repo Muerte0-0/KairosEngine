@@ -1,7 +1,7 @@
 # Graph Report - D:\Dev\Projects\KairosEngine  (2026-04-29)
 
 ## Corpus Check
-- 188 files · ~120,745 words
+- 188 files · ~120,505 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

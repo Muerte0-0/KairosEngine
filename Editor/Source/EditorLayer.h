@@ -33,6 +33,9 @@ namespace Kairos
 
 		// Receives a newly loaded scene from the Application after async transition.
 		void OnSceneLoaded(const Ref<Scene>& scene) override;
+
+		void OnEnterPlayMode(const Ref<Scene>& runtimeScene) override;
+		void OnExitPlayMode(const Ref<Scene>& editorScene) override;
 	private:
 		Ref<Scene> m_ActiveScene;
 		std::filesystem::path m_ActiveScenePath;

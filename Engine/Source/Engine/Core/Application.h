@@ -15,6 +15,7 @@
 
 #include "Engine/ImGui/ImGuiLayer.h"
 #include "Engine/ImGui/ImGuiUtils.h"
+#include "Engine/Scene/Scene.h"
 
 namespace Engine
 {
@@ -49,6 +50,15 @@ namespace Engine
 
 		EngineState   GetEngineState()    const { return m_EngineState; }
 		LoadingPhase  GetLoadingPhase()   const { return m_LoadingPhase; }
+		EngineMode    GetEngineMode()     const { return m_EngineMode; }
+
+		// Play mode transitions. Must be called on main thread.
+		void EnterPlayMode();
+		void ExitPlayMode();
+
+		// Called by EditorLayer to register the current editor scene so
+		// EnterPlayMode can clone it.
+		void SetEditorScene(const Ref<Scene>& scene) { m_EditorScene = scene; }
 		
 		template<typename TLayer>
 		requires(std::is_base_of_v<Layer, TLayer>)
@@ -84,6 +94,7 @@ namespace Engine
 	private:
 		void EnsureApplicationShadersCompiled() const;
 		void RenderLoadingScreen();
+		void RenderGenericOverlay();
 		void TickLoadingState(float deltaTime);
 		void AttachLayersDuringLoading();
 		
@@ -95,7 +106,12 @@ namespace Engine
 		// Engine state
 		EngineState  m_EngineState  = EngineState::Loading;
 		LoadingPhase m_LoadingPhase = LoadingPhase::EditorStartup;
+		EngineMode   m_EngineMode   = EngineMode::Editor;
 		LoadingScreen m_LoadingScreen;
+
+		// Play mode scene management (main thread only)
+		Ref<Scene> m_EditorScene{ nullptr };
+		Ref<Scene> m_RuntimeScene{ nullptr };
 		
 		bool m_IsMinimized = false;
 
