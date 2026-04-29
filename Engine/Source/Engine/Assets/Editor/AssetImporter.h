@@ -19,5 +19,6 @@ namespace Engine
 		static Ref<Asset> ImportMesh    (const AssetMetadata& metadata);
 		static Ref<Asset> ImportTexture (const AssetMetadata& metadata);
 		static Ref<Asset> ImportMaterial(const AssetMetadata& metadata);
+		static Ref<Asset> ImportPrefab(const AssetMetadata& metadata);
 	};
 }

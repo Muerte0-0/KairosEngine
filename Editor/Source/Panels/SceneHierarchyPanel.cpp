@@ -104,7 +104,14 @@ namespace Kairos
 		if (ImGui::BeginPopupContextWindow(nullptr, flags))
 		{
 			if (ImGui::MenuItem("Create Empty Entity"))
-				m_Context->CreateEntity("Empty Entity");
+			{
+				Engine::Entity e = m_Context->CreateEntity("New Entity");
+				m_SelectionContext = e;
+				m_RenameEntityUUID    = e.GetUUID();
+				m_IsRenamingEntity    = true;
+				m_RenameEntityFocused = false;
+				strncpy_s(m_EntityRenameBuffer, "New Entity", sizeof(m_EntityRenameBuffer) - 1);
+			}
 
 			ImGui::Separator();
 
@@ -115,7 +122,11 @@ namespace Kairos
 					Engine::Entity e = m_Context->CreateEntity(name);
 					auto& mc = e.AddComponent<Engine::MeshComponent>();
 					mc.SetPrimitiveMesh(key, Engine::PrimitiveMeshFactory::GetOrCreate(key));
-					m_SelectionContext = e;
+					m_SelectionContext    = e;
+					m_RenameEntityUUID    = e.GetUUID();
+					m_IsRenamingEntity    = true;
+					m_RenameEntityFocused = false;
+					strncpy_s(m_EntityRenameBuffer, name, sizeof(m_EntityRenameBuffer) - 1);
 				};
 
 				if (ImGui::MenuItem("Cube"))   CreatePrimitive("Cube",   Engine::PrimitiveKey::Cube);
@@ -131,7 +142,11 @@ namespace Kairos
 					Engine::Entity e = m_Context->CreateEntity(name);
 					auto& lc = e.AddComponent<Engine::LightComponent>();
 					lc.Type = type;
-					m_SelectionContext = e;
+					m_SelectionContext    = e;
+					m_RenameEntityUUID    = e.GetUUID();
+					m_IsRenamingEntity    = true;
+					m_RenameEntityFocused = false;
+					strncpy_s(m_EntityRenameBuffer, name, sizeof(m_EntityRenameBuffer) - 1);
 				};
 
 				if (ImGui::MenuItem("Directional Light")) CreateLight("Directional Light", Engine::LightType::Directional);
@@ -146,7 +161,11 @@ namespace Kairos
 			{
 				Engine::Entity e = m_Context->CreateEntity("Camera");
 				e.AddComponent<Engine::CameraComponent>();
-				m_SelectionContext = e;
+				m_SelectionContext    = e;
+				m_RenameEntityUUID    = e.GetUUID();
+				m_IsRenamingEntity    = true;
+				m_RenameEntityFocused = false;
+				strncpy_s(m_EntityRenameBuffer, "Camera", sizeof(m_EntityRenameBuffer) - 1);
 			}
 
 			ImGui::EndPopup();
@@ -162,6 +181,8 @@ namespace Kairos
 		Engine::SceneGraph& graph = m_Context->GetSceneGraph();
 		Engine::SceneNode* node = graph.GetNode(id);
 
+		const bool isRenaming = m_IsRenamingEntity && entity.GetUUID() == m_RenameEntityUUID;
+
 		ImGuiTreeNodeFlags flags =
 			ImGuiTreeNodeFlags_OpenOnArrow |
 			ImGuiTreeNodeFlags_SpanAvailWidth |
@@ -174,16 +195,56 @@ namespace Kairos
 		if (!hasChildren)
 			flags |= ImGuiTreeNodeFlags_Leaf;
 
-		bool opened = ImGui::TreeNodeEx((void*)(intptr_t)(uint32_t)(entt::entity)entity,
-			flags, "%s", tag.Tag.c_str());
+		// When renaming: use empty label so the arrow renders without text;
+		// we draw InputText on SameLine immediately after.
+		bool opened;
+		if (isRenaming)
+		{
+			opened = ImGui::TreeNodeEx((void*)(intptr_t)(uint32_t)entity, flags, "");
+			ImGui::SameLine();
 
-		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+			if (!m_RenameEntityFocused)
+			{
+				ImGui::SetKeyboardFocusHere();
+				m_RenameEntityFocused = true;
+			}
+
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+			bool commit = ImGui::InputText("##RenameEntity", m_EntityRenameBuffer, sizeof(m_EntityRenameBuffer),
+				ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll);
+
+			bool clickedAway = !ImGui::IsItemActive() && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+			bool escaped     = ImGui::IsKeyPressed(ImGuiKey_Escape);
+
+			if (commit || clickedAway)
+			{
+				if (m_EntityRenameBuffer[0] == '\0')
+					strncpy_s(m_EntityRenameBuffer, "Unnamed", sizeof(m_EntityRenameBuffer) - 1);
+				tag.Tag = m_EntityRenameBuffer;
+				m_IsRenamingEntity    = false;
+				m_RenameEntityFocused = false;
+			}
+			else if (escaped)
+			{
+				m_IsRenamingEntity    = false;
+				m_RenameEntityFocused = false;
+			}
+		}
+		else
+		{
+			opened = ImGui::TreeNodeEx((void*)(intptr_t)(uint32_t)(entt::entity)entity,
+				flags, "%s", tag.Tag.c_str());
+		}
+
+		if (!isRenaming && ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
 			m_SelectionContext = entity;
 
 		if (ImGui::BeginPopupContextItem())
 		{
 			if (ImGui::MenuItem("Delete Entity"))
 			{
+				if (m_IsRenamingEntity && entity.GetUUID() == m_RenameEntityUUID)
+					m_IsRenamingEntity = false;
 				m_Context->DestroyEntity(entity);
 				if (m_SelectionContext == entity) m_SelectionContext = {};
 				if (opened) ImGui::TreePop();
@@ -191,15 +252,25 @@ namespace Kairos
 				return;
 			}
 
+			if (ImGui::MenuItem("Rename"))
+			{
+				m_SelectionContext    = entity;
+				m_RenameEntityUUID    = entity.GetUUID();
+				m_IsRenamingEntity    = true;
+				m_RenameEntityFocused = false;
+				strncpy_s(m_EntityRenameBuffer, tag.Tag.c_str(), sizeof(m_EntityRenameBuffer) - 1);
+			}
+
 			if (ImGui::MenuItem("Create Child"))
 			{
-				// New entity has WorldTransform = identity (just created, propagation hasn't run).
-				// SetParent directly — local stays at (0,0,0) which IS correct world-relative
-				// since it's a brand-new entity with no prior world position.
 				Entity child = m_Context->CreateEntity("Child Entity");
 				Engine::EntityID childID = child;
 				graph.SetParent(childID, id);
-				m_SelectionContext = child;
+				m_SelectionContext    = child;
+				m_RenameEntityUUID    = child.GetUUID();
+				m_IsRenamingEntity    = true;
+				m_RenameEntityFocused = false;
+				strncpy_s(m_EntityRenameBuffer, "Child Entity", sizeof(m_EntityRenameBuffer) - 1);
 			}
 
 			ImGui::EndPopup();

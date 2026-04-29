@@ -162,4 +162,14 @@ namespace Engine
 		bool HasMeshAsset()   const { return static_cast<uint64_t>(MeshAssetHandle) != NullAssetHandle; }
 		bool IsPrimitive()    const { return !PrimitiveKey.empty(); }
 	};
+
+	// Attached to the root entity of a prefab instance.
+	// Tracks which prefab asset it was instantiated from.
+	struct PrefabInstanceComponent
+	{
+		AssetHandle PrefabHandle = AssetHandle(NullAssetHandle);
+
+		PrefabInstanceComponent() = default;
+		PrefabInstanceComponent(AssetHandle handle) : PrefabHandle(handle) {}
+	};
 }

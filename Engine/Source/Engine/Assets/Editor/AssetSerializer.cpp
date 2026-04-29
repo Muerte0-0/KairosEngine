@@ -19,6 +19,7 @@ namespace Engine
 			case AssetType::Material: return "Material";
 			case AssetType::Shader:   return "Shader";
 			case AssetType::Scene:    return "Scene";
+			case AssetType::Prefab:   return "Prefab";
 			default:                  return "None";
 		}
 	}
@@ -30,6 +31,7 @@ namespace Engine
 		if (s == "Material") return AssetType::Material;
 		if (s == "Shader")   return AssetType::Shader;
 		if (s == "Scene")    return AssetType::Scene;
+		if (s == "Prefab")   return AssetType::Prefab;
 		return AssetType::None;
 	}
 

@@ -246,7 +246,7 @@ namespace Kairos
 							std::string stem = path.stem().string()
 							                 + (directoryEntry.is_directory() ? "" : path.extension().string());
 							strncpy_s(m_RenameBuffer, stem.c_str(), sizeof(m_RenameBuffer) - 1);
-							ImGui::SetKeyboardFocusHere();
+							m_RenameFocusPending = true;
 						}
 						if (ImGui::MenuItem("Show in Explorer"))
 						{
@@ -270,6 +270,7 @@ namespace Kairos
 						m_RenamingPath = path;
 						std::string name = path.filename().string();
 						strncpy_s(m_RenameBuffer, name.c_str(), sizeof(m_RenameBuffer) - 1);
+						m_RenameFocusPending = true;
 					}
 
 					// ── Label or inline rename field ──────────────────────────
@@ -277,6 +278,11 @@ namespace Kairos
 					{
 						ImGui::SetNextItemWidth(thumbnailSize);
 						ImGui::PushID("##RenameInput");
+						if (m_RenameFocusPending)
+						{
+							ImGui::SetKeyboardFocusHere();
+							m_RenameFocusPending = false;
+						}
 						if (ImGui::InputText("##Rename", m_RenameBuffer, sizeof(m_RenameBuffer),
 							ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_AutoSelectAll))
 						{
@@ -352,6 +358,12 @@ namespace Kairos
 		{ std::ofstream f(candidate); }
 
 		LOG(Engine::LogLevel::Info, "ContentBrowser: created '{}'.", candidate.string());
+
+		// Auto-enter rename mode
+		m_RenamingPath = candidate;
+		m_RenameFocusPending = true;
+		std::string fullName = candidate.filename().string();
+		strncpy_s(m_RenameBuffer, fullName.c_str(), sizeof(m_RenameBuffer) - 1);
 	}
 
 
@@ -412,6 +424,12 @@ namespace Kairos
 			while (std::filesystem::exists(newDir))
 				newDir = m_CurrentDirectory / ("NewFolder" + std::to_string(++suffix));
 			std::filesystem::create_directory(newDir);
+
+			// Auto-enter rename mode
+			m_RenamingPath = newDir;
+			m_RenameFocusPending = true;
+			std::string folderName = newDir.filename().string();
+			strncpy_s(m_RenameBuffer, folderName.c_str(), sizeof(m_RenameBuffer) - 1);
 			ImGui::CloseCurrentPopup();
 		}
 

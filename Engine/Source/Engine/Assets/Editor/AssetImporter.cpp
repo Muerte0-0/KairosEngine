@@ -6,6 +6,7 @@
 #include "Engine/Renderer/RHI/Resources/Texture.h"
 #include "Engine/Materials/MaterialGraph.h"
 #include "Engine/Materials/MaterialGraphCompiler.h"
+#include "Engine/Scene/Prefab.h"
 
 namespace Engine
 {
@@ -25,6 +26,7 @@ namespace Engine
 			{ ".kmat", AssetType::Material },
 			{ ".ksh",  AssetType::Shader   },
 			{ ".kscn", AssetType::Scene    },
+			{ ".prefab", AssetType::Prefab },
 		};
 
 		std::string ext = path.extension().string();
@@ -41,6 +43,7 @@ namespace Engine
 			case AssetType::Mesh:     return ImportMesh(metadata);
 			case AssetType::Texture:  return ImportTexture(metadata);
 			case AssetType::Material: return ImportMaterial(metadata);
+			case AssetType::Prefab:   return ImportPrefab(metadata);
 			default:
 				LOG(LogLevel::Error, "AssetImporter: no importer for AssetType '{}'.", (uint16_t)metadata.Type);
 				return nullptr;
@@ -123,5 +126,20 @@ namespace Engine
 		material->IsDirty          = false;
 
 		return material;
+	}
+
+	Ref<Asset> AssetImporter::ImportPrefab(const AssetMetadata& metadata)
+	{
+		std::filesystem::path absolutePath = Project::GetAssetPath(metadata.FilePath);
+
+		Ref<Prefab> prefab = LoadPrefab(absolutePath);
+		if (!prefab)
+		{
+			LOG(LogLevel::Error, "AssetImporter: failed to load prefab '{}'.", absolutePath.string());
+			return nullptr;
+		}
+
+		prefab->Handle = metadata.Handle;
+		return prefab;
 	}
 }

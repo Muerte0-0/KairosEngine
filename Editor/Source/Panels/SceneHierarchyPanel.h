@@ -26,5 +26,11 @@ namespace Kairos
 
 		Ref<Scene>  m_Context;
 		Entity      m_SelectionContext;
+
+		// Inline rename state
+		Engine::UUID m_RenameEntityUUID    = 0;
+		bool         m_IsRenamingEntity    = false;
+		bool         m_RenameEntityFocused = false;
+		char         m_EntityRenameBuffer[256] = {};
 	};
 }

@@ -15,6 +15,7 @@ namespace Engine
 		Material,
 		Shader,
 		Scene,
+		Prefab,
 	};
 
 	class Asset

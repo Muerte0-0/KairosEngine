@@ -229,4 +229,10 @@ namespace Engine
 	{
 		
 	}
+	
+	template <>
+	void Scene::OnComponentAdded<PrefabInstanceComponent>(Entity entity, PrefabInstanceComponent& component)
+	{
+		
+	}
 }
