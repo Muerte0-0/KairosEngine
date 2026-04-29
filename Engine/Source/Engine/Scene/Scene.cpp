@@ -126,7 +126,7 @@ namespace Engine
 		std::unordered_map<entt::entity, entt::entity> entityMap;
 
 		// Pass 1: create entities preserving UUIDs.
-		m_Registry.each([&](entt::entity src)
+		for (auto src : std::views::reverse(m_Registry.view<entt::entity>()))
 		{
 			const auto* id  = m_Registry.try_get<IDComponent>(src);
 			const auto* tag = m_Registry.try_get<TagComponent>(src);
@@ -136,7 +136,7 @@ namespace Engine
 
 			Entity dst = clone->CreateEntityWithUUID(uuid, name);
 			entityMap[src] = static_cast<entt::entity>(dst);
-		});
+		}
 
 		// Pass 2: copy all components (except IDComponent / TagComponent already set).
 		for (auto [src, dst] : entityMap)
