@@ -174,7 +174,6 @@ namespace Kairos
 
 	void EditorLayer::DrawLevelEditorWindow()
 	{
-		// Fixed title — MUST NOT change, title change = new ImGui window = loses dock
 		// Scene name displayed inside the window instead
 		ImGuiCond dockCond = m_LevelEditorLayoutBuilt ? ImGuiCond_FirstUseEver : ImGuiCond_Always;
 		ImGui::SetNextWindowDockID(m_OuterDockID, dockCond);
@@ -187,11 +186,14 @@ namespace Kairos
 		ImGui::TextDisabled("Scene: %s", sceneName.c_str());
 		ImGui::SameLine();
 
+		ImGui::Dummy({ImGui::GetContentRegionAvail().x / 2.5f, 0.0f});
+		
 		const EngineMode mode = Engine::Application::Get().GetEngineMode();
 
 		// Play button (Editor mode only)
 		if (mode == EngineMode::Editor)
 		{
+			ImGui::SameLine();
 			if (ImGui::Button("Play")) // u8"\u25b6"
 				Engine::Application::Get().EnterPlayMode();
 		}
@@ -219,7 +221,7 @@ namespace Kairos
 			if (ImGui::Button("Stop")) // u8"\u23f9"
 				Engine::Application::Get().ExitPlayMode();
 		}
-
+		
 		ImGui::Separator();
 
 		ImGuiID innerID = ImGui::GetID("##LevelEditorInner");
