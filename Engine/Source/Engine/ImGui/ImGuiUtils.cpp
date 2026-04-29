@@ -78,8 +78,8 @@ namespace Engine
 
 			if (fontsDir.empty())
 				return; // ImGui will use its default font.
-
-			const std::filesystem::path regularPath = fontsDir / "OpenSans" / "OpenSans-Regular.ttf";
+			
+			const std::filesystem::path regularPath = fontsDir / "JetbrainsMono" / "JetBrainsMonoNerdFontMono-Regular.ttf";
 			const std::filesystem::path boldPath    = fontsDir / "OpenSans" / "OpenSans-Bold.ttf";
 
 			if (std::filesystem::exists(regularPath))
@@ -106,7 +106,7 @@ namespace Engine
 		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 		io.ConfigFlags |= ImGuiConfigFlags_IsSRGB;
 
-		LoadFonts(18.0f);
+		LoadFonts(16.0f);
 
 		ImGuiStyle& style = ImGui::GetStyle();
 
