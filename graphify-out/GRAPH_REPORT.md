@@ -1,12 +1,12 @@
 # Graph Report - D:\Dev\Projects\KairosEngine  (2026-04-29)
 
 ## Corpus Check
-- 187 files · ~121,578 words
+- 187 files · ~121,672 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 863 nodes · 1556 edges · 128 communities detected
-- Extraction: 63% EXTRACTED · 37% INFERRED · 0% AMBIGUOUS · INFERRED: 580 edges (avg confidence: 0.8)
+- 863 nodes · 1559 edges · 128 communities detected
+- Extraction: 63% EXTRACTED · 37% INFERRED · 0% AMBIGUOUS · INFERRED: 583 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -141,7 +141,7 @@
 
 ## God Nodes (most connected - your core abstractions)
 1. `End()` - 61 edges
-2. `Get()` - 45 edges
+2. `Get()` - 46 edges
 3. `Begin()` - 39 edges
 4. `GetAPI()` - 29 edges
 5. `Run()` - 26 edges
@@ -167,51 +167,51 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.06
-Nodes (62): Application(), AttachLayersDuringLoading(), EnsureApplicationShadersCompiled(), EnterPlayMode(), GetShaderCompilerBinaryName(), Initialize(), JoinCommand(), OnWindowClosed() (+54 more)
+Nodes (61): Application(), AttachLayersDuringLoading(), EnsureApplicationShadersCompiled(), GetShaderCompilerBinaryName(), Initialize(), JoinCommand(), OnWindowClosed(), PrintCommandOutput() (+53 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.06
 Nodes (53): Import(), ImportMaterial(), ImportMesh(), ImportTexture(), Add(), Get(), GetHandleForPath(), IsPathRegistered() (+45 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.06
-Nodes (41): ExitPlayMode(), SetView(), GetActiveCamera(), UpdateFromRegistry(), BuildLevelEditorLayout(), DrawConsole(), DrawLevelEditorWindow(), DrawMenuBar() (+33 more)
+Cohesion: 0.07
+Nodes (46): HasStage(), Render(), BuildRenderingInfo(), CreateColorAttachment(), CreateColorSampler(), CreateDepthAttachment(), CreateDepthSampler(), CreateMSAAColorAttachment() (+38 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.06
-Nodes (48): FlushSlot(), OnBeginFrame(), OnShutdown(), LoadSceneAsync(), Reset(), SceneWorker(), Create(), GetDefault() (+40 more)
+Cohesion: 0.07
+Nodes (33): Contains(), Remove(), GetAsset(), GetAssetType(), IsAssetLoaded(), IsAssetValid(), Clone(), CreateEntity() (+25 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.08
-Nodes (39): GetTime(), RenderGenericOverlay(), DeduceTypeFromPath(), Init(), Record(), Shutdown(), DrawDebugWindow(), OnImGuiRender() (+31 more)
+Cohesion: 0.07
+Nodes (43): FlushSlot(), OnBeginFrame(), OnShutdown(), LoadSceneAsync(), Reset(), SceneWorker(), GetExecutableDirectory(), Init() (+35 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.06
-Nodes (36): OnWindowResize(), OnRender(), FindWorkspaceRoot(), GetExecutablePath(), ResolveWorkspaceRoot(), GetLayout(), Render(), ResolveMaterialAsset() (+28 more)
+Nodes (40): EnterPlayMode(), ExitPlayMode(), GetActiveCamera(), UpdateFromRegistry(), BuildLevelEditorLayout(), DrawConsole(), DrawLevelEditorWindow(), DrawMenuBar() (+32 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.09
-Nodes (38): HasStage(), CreateColorAttachment(), CreateColorSampler(), CreateDepthAttachment(), CreateDepthSampler(), CreateMSAAColorAttachment(), Engine(), FindDepthFormat() (+30 more)
+Cohesion: 0.08
+Nodes (41): GetTime(), RenderGenericOverlay(), DeduceTypeFromPath(), Init(), Record(), Shutdown(), DrawDebugWindow(), OnImGuiRender() (+33 more)
 
 ### Community 7 - "Community 7"
+Cohesion: 0.06
+Nodes (36): OnWindowResize(), OnRender(), FindWorkspaceRoot(), GetExecutablePath(), ResolveWorkspaceRoot(), GetLayout(), Render(), ResolveMaterialAsset() (+28 more)
+
+### Community 8 - "Community 8"
 Cohesion: 0.07
 Nodes (34): Shutdown(), Create(), Create(), Create(), EndFrameCapture(), LoadRenderDocAPI(), StartFrameCapture(), TriggerCapture() (+26 more)
 
-### Community 8 - "Community 8"
-Cohesion: 0.09
-Nodes (27): Contains(), Remove(), GetAsset(), GetAssetType(), IsAssetLoaded(), IsAssetValid(), Clone(), CreateEntity() (+19 more)
-
 ### Community 9 - "Community 9"
-Cohesion: 0.11
-Nodes (32): Update(), AddNodeToCanvas(), DrawAddNodePopup(), DrawNodeCanvas(), DrawParamsSidebar(), DrawToolbar(), GraphNodeWrapper, MakePinStyle() (+24 more)
-
-### Community 10 - "Community 10"
 Cohesion: 0.12
 Nodes (32): Create(), Exists(), GetStages(), Load(), StageToString(), CollectShaderFiles(), CompileEntryPoint(), DiscoverAnnotatedEntryPoints() (+24 more)
 
-### Community 11 - "Community 11"
+### Community 10 - "Community 10"
 Cohesion: 0.09
 Nodes (24): ContentBrowserPanel(), CreateNewAsset(), DrawEmptySpaceContextMenu(), GetIconForPath(), OnImGuiRender(), RenderFolderTree(), TryLoadIcon(), CreateApplication() (+16 more)
+
+### Community 11 - "Community 11"
+Cohesion: 0.12
+Nodes (26): AddNodeToCanvas(), DrawAddNodePopup(), DrawToolbar(), GraphNodeWrapper, MakePinStyle(), MaterialEditorWindow(), PinColor(), RebuildCanvasFromGraph() (+18 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.21
@@ -226,20 +226,20 @@ Cohesion: 0.36
 Nodes (11): HexToImVec4(), LoadFonts(), ResolveFontDirectory(), SetImGuiStyle(), SetTheme_CatppuccinFrappé(), SetTheme_CatppuccinLatte(), SetTheme_CatppuccinMacchiato(), SetTheme_CatppuccinMocha() (+3 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.31
-Nodes (6): Create(), Destroy(), RaiseEvent(), ResolveIconPath(), ShouldClose(), Window()
-
-### Community 16 - "Community 16"
 Cohesion: 0.22
 Nodes (0): 
 
-### Community 17 - "Community 17"
+### Community 16 - "Community 16"
 Cohesion: 0.39
 Nodes (6): CreateModule(), Engine(), Init(), LoadSpirvFromDisk(), Shutdown(), VulkanShader()
 
-### Community 18 - "Community 18"
+### Community 17 - "Community 17"
 Cohesion: 0.32
 Nodes (4): Shutdown(), Submit(), SubmitAfter(), SubmitBatch()
+
+### Community 18 - "Community 18"
+Cohesion: 0.33
+Nodes (3): SetView(), SetViewFromTransform(), SyncFromEntityTransform()
 
 ### Community 19 - "Community 19"
 Cohesion: 0.5
@@ -886,16 +886,16 @@ Nodes (1): Kairos Engine Logo
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `End()` connect `Community 4` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`?**
-  _High betweenness centrality (0.154) - this node is a cross-community bridge._
-- **Why does `Get()` connect `Community 1` to `Community 0`, `Community 2`, `Community 3`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`?**
-  _High betweenness centrality (0.116) - this node is a cross-community bridge._
-- **Why does `GetAPI()` connect `Community 7` to `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 10`, `Community 11`, `Community 17`?**
-  _High betweenness centrality (0.071) - this node is a cross-community bridge._
+- **Why does `End()` connect `Community 6` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 13`?**
+  _High betweenness centrality (0.152) - this node is a cross-community bridge._
+- **Why does `Get()` connect `Community 1` to `Community 0`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`?**
+  _High betweenness centrality (0.121) - this node is a cross-community bridge._
+- **Why does `GetAPI()` connect `Community 8` to `Community 2`, `Community 4`, `Community 6`, `Community 7`, `Community 9`, `Community 10`, `Community 16`?**
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._
 - **Are the 60 inferred relationships involving `End()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
   _`End()` has 60 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 43 inferred relationships involving `Get()` (e.g. with `OnAttach()` and `DrawMenuBar()`) actually correct?**
-  _`Get()` has 43 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 44 inferred relationships involving `Get()` (e.g. with `OnAttach()` and `DrawMenuBar()`) actually correct?**
+  _`Get()` has 44 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 38 inferred relationships involving `Begin()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
   _`Begin()` has 38 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 26 inferred relationships involving `GetAPI()` (e.g. with `CreateBuffer_Static()` and `CreateBuffer_Dynamic()`) actually correct?**
