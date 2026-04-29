@@ -215,6 +215,11 @@ namespace Engine
 		m_LayerStack.clear();
 		m_ImGuiLayer.reset();
 
+		// Release scene refs — Application holds independent Ref<Scene> copies that
+		// keep Mesh/Material GPU buffers alive past layer destruction otherwise.
+		m_EditorScene.reset();
+		m_RuntimeScene.reset();
+
 		// Drop all loaded assets (Mesh VkBuffers held by EditorAssetManager).
 		Project::SetActive(nullptr);
 

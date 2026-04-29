@@ -1,5 +1,7 @@
 ﻿#include "kepch.h"
 #include "CameraManager.h"
+
+#include "Engine/Core/Application.h"
 #include "Engine/Scene/Components.h"
 
 namespace Engine
@@ -35,7 +37,7 @@ namespace Engine
 
 	const Camera* CameraManager::GetActiveCamera() const
 	{
-		if ((m_Mode == EngineMode::Play || m_Mode == EngineMode::Paused) && m_ActiveGameCamera)
+		if ((Application::Get().GetEngineMode() == EngineMode::Play || Application::Get().GetEngineMode() == EngineMode::Paused) && m_ActiveGameCamera)
 			return m_ActiveGameCamera;
 
 		return m_SceneCamera;

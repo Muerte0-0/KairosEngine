@@ -51,6 +51,7 @@ namespace Engine
 		EngineState   GetEngineState()    const { return m_EngineState; }
 		LoadingPhase  GetLoadingPhase()   const { return m_LoadingPhase; }
 		EngineMode    GetEngineMode()     const { return m_EngineMode; }
+		void          SetEngineMode(EngineMode mode) { m_EngineMode = mode; }
 
 		// Play mode transitions. Must be called on main thread.
 		void EnterPlayMode();

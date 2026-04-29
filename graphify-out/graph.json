@@ -8903,8 +8903,8 @@
       "source_file": "D:\\Dev\\Projects\\KairosEngine\\Engine\\Source\\Engine\\Core\\Application.cpp",
       "source_location": "L384",
       "weight": 1.0,
-      "_src": "application_enterplaymode",
-      "_tgt": "editorlayer_onenterplaymode",
+      "_src": "editorlayer_onenterplaymode",
+      "_tgt": "application_enterplaymode",
       "source": "editorlayer_onenterplaymode",
       "target": "application_enterplaymode"
     },
@@ -8915,8 +8915,8 @@
       "source_file": "D:\\Dev\\Projects\\KairosEngine\\Engine\\Source\\Engine\\Core\\Application.cpp",
       "source_location": "L399",
       "weight": 1.0,
-      "_src": "application_exitplaymode",
-      "_tgt": "editorlayer_onexitplaymode",
+      "_src": "editorlayer_onexitplaymode",
+      "_tgt": "application_exitplaymode",
       "source": "editorlayer_onexitplaymode",
       "target": "application_exitplaymode"
     },
@@ -18959,8 +18959,8 @@
       "source_file": "D:\\Dev\\Projects\\KairosEngine\\Engine\\Source\\Engine\\ImGui\\LoadingScreen.cpp",
       "source_location": "L306",
       "weight": 1.0,
-      "_src": "loadingscreen_renderoverlaypopup",
-      "_tgt": "loadingsystem_getoverlayposition",
+      "_src": "loadingsystem_getoverlayposition",
+      "_tgt": "loadingscreen_renderoverlaypopup",
       "source": "loadingsystem_getoverlayposition",
       "target": "loadingscreen_renderoverlaypopup"
     },

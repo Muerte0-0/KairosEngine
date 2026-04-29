@@ -28,7 +28,6 @@ namespace Kairos
 		m_SceneCamera = CreateScope<SceneCamera>();
 		m_SceneCameraController = CreateScope<SceneCameraController>(*m_SceneCamera);
 		m_CameraManager.SetSceneCamera(m_SceneCamera.get());
-		m_CameraManager.SetMode(EngineMode::Editor);
 
 		LoadingSystem::SetStatusTextMainThread("Select project...");
 		LoadingSystem::SetStartupProgressMainThread(0.60f);
@@ -186,6 +185,41 @@ namespace Kairos
 			? "Untitled"
 			: m_ActiveScene->GetName();
 		ImGui::TextDisabled("Scene: %s", sceneName.c_str());
+		ImGui::SameLine();
+
+		const EngineMode mode = Engine::Application::Get().GetEngineMode();
+
+		// Play button (Editor mode only)
+		if (mode == EngineMode::Editor)
+		{
+			if (ImGui::Button("Play")) // u8"\u25b6"
+				Engine::Application::Get().EnterPlayMode();
+		}
+
+		// Pause button (Play mode only)
+		if (mode == EngineMode::Play)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button("Pause")) // u8"\u23f8"
+				Engine::Application::Get().SetEngineMode(EngineMode::Paused);
+		}
+
+		// Resume button (Paused mode only)
+		if (mode == EngineMode::Paused)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button("Resume")) // u8"\u25b6"
+				Engine::Application::Get().SetEngineMode(EngineMode::Play);
+		}
+
+		// Stop button (Play or Paused)
+		if (mode == EngineMode::Play || mode == EngineMode::Paused)
+		{
+			ImGui::SameLine();
+			if (ImGui::Button("Stop")) // u8"\u23f9"
+				Engine::Application::Get().ExitPlayMode();
+		}
+
 		ImGui::Separator();
 
 		ImGuiID innerID = ImGui::GetID("##LevelEditorInner");
