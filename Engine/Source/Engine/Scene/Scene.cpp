@@ -42,6 +42,26 @@ namespace Engine
 		m_Registry.destroy(entity);
 	}
 
+	void Scene::DestroyEntityHierarchy(Entity entity)
+	{
+		EntityID id = static_cast<entt::entity>(entity);
+		SceneNode* node = m_SceneGraph.GetNode(id);
+
+		// Copy children list — RemoveEntity will mutate node's Children
+		std::vector<EntityID> children;
+		if (node)
+			children = node->Children;
+
+		for (EntityID childID : children)
+		{
+			if (m_Registry.valid(static_cast<entt::entity>(childID)))
+				DestroyEntityHierarchy(Entity{ static_cast<entt::entity>(childID), this });
+		}
+
+		m_SceneGraph.RemoveEntity(id);
+		m_Registry.destroy(static_cast<entt::entity>(entity));
+	}
+
 	void Scene::OnUpdate(float deltaTime)
 	{
 		PropagateTransforms();

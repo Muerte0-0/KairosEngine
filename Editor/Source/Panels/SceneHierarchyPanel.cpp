@@ -65,6 +65,22 @@ namespace Kairos
 		tc.WorldTransform = childWorld;
 	}
 
+	// Returns true if entity itself or any ancestor has PrefabInstanceComponent
+	static bool IsUnderPrefabInstance(Engine::EntityID id, Engine::Scene* scene)
+	{
+		Engine::SceneGraph& graph = scene->GetSceneGraph();
+		while (id != Engine::INVALID_ENTITY)
+		{
+			Engine::Entity e{ id, scene };
+			if (e && e.HasComponent<Engine::PrefabInstanceComponent>())
+				return true;
+			const Engine::SceneNode* node = graph.GetNode(id);
+			if (!node) break;
+			id = node->Parent;
+		}
+		return false;
+	}
+
 	// ---------------------------------------------------------------------------
 
 	SceneHierarchyPanel::SceneHierarchyPanel(const Ref<Scene>& context)
@@ -172,6 +188,21 @@ namespace Kairos
 		}
 
 		ImGui::End();
+
+		// Flush deferred hierarchy deletion — safe now that ImGui tree traversal is done
+		if (m_EntityToDestroy)
+		{
+			m_Context->DestroyEntityHierarchy(m_EntityToDestroy);
+			m_EntityToDestroy = {};
+		}
+
+		// Flush deferred revert
+		if (m_EntityToRevert)
+		{
+			if (OnRevertPrefabInstance)
+				OnRevertPrefabInstance(m_EntityToRevert);
+			m_EntityToRevert = {};
+		}
 	}
 
 	void SceneHierarchyPanel::DrawEntityNode(Entity entity)
@@ -232,8 +263,15 @@ namespace Kairos
 		}
 		else
 		{
+			bool isPrefabRelated = IsUnderPrefabInstance(id, m_Context.get());
+			if (isPrefabRelated)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.6f, 1.0f, 1.0f));
+
 			opened = ImGui::TreeNodeEx((void*)(intptr_t)(uint32_t)(entt::entity)entity,
 				flags, "%s", tag.Tag.c_str());
+
+			if (isPrefabRelated)
+				ImGui::PopStyleColor();
 		}
 
 		if (!isRenaming && ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
@@ -245,7 +283,7 @@ namespace Kairos
 			{
 				if (m_IsRenamingEntity && entity.GetUUID() == m_RenameEntityUUID)
 					m_IsRenamingEntity = false;
-				m_Context->DestroyEntity(entity);
+				m_EntityToDestroy = entity;
 				if (m_SelectionContext == entity) m_SelectionContext = {};
 				if (opened) ImGui::TreePop();
 				ImGui::EndPopup();
@@ -279,6 +317,24 @@ namespace Kairos
 			{
 				if (OnSaveAsPrefab)
 					OnSaveAsPrefab(entity);
+			}
+
+			// Prefab instance actions
+			if (entity.HasComponent<Engine::PrefabInstanceComponent>())
+			{
+				ImGui::Separator();
+				if (ImGui::MenuItem("Revert to Prefab"))
+				{
+					m_EntityToRevert = entity;
+					if (opened) ImGui::TreePop();
+					ImGui::EndPopup();
+					return;
+				}
+				if (ImGui::MenuItem("Open Prefab Editor"))
+				{
+					if (OnOpenPrefabEditor)
+						OnOpenPrefabEditor(entity.GetComponent<Engine::PrefabInstanceComponent>().PrefabHandle);
+				}
 			}
 
 			ImGui::EndPopup();

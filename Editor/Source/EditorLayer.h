@@ -90,5 +90,16 @@ namespace Kairos
 		void OpenScene(const std::filesystem::path& filepath);
 		void SaveScene();
 		void SaveSceneAs();
+
+		// Prefab editor
+		void OpenPrefabEditor(Engine::AssetHandle prefabHandle);
+		void SavePrefabAndApply();
+		void RevertPrefabInstance(Engine::Entity entity);
+		void ExitPrefabEditor();
+
+		Ref<Scene>          m_PrefabEditingScene;
+		Engine::AssetHandle m_EditingPrefab       = Engine::AssetHandle(Engine::NullAssetHandle);
+		bool                m_IsEditingPrefab     = false;
+		bool                m_PrefabDirty         = false;
 	};
 }

@@ -27,6 +27,10 @@ namespace Kairos
 		// EditorLayer wires this to open a save dialog + call SavePrefab.
 		std::function<void(Entity)> OnSaveAsPrefab;
 
+		// Prefab instance actions — wired by EditorLayer.
+		std::function<void(Entity)>              OnRevertPrefabInstance;
+		std::function<void(Engine::AssetHandle)> OnOpenPrefabEditor;
+
 	private:
 		void DrawEntityNode(Entity entity);
 
@@ -38,5 +42,10 @@ namespace Kairos
 		bool         m_IsRenamingEntity    = false;
 		bool         m_RenameEntityFocused = false;
 		char         m_EntityRenameBuffer[256] = {};
+
+		// Deferred deletion — set during tree traversal, flushed after ImGui::End
+		Entity       m_EntityToDestroy;
+		// Deferred revert — same reason: must not call during tree traversal
+		Entity       m_EntityToRevert;
 	};
 }

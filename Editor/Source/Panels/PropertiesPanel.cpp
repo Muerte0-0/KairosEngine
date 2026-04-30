@@ -286,6 +286,10 @@ namespace Kairos
 		{
 			DrawComponents(m_SelectionContext);
 
+			// Notify editor of any edit so it can mark the prefab dirty.
+			if (OnEntityModified)
+				OnEntityModified();
+
 			if (ImGui::Button("Add Component"))
 				ImGui::OpenPopup("AddComponent");
 

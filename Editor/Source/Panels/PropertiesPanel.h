@@ -23,6 +23,10 @@ namespace Kairos
 
 		void OnImGuiRender() override;
 
+		// Called after any component edit (transform, add, remove, etc.).
+		// EditorLayer wires this to mark the prefab dirty when in prefab edit mode.
+		std::function<void()> OnEntityModified;
+
 	private:
 		void DrawComponents(Entity entity);
 		void DrawAssetInspector(Engine::AssetHandle handle);

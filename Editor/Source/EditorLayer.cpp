@@ -106,11 +106,11 @@ namespace Kairos
 	{
 		Layer::OnUpdate(DeltaTime);
 
-		// Always propagate transforms in editor so WorldTransform stays current
-		m_ActiveScene->OnUpdate(DeltaTime);
+		// When editing a prefab use the isolated scene; otherwise use the active scene.
+		Scene* renderScene = m_IsEditingPrefab ? m_PrefabEditingScene.get() : m_ActiveScene.get();
 
-		// Sync primary game camera view matrix from entity world transform.
-		m_CameraManager.UpdateFromRegistry(m_ActiveScene->GetRegistry());
+		renderScene->OnUpdate(DeltaTime);
+		m_CameraManager.UpdateFromRegistry(renderScene->GetRegistry());
 
 		m_SceneCameraController->SetViewportFocused(m_ViewportPanel->IsFocused());
 		m_SceneCameraController->SetViewportHovered(m_ViewportPanel->IsHovered());
@@ -135,8 +135,9 @@ namespace Kairos
 		if (!m_SceneRenderer)
 			return;
 
+		Scene* renderScene = m_IsEditingPrefab ? m_PrefabEditingScene.get() : m_ActiveScene.get();
 		m_SceneRenderer->BeginScene(m_CameraManager);
-		m_ActiveScene->OnRender(*m_SceneRenderer);
+		renderScene->OnRender(*m_SceneRenderer);
 		m_SceneRenderer->EndScene();
 	}
 
@@ -247,6 +248,21 @@ namespace Kairos
 		}
 		
 		ImGui::Separator();
+
+		// Prefab editor banner
+		if (m_IsEditingPrefab)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.4f, 0.8f, 1.0f, 1.0f));
+			ImGui::TextUnformatted("  [PREFAB EDIT MODE]");
+			ImGui::PopStyleColor();
+			ImGui::SameLine();
+			if (ImGui::Button("Save & Apply"))
+				SavePrefabAndApply();
+			ImGui::SameLine();
+			if (ImGui::Button("Exit"))
+				ExitPrefabEditor();
+			ImGui::Separator();
+		}
 
 		ImGuiID innerID = ImGui::GetID("##LevelEditorInner");
 		ImGui::DockSpace(innerID, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
@@ -540,7 +556,7 @@ namespace Kairos
 				break;
 			case AssetType::Prefab:
 			{
-				// Double-click on a .prefab → instantiate directly into active scene
+				// Double-click → open prefab editor (not instantiate)
 				auto editorAM = Project::GetActive()->GetEditorAssetManager();
 				AssetHandle handle = editorAM->ImportAsset(path);
 				if (static_cast<uint64_t>(handle) == NullAssetHandle)
@@ -548,16 +564,7 @@ namespace Kairos
 					LOG(LogLevel::Warning, "OpenAssetEditor: prefab import failed for '{}'.", path.string());
 					break;
 				}
-				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
-				if (!prefab)
-				{
-					LOG(LogLevel::Warning, "OpenAssetEditor: prefab load failed for '{}'.", path.string());
-					break;
-				}
-				Entity root = prefab->Instantiate(m_ActiveScene.get());
-				if (root && m_SceneHierarchyPanel)
-					m_SceneHierarchyPanel->SetSelectedEntity(root);
-				LOG(LogLevel::Info, "Prefab '{}' instantiated.", path.stem().string());
+				OpenPrefabEditor(handle);
 				break;
 			}
 			default:
@@ -796,6 +803,25 @@ namespace Kairos
 
 				LOG(Engine::LogLevel::Info, "Saved prefab '{}'.", candidate.stem().string());
 			};
+
+			// ── Prefab: revert instance ───────────────────────────────────────
+			m_SceneHierarchyPanel->OnRevertPrefabInstance = [this](Engine::Entity entity)
+			{
+				RevertPrefabInstance(entity);
+			};
+
+			// ── Prefab: open prefab editor ────────────────────────────────────
+			m_SceneHierarchyPanel->OnOpenPrefabEditor = [this](Engine::AssetHandle handle)
+			{
+				OpenPrefabEditor(handle);
+			};
+
+			// ── Prefab: dirty tracking ─────────────────────────────────────────
+			m_PropertiesPanel->OnEntityModified = [this]()
+			{
+				if (m_IsEditingPrefab)
+					m_PrefabDirty = true;
+			};
 		}
 	}
 
@@ -858,5 +884,170 @@ namespace Kairos
 		
 		if (!path.empty())
 			SceneSerializer(m_ActiveScene).Serialize(path.string());
+	}
+
+	// ---------------------------------------------------------------------------
+	// Prefab Editor
+	// ---------------------------------------------------------------------------
+
+	void EditorLayer::OpenPrefabEditor(Engine::AssetHandle prefabHandle)
+	{
+		if (m_IsEditingPrefab)
+			ExitPrefabEditor();
+
+		Engine::Ref<Engine::Prefab> prefab = Engine::AssetManager::GetAsset<Engine::Prefab>(prefabHandle);
+		if (!prefab)
+		{
+			LOG(Engine::LogLevel::Warning, "OpenPrefabEditor: failed to load prefab asset.");
+			return;
+		}
+
+		// Create isolated scene and instantiate prefab into it
+		m_PrefabEditingScene = CreateRef<Scene>();
+		m_PrefabEditingScene->SetName("PrefabEdit");
+		prefab->Instantiate(m_PrefabEditingScene.get());
+
+		m_EditingPrefab   = prefabHandle;
+		m_IsEditingPrefab = true;
+		m_PrefabDirty     = false;
+
+		if (m_SceneHierarchyPanel)
+			m_SceneHierarchyPanel->SetContext(m_PrefabEditingScene);
+
+		LOG(Engine::LogLevel::Info, "Opened prefab editor.");
+	}
+
+	void EditorLayer::SavePrefabAndApply()
+	{
+		if (!m_IsEditingPrefab || !m_PrefabEditingScene)
+			return;
+
+		// 1. Find root entity in prefab scene (entity with PrefabInstanceComponent)
+		Engine::Entity prefabRoot;
+		m_PrefabEditingScene->EachEntity([&](Engine::Entity e)
+		{
+			if (e.HasComponent<Engine::PrefabInstanceComponent>())
+				prefabRoot = e;
+		});
+
+		if (!prefabRoot)
+		{
+			LOG(Engine::LogLevel::Warning, "SavePrefabAndApply: no root entity found.");
+			return;
+		}
+
+		// 2. Serialize prefab scene → PrefabData
+		Engine::PrefabData newData = Engine::SerializeEntityHierarchy(prefabRoot);
+
+		// 3. Find source path and overwrite .prefab file
+		auto* editorAM = static_cast<EditorAssetManager*>(
+			Engine::Project::GetActive()->GetAssetManager().get());
+
+		const Engine::AssetMetadata* meta = editorAM->GetRegistry().Get(m_EditingPrefab);
+		if (!meta || !meta->IsValid())
+		{
+			LOG(Engine::LogLevel::Error, "SavePrefabAndApply: prefab handle not in registry.");
+			return;
+		}
+
+		std::filesystem::path sourcePath = Engine::Project::GetAssetPath(meta->FilePath);
+		if (!Engine::SavePrefab(sourcePath, newData))
+		{
+			LOG(Engine::LogLevel::Error, "SavePrefabAndApply: write failed.");
+			return;
+		}
+
+		// 4. Reload asset so GetAsset<Prefab> returns updated data
+		editorAM->ReimportAsset(m_EditingPrefab);
+		Engine::Ref<Engine::Prefab> updatedPrefab = Engine::AssetManager::GetAsset<Engine::Prefab>(m_EditingPrefab);
+		if (!updatedPrefab)
+		{
+			LOG(Engine::LogLevel::Error, "SavePrefabAndApply: reload failed.");
+			return;
+		}
+		updatedPrefab->Data = newData;
+
+		// 5. Apply to all instances in active scene
+		Engine::AssetHandle handle = m_EditingPrefab;
+		std::vector<Engine::Entity> instances;
+		m_ActiveScene->EachEntity([&](Engine::Entity e)
+		{
+			if (e.HasComponent<Engine::PrefabInstanceComponent>())
+				if (e.GetComponent<Engine::PrefabInstanceComponent>().PrefabHandle == handle)
+					instances.push_back(e);
+		});
+
+		for (Engine::Entity inst : instances)
+		{
+			auto& tc = inst.GetComponent<Engine::TransformComponent>();
+			Engine::TransformComponent savedTransform = tc;
+
+			m_ActiveScene->DestroyEntityHierarchy(inst);
+			Engine::Entity newEnt = updatedPrefab->Instantiate(m_ActiveScene.get());
+			if (newEnt)
+			{
+				auto& newTc = newEnt.GetComponent<Engine::TransformComponent>();
+				newTc.Translation = savedTransform.Translation;
+				newTc.Rotation    = savedTransform.Rotation;
+				newTc.Scale       = savedTransform.Scale;
+			}
+		}
+
+		m_PrefabDirty = false;
+		LOG(Engine::LogLevel::Info, "Prefab saved and applied to {} instance(s).", instances.size());
+	}
+
+	void EditorLayer::RevertPrefabInstance(Engine::Entity entity)
+	{
+		if (!entity || !entity.HasComponent<Engine::PrefabInstanceComponent>())
+			return;
+
+		Engine::AssetHandle handle = entity.GetComponent<Engine::PrefabInstanceComponent>().PrefabHandle;
+		Engine::Ref<Engine::Prefab> prefab = Engine::AssetManager::GetAsset<Engine::Prefab>(handle);
+		if (!prefab)
+		{
+			LOG(Engine::LogLevel::Warning, "RevertPrefabInstance: prefab asset not found.");
+			return;
+		}
+
+		auto& tc = entity.GetComponent<Engine::TransformComponent>();
+		Engine::TransformComponent savedTransform = tc;
+
+		m_ActiveScene->DestroyEntityHierarchy(entity);
+		if (m_SceneHierarchyPanel)
+			m_SceneHierarchyPanel->SetSelectedEntity({});
+
+		Engine::Entity newEnt = prefab->Instantiate(m_ActiveScene.get());
+		if (newEnt)
+		{
+			auto& newTc = newEnt.GetComponent<Engine::TransformComponent>();
+			newTc.Translation = savedTransform.Translation;
+			newTc.Rotation    = savedTransform.Rotation;
+			newTc.Scale       = savedTransform.Scale;
+
+			if (m_SceneHierarchyPanel)
+				m_SceneHierarchyPanel->SetSelectedEntity(newEnt);
+		}
+
+		LOG(Engine::LogLevel::Info, "Prefab instance reverted.");
+	}
+
+	void EditorLayer::ExitPrefabEditor()
+	{
+		if (!m_IsEditingPrefab)
+			return;
+
+		if (m_PrefabDirty)
+			SavePrefabAndApply();
+
+		m_PrefabEditingScene.reset();
+		m_EditingPrefab   = Engine::AssetHandle(Engine::NullAssetHandle);
+		m_IsEditingPrefab = false;
+		m_PrefabDirty     = false;
+
+		if (m_SceneHierarchyPanel)
+			m_SceneHierarchyPanel->SetContext(m_ActiveScene);
+
+		LOG(Engine::LogLevel::Info, "Exited prefab editor.");
 	}
 }

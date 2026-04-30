@@ -26,6 +26,7 @@ namespace Engine
 		Entity CreateEntity(const std::string& name = "Empty Entity");
 		Entity CreateEntityWithUUID(UUID uuid, const std::string& name = "Empty Entity");
 		void DestroyEntity(Entity entity);
+		void DestroyEntityHierarchy(Entity entity);
 
 		void OnUpdate(float deltaTime);
 
