@@ -187,6 +187,10 @@ namespace Engine
 			}
 			if (const auto* lc = m_Registry.try_get<LightComponent>(src))
 				clone->m_Registry.emplace_or_replace<LightComponent>(dst, *lc);
+			if (const auto* pc = m_Registry.try_get<PrefabInstanceComponent>(src))
+				clone->m_Registry.emplace_or_replace<PrefabInstanceComponent>(dst, *pc);
+			if (const auto* oc = m_Registry.try_get<PrefabOverrideComponent>(src))
+				clone->m_Registry.emplace_or_replace<PrefabOverrideComponent>(dst, *oc);
 		}
 
 		// Pass 3: rebuild SceneGraph hierarchy.
@@ -254,5 +258,11 @@ namespace Engine
 	void Scene::OnComponentAdded<PrefabInstanceComponent>(Entity entity, PrefabInstanceComponent& component)
 	{
 		
+	}
+
+	template <>
+	void Scene::OnComponentAdded<PrefabOverrideComponent>(Entity entity, PrefabOverrideComponent& component)
+	{
+
 	}
 }

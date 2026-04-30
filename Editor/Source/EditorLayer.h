@@ -94,6 +94,7 @@ namespace Kairos
 		// Prefab editor
 		void OpenPrefabEditor(Engine::AssetHandle prefabHandle);
 		void SavePrefabAndApply();
+		void ApplyPrefabInstanceToPrefab(Engine::Entity entity);
 		void RevertPrefabInstance(Engine::Entity entity);
 		void ExitPrefabEditor();
 

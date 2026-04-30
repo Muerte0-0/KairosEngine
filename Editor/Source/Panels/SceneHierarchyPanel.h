@@ -33,6 +33,8 @@ namespace Kairos
 
 	private:
 		void DrawEntityNode(Entity entity);
+		void RequestDeleteEntity(Entity entity);
+		bool NeedsDeleteConfirmation(Entity entity) const;
 
 		Ref<Scene>  m_Context;
 		Entity      m_SelectionContext;
@@ -45,6 +47,7 @@ namespace Kairos
 
 		// Deferred deletion — set during tree traversal, flushed after ImGui::End
 		Entity       m_EntityToDestroy;
+		Entity       m_EntityPendingDeleteConfirmation;
 		// Deferred revert — same reason: must not call during tree traversal
 		Entity       m_EntityToRevert;
 	};

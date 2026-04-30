@@ -18,6 +18,116 @@
 
 constexpr const char* KPROJ_FILTER = "Kairos Project\0*.kproj\0\0";
 
+namespace
+{
+	struct PrefabOverrideSnapshot
+	{
+		std::unordered_set<Engine::ComponentType> Types;
+
+		Engine::TagComponent       Tag;
+		Engine::TransformComponent Transform;
+		Engine::MeshComponent      Mesh;
+		Engine::CameraComponent    Camera;
+		Engine::LightComponent     Light;
+
+		bool HasTag       = false;
+		bool HasTransform = false;
+		bool HasMesh      = false;
+		bool HasCamera    = false;
+		bool HasLight     = false;
+	};
+
+	PrefabOverrideSnapshot CapturePrefabOverrides(Engine::Entity entity)
+	{
+		PrefabOverrideSnapshot snapshot;
+		if (!entity || !entity.HasComponent<Engine::PrefabOverrideComponent>())
+			return snapshot;
+
+		snapshot.Types = entity.GetComponent<Engine::PrefabOverrideComponent>().OverriddenComponents;
+		if (snapshot.Types.contains(Engine::ComponentType::Tag) && entity.HasComponent<Engine::TagComponent>())
+		{
+			snapshot.Tag = entity.GetComponent<Engine::TagComponent>();
+			snapshot.HasTag = true;
+		}
+		if (snapshot.Types.contains(Engine::ComponentType::Transform) && entity.HasComponent<Engine::TransformComponent>())
+		{
+			snapshot.Transform = entity.GetComponent<Engine::TransformComponent>();
+			snapshot.HasTransform = true;
+		}
+		if (snapshot.Types.contains(Engine::ComponentType::Mesh) && entity.HasComponent<Engine::MeshComponent>())
+		{
+			snapshot.Mesh = entity.GetComponent<Engine::MeshComponent>();
+			snapshot.HasMesh = true;
+		}
+		if (snapshot.Types.contains(Engine::ComponentType::Camera) && entity.HasComponent<Engine::CameraComponent>())
+		{
+			snapshot.Camera = entity.GetComponent<Engine::CameraComponent>();
+			snapshot.HasCamera = true;
+		}
+		if (snapshot.Types.contains(Engine::ComponentType::Light) && entity.HasComponent<Engine::LightComponent>())
+		{
+			snapshot.Light = entity.GetComponent<Engine::LightComponent>();
+			snapshot.HasLight = true;
+		}
+
+		return snapshot;
+	}
+
+	template<typename T>
+	void ReplaceOrRemoveComponent(Engine::Entity entity, bool hasComponent, const T& component)
+	{
+		auto& registry = entity.GetScene()->GetRegistry();
+		auto enttID = static_cast<entt::entity>(entity);
+		if (hasComponent)
+			registry.emplace_or_replace<T>(enttID, component);
+		else if (entity.HasComponent<T>())
+			entity.RemoveComponent<T>();
+	}
+
+	void ApplyPrefabOverrideSnapshot(Engine::Entity entity, const PrefabOverrideSnapshot& snapshot)
+	{
+		if (!entity)
+			return;
+
+		if (snapshot.Types.contains(Engine::ComponentType::Tag))
+			ReplaceOrRemoveComponent(entity, snapshot.HasTag, snapshot.Tag);
+		if (snapshot.Types.contains(Engine::ComponentType::Transform))
+			ReplaceOrRemoveComponent(entity, snapshot.HasTransform, snapshot.Transform);
+		if (snapshot.Types.contains(Engine::ComponentType::Mesh))
+			ReplaceOrRemoveComponent(entity, snapshot.HasMesh, snapshot.Mesh);
+		if (snapshot.Types.contains(Engine::ComponentType::Camera))
+			ReplaceOrRemoveComponent(entity, snapshot.HasCamera, snapshot.Camera);
+		if (snapshot.Types.contains(Engine::ComponentType::Light))
+			ReplaceOrRemoveComponent(entity, snapshot.HasLight, snapshot.Light);
+
+		if (!snapshot.Types.empty())
+		{
+			if (!entity.HasComponent<Engine::PrefabOverrideComponent>())
+				entity.AddComponent<Engine::PrefabOverrideComponent>();
+			entity.GetComponent<Engine::PrefabOverrideComponent>().OverriddenComponents = snapshot.Types;
+		}
+	}
+
+	Engine::EntityID GetParentEntityID(Engine::Entity entity)
+	{
+		if (!entity)
+			return Engine::INVALID_ENTITY;
+
+		const Engine::SceneNode* node = entity.GetScene()->GetSceneGraph().GetNode(static_cast<Engine::EntityID>(entity));
+		return node ? node->Parent : Engine::INVALID_ENTITY;
+	}
+
+	void RestoreParent(Engine::Entity entity, Engine::EntityID parent)
+	{
+		if (!entity || parent == Engine::INVALID_ENTITY)
+			return;
+
+		auto parentEntt = static_cast<entt::entity>(parent);
+		if (entity.GetScene()->GetRegistry().valid(parentEntt))
+			entity.GetScene()->GetSceneGraph().SetParent(static_cast<Engine::EntityID>(entity), parent);
+	}
+}
+
 namespace Kairos
 {
 	void EditorLayer::OnAttach()
@@ -394,20 +504,6 @@ namespace Kairos
 			}
 
 			ImGui::EndMenuBar();
-		}
-
-		// Play/Stop toolbar — rendered outside the menu bar, inside the outer window
-		const EngineMode mode = Application::Get().GetEngineMode();
-		ImGui::Separator();
-		if (mode == EngineMode::Editor)
-		{
-			if (ImGui::Button("  Play  "))
-				Application::Get().EnterPlayMode();
-		}
-		else
-		{
-			if (ImGui::Button("  Stop  "))
-				Application::Get().ExitPlayMode();
 		}
 	}
 
@@ -822,6 +918,14 @@ namespace Kairos
 				if (m_IsEditingPrefab)
 					m_PrefabDirty = true;
 			};
+			m_PropertiesPanel->OnApplyPrefabInstance = [this](Engine::Entity entity)
+			{
+				ApplyPrefabInstanceToPrefab(entity);
+			};
+			m_PropertiesPanel->OnRevertPrefabInstance = [this](Engine::Entity entity)
+			{
+				RevertPrefabInstance(entity);
+			};
 		}
 	}
 
@@ -979,22 +1083,74 @@ namespace Kairos
 
 		for (Engine::Entity inst : instances)
 		{
-			auto& tc = inst.GetComponent<Engine::TransformComponent>();
-			Engine::TransformComponent savedTransform = tc;
+			PrefabOverrideSnapshot overrides = CapturePrefabOverrides(inst);
+			Engine::EntityID parent = GetParentEntityID(inst);
 
 			m_ActiveScene->DestroyEntityHierarchy(inst);
 			Engine::Entity newEnt = updatedPrefab->Instantiate(m_ActiveScene.get());
-			if (newEnt)
-			{
-				auto& newTc = newEnt.GetComponent<Engine::TransformComponent>();
-				newTc.Translation = savedTransform.Translation;
-				newTc.Rotation    = savedTransform.Rotation;
-				newTc.Scale       = savedTransform.Scale;
-			}
+			RestoreParent(newEnt, parent);
+			ApplyPrefabOverrideSnapshot(newEnt, overrides);
 		}
 
 		m_PrefabDirty = false;
 		LOG(Engine::LogLevel::Info, "Prefab saved and applied to {} instance(s).", instances.size());
+	}
+
+	void EditorLayer::ApplyPrefabInstanceToPrefab(Engine::Entity entity)
+	{
+		if (!entity || !entity.HasComponent<Engine::PrefabInstanceComponent>())
+			return;
+
+		Engine::AssetHandle handle = entity.GetComponent<Engine::PrefabInstanceComponent>().PrefabHandle;
+		Engine::PrefabData newData = Engine::SerializeEntityHierarchy(entity);
+
+		auto* editorAM = static_cast<EditorAssetManager*>(
+			Engine::Project::GetActive()->GetAssetManager().get());
+
+		const Engine::AssetMetadata* meta = editorAM->GetRegistry().Get(handle);
+		if (!meta || !meta->IsValid())
+		{
+			LOG(Engine::LogLevel::Error, "ApplyPrefabInstanceToPrefab: prefab handle not in registry.");
+			return;
+		}
+
+		std::filesystem::path sourcePath = Engine::Project::GetAssetPath(meta->FilePath);
+		if (!Engine::SavePrefab(sourcePath, newData))
+		{
+			LOG(Engine::LogLevel::Error, "ApplyPrefabInstanceToPrefab: write failed.");
+			return;
+		}
+
+		editorAM->ReimportAsset(handle);
+		Engine::Ref<Engine::Prefab> updatedPrefab = Engine::AssetManager::GetAsset<Engine::Prefab>(handle);
+		if (!updatedPrefab)
+		{
+			LOG(Engine::LogLevel::Error, "ApplyPrefabInstanceToPrefab: reload failed.");
+			return;
+		}
+		updatedPrefab->Data = newData;
+
+		std::vector<Engine::Entity> instances;
+		m_ActiveScene->EachEntity([&](Engine::Entity e)
+		{
+			if (e.HasComponent<Engine::PrefabInstanceComponent>() &&
+				e.GetComponent<Engine::PrefabInstanceComponent>().PrefabHandle == handle)
+				instances.push_back(e);
+		});
+
+		for (Engine::Entity inst : instances)
+		{
+			PrefabOverrideSnapshot overrides = CapturePrefabOverrides(inst);
+			Engine::EntityID parent = GetParentEntityID(inst);
+			m_ActiveScene->DestroyEntityHierarchy(inst);
+			Engine::Entity newEnt = updatedPrefab->Instantiate(m_ActiveScene.get());
+			RestoreParent(newEnt, parent);
+			ApplyPrefabOverrideSnapshot(newEnt, overrides);
+			if (m_SceneHierarchyPanel && inst == entity)
+				m_SceneHierarchyPanel->SetSelectedEntity(newEnt);
+		}
+
+		LOG(Engine::LogLevel::Info, "Prefab instance applied to prefab and propagated to {} instance(s).", instances.size());
 	}
 
 	void EditorLayer::RevertPrefabInstance(Engine::Entity entity)
@@ -1010,8 +1166,8 @@ namespace Kairos
 			return;
 		}
 
-		auto& tc = entity.GetComponent<Engine::TransformComponent>();
-		Engine::TransformComponent savedTransform = tc;
+		Engine::TransformComponent savedTransform = entity.GetComponent<Engine::TransformComponent>();
+		Engine::EntityID parent = GetParentEntityID(entity);
 
 		m_ActiveScene->DestroyEntityHierarchy(entity);
 		if (m_SceneHierarchyPanel)
@@ -1020,10 +1176,13 @@ namespace Kairos
 		Engine::Entity newEnt = prefab->Instantiate(m_ActiveScene.get());
 		if (newEnt)
 		{
+			RestoreParent(newEnt, parent);
 			auto& newTc = newEnt.GetComponent<Engine::TransformComponent>();
 			newTc.Translation = savedTransform.Translation;
 			newTc.Rotation    = savedTransform.Rotation;
 			newTc.Scale       = savedTransform.Scale;
+			if (newEnt.HasComponent<Engine::PrefabOverrideComponent>())
+				newEnt.RemoveComponent<Engine::PrefabOverrideComponent>();
 
 			if (m_SceneHierarchyPanel)
 				m_SceneHierarchyPanel->SetSelectedEntity(newEnt);

@@ -20,6 +20,17 @@
 
 namespace Kairos
 {
+	static void MarkPrefabOverride(Entity entity, Engine::ComponentType componentType)
+	{
+		if (!entity || !entity.HasComponent<Engine::PrefabInstanceComponent>())
+			return;
+
+		if (!entity.HasComponent<Engine::PrefabOverrideComponent>())
+			entity.AddComponent<Engine::PrefabOverrideComponent>();
+
+		entity.GetComponent<Engine::PrefabOverrideComponent>().OverriddenComponents.insert(componentType);
+	}
+
 	// Returns true if primitive selection changed
 	static bool DrawPrimitivePicker(Engine::MeshComponent& mc)
 	{
@@ -227,8 +238,9 @@ namespace Kairos
 		return changed;
 	}
 
-	static void DrawVec3Control(const std::string& label, glm::vec3& values, float defaultValue = 0.0f, float columnWidth = 100.0f)
+	static bool DrawVec3Control(const std::string& label, glm::vec3& values, float defaultValue = 0.0f, float columnWidth = 100.0f)
 	{
+		bool changed = false;
 		ImGui::PushID(label.c_str());
 		ImGui::Columns(2);
 		ImGui::SetColumnWidth(0, columnWidth);
@@ -243,35 +255,36 @@ namespace Kairos
 		ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4{0.4f, 0.1f, 0.15f, 1.0f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.6f, 0.2f, 0.2f,  1.0f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4{0.4f, 0.1f, 0.15f, 1.0f});
-		if (ImGui::Button("X", buttonSize)) values.x = defaultValue;
+		if (ImGui::Button("X", buttonSize)) { values.x = defaultValue; changed = true; }
 		ImGui::PopStyleColor(3);
 		ImGui::SameLine();
-		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%0.2f");
+		changed |= ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%0.2f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
 		ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4{0.1f, 0.2f, 0.1f, 1.0f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.1f, 0.3f, 0.1f, 1.0f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4{0.1f, 0.2f, 0.1f, 1.0f});
-		if (ImGui::Button("Y", buttonSize)) values.y = defaultValue;
+		if (ImGui::Button("Y", buttonSize)) { values.y = defaultValue; changed = true; }
 		ImGui::PopStyleColor(3);
 		ImGui::SameLine();
-		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%0.2f");
+		changed |= ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%0.2f");
 		ImGui::PopItemWidth();
 		ImGui::SameLine();
 
 		ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4{0.1f, 0.25f, 0.4f, 1.0f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.1f, 0.25f, 0.6f, 1.0f});
 		ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4{0.1f, 0.25f, 0.4f, 1.0f});
-		if (ImGui::Button("Z", buttonSize)) values.z = defaultValue;
+		if (ImGui::Button("Z", buttonSize)) { values.z = defaultValue; changed = true; }
 		ImGui::PopStyleColor(3);
 		ImGui::SameLine();
-		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%0.2f");
+		changed |= ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%0.2f");
 		ImGui::PopItemWidth();
 
 		ImGui::PopStyleVar();
 		ImGui::Columns(1);
 		ImGui::PopID();
+		return changed;
 	}
 
 	void PropertiesPanel::OnImGuiRender()
@@ -286,10 +299,6 @@ namespace Kairos
 		{
 			DrawComponents(m_SelectionContext);
 
-			// Notify editor of any edit so it can mark the prefab dirty.
-			if (OnEntityModified)
-				OnEntityModified();
-
 			if (ImGui::Button("Add Component"))
 				ImGui::OpenPopup("AddComponent");
 
@@ -298,18 +307,24 @@ namespace Kairos
 				if (ImGui::MenuItem("Camera Component"))
 				{
 					m_SelectionContext.AddComponent<CameraComponent>();
+					MarkPrefabOverride(m_SelectionContext, ComponentType::Camera);
+					if (OnEntityModified) OnEntityModified();
 					ImGui::CloseCurrentPopup();
 				}
 
 				if (ImGui::MenuItem("Mesh Component"))
 				{
 					m_SelectionContext.AddComponent<MeshComponent>();
+					MarkPrefabOverride(m_SelectionContext, ComponentType::Mesh);
+					if (OnEntityModified) OnEntityModified();
 					ImGui::CloseCurrentPopup();
 				}
 
 				if (ImGui::MenuItem("Light Component"))
 				{
 					m_SelectionContext.AddComponent<LightComponent>();
+					MarkPrefabOverride(m_SelectionContext, ComponentType::Light);
+					if (OnEntityModified) OnEntityModified();
 					ImGui::CloseCurrentPopup();
 				}
 
@@ -378,6 +393,7 @@ namespace Kairos
 		using namespace Engine;
 
 		ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_AllowOverlap;
+		bool entityModified = false;
 
 		if (entity.HasComponent<TagComponent>())
 		{
@@ -385,21 +401,65 @@ namespace Kairos
 			char buffer[256] = {};
 			strcpy_s(buffer, sizeof(buffer), tag.c_str());
 			if (ImGui::InputText("Tag", buffer, sizeof(buffer)))
+			{
 				tag = std::string(buffer);
+				MarkPrefabOverride(entity, ComponentType::Tag);
+				entityModified = true;
+			}
 		}
 
 		ImGui::Separator();
 
+		if (entity.HasComponent<PrefabInstanceComponent>())
+		{
+			ImGui::SeparatorText("Prefab Instance");
+
+			if (ImGui::Button("Apply Changes"))
+			{
+				if (OnApplyPrefabInstance)
+					OnApplyPrefabInstance(entity);
+			}
+			
+			ImGui::SameLine();
+			if (ImGui::Button("Reset Changes"))
+			{
+				if (OnRevertPrefabInstance)
+					OnRevertPrefabInstance(entity);
+			}
+
+			if (entity.HasComponent<PrefabOverrideComponent>())
+			{
+				auto& overrides = entity.GetComponent<PrefabOverrideComponent>().OverriddenComponents;
+				if (!overrides.empty())
+				{
+					ImGui::SeparatorText("Overrides");
+					for (ComponentType type : overrides)
+						ImGui::BulletText("%s", ComponentTypeToString(type));
+				}
+			}
+
+		}
+		
+		ImGui::Separator();
+		
 		if (entity.HasComponent<TransformComponent>())
 		{
 			if (ImGui::TreeNodeEx((void*)typeid(TransformComponent).hash_code(), treeNodeFlags, "Transform"))
 			{
 				auto& tc = entity.GetComponent<TransformComponent>();
-				DrawVec3Control("Translation", tc.Translation);
+				bool changed = DrawVec3Control("Translation", tc.Translation);
 				glm::vec3 rotation = glm::degrees(tc.Rotation);
-				DrawVec3Control("Rotation", rotation);
-				tc.Rotation = glm::radians(rotation);
-				DrawVec3Control("Scale", tc.Scale, 1.0f);
+				if (DrawVec3Control("Rotation", rotation))
+				{
+					tc.Rotation = glm::radians(rotation);
+					changed = true;
+				}
+				changed |= DrawVec3Control("Scale", tc.Scale, 1.0f);
+				if (changed)
+				{
+					MarkPrefabOverride(entity, ComponentType::Transform);
+					entityModified = true;
+				}
 				ImGui::TreePop();
 			}
 		}
@@ -440,15 +500,24 @@ namespace Kairos
 				changed |= DrawMeshAssetField(mc);
 				ImGui::Columns(1);
 
-				ImGui::Checkbox("Cast Shadows", &mc.CastShadows);
+				changed |= ImGui::Checkbox("Cast Shadows", &mc.CastShadows);
 
-				DrawMaterialSlots(mc);
+				changed |= DrawMaterialSlots(mc);
+				if (changed)
+				{
+					MarkPrefabOverride(entity, ComponentType::Mesh);
+					entityModified = true;
+				}
 
 				ImGui::TreePop();
 			}
 
 			if (removeComponent)
+			{
 				entity.RemoveComponent<MeshComponent>();
+				MarkPrefabOverride(entity, ComponentType::Mesh);
+				entityModified = true;
+			}
 		}
 
 		if (entity.HasComponent<CameraComponent>())
@@ -487,6 +556,8 @@ namespace Kairos
 					{
 						cc.Primary = false;
 					}
+					MarkPrefabOverride(entity, ComponentType::Camera);
+					entityModified = true;
 				}
 
 				ImGui::Separator();
@@ -494,21 +565,37 @@ namespace Kairos
 				// FOV
 				float fov = cam.GetFOV();
 				if (ImGui::DragFloat("FOV", &fov, 0.5f, 1.0f, 179.0f, "%.1f deg"))
+				{
 					cam.SetFOV(fov);
+					MarkPrefabOverride(entity, ComponentType::Camera);
+					entityModified = true;
+				}
 
 				// Near / Far
 				float nearPlane = cam.GetNear();
 				float farPlane  = cam.GetFar();
 				if (ImGui::DragFloat("Near Plane", &nearPlane, 0.1f, 0.1f, 10.0f, "%.1f"))
+				{
 					cam.SetNearFar(nearPlane, cam.GetFar());
+					MarkPrefabOverride(entity, ComponentType::Camera);
+					entityModified = true;
+				}
 				if (ImGui::DragFloat("Far Plane",  &farPlane,  1.0f,   0.1f,  10000.0f, "%.1f"))
+				{
 					cam.SetNearFar(cam.GetNear(), farPlane);
+					MarkPrefabOverride(entity, ComponentType::Camera);
+					entityModified = true;
+				}
 
 				ImGui::TreePop();
 			}
 
 			if (removeComponent)
+			{
 				entity.RemoveComponent<CameraComponent>();
+				MarkPrefabOverride(entity, ComponentType::Camera);
+				entityModified = true;
+			}
 		}
 
 		if (entity.HasComponent<LightComponent>())
@@ -537,10 +624,22 @@ namespace Kairos
 				const char* typeNames[] = { "Directional", "Point", "Spot" };
 				int typeIdx = static_cast<int>(lc.Type);
 				if (ImGui::Combo("Type", &typeIdx, typeNames, 3))
+				{
 					lc.Type = static_cast<LightType>(typeIdx);
+					MarkPrefabOverride(entity, ComponentType::Light);
+					entityModified = true;
+				}
 
-				ImGui::ColorEdit3("Color", &lc.Color.x);
-				ImGui::DragFloat("Intensity", &lc.Intensity, 0.01f, 0.0f, 100.0f, "%.2f");
+				if (ImGui::ColorEdit3("Color", &lc.Color.x))
+				{
+					MarkPrefabOverride(entity, ComponentType::Light);
+					entityModified = true;
+				}
+				if (ImGui::DragFloat("Intensity", &lc.Intensity, 0.01f, 0.0f, 100.0f, "%.2f"))
+				{
+					MarkPrefabOverride(entity, ComponentType::Light);
+					entityModified = true;
+				}
 
 				ImGui::Separator();
 
@@ -550,28 +649,50 @@ namespace Kairos
 				}
 				else if (lc.Type == LightType::Point)
 				{
-					ImGui::DragFloat("Range", &lc.Point.Range, 0.1f, 0.01f, 1000.0f, "%.2f");
+					if (ImGui::DragFloat("Range", &lc.Point.Range, 0.1f, 0.01f, 1000.0f, "%.2f"))
+					{
+						MarkPrefabOverride(entity, ComponentType::Light);
+						entityModified = true;
+					}
 				}
 				else if (lc.Type == LightType::Spot)
 				{
-					DrawVec3Control("Direction", lc.Spot.Direction);
-					ImGui::DragFloat("Range", &lc.Spot.Range, 0.1f, 0.01f, 1000.0f, "%.2f");
+					bool changed = DrawVec3Control("Direction", lc.Spot.Direction);
+					changed |= ImGui::DragFloat("Range", &lc.Spot.Range, 0.1f, 0.01f, 1000.0f, "%.2f");
 
 					float innerDeg = glm::degrees(lc.Spot.InnerConeAngle);
 					float outerDeg = glm::degrees(lc.Spot.OuterConeAngle);
 					if (ImGui::DragFloat("Inner Cone", &innerDeg, 0.5f, 0.0f, 89.0f, "%.1f deg"))
+					{
 						lc.Spot.InnerConeAngle = glm::radians(innerDeg);
+						changed = true;
+					}
 					if (ImGui::DragFloat("Outer Cone", &outerDeg, 0.5f, 0.0f, 89.0f, "%.1f deg"))
+					{
 						lc.Spot.OuterConeAngle = glm::radians(outerDeg);
+						changed = true;
+					}
 					// Clamp inner <= outer
 					lc.Spot.InnerConeAngle = std::min(lc.Spot.InnerConeAngle, lc.Spot.OuterConeAngle);
+					if (changed)
+					{
+						MarkPrefabOverride(entity, ComponentType::Light);
+						entityModified = true;
+					}
 				}
 
 				ImGui::TreePop();
 			}
 
 			if (removeComponent)
+			{
 				entity.RemoveComponent<LightComponent>();
+				MarkPrefabOverride(entity, ComponentType::Light);
+				entityModified = true;
+			}
 		}
+
+		if (entityModified && OnEntityModified)
+			OnEntityModified();
 	}
 }

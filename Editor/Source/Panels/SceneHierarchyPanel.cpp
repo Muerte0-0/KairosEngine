@@ -88,6 +88,32 @@ namespace Kairos
 		SetContext(context);
 	}
 
+	bool SceneHierarchyPanel::NeedsDeleteConfirmation(Entity entity) const
+	{
+		if (!entity || !m_Context)
+			return false;
+
+		if (entity.HasComponent<Engine::PrefabInstanceComponent>())
+			return true;
+
+		Engine::SceneNode* node = m_Context->GetSceneGraph().GetNode(static_cast<Engine::EntityID>(entity));
+		return node && !node->Children.empty();
+	}
+
+	void SceneHierarchyPanel::RequestDeleteEntity(Entity entity)
+	{
+		if (!entity)
+			return;
+
+		if (m_IsRenamingEntity && entity.GetUUID() == m_RenameEntityUUID)
+			m_IsRenamingEntity = false;
+
+		if (NeedsDeleteConfirmation(entity))
+			m_EntityPendingDeleteConfirmation = entity;
+		else
+			m_EntityToDestroy = entity;
+	}
+
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
 		ImGui::Begin("Scene Hierarchy");
@@ -114,6 +140,9 @@ namespace Kairos
 
 		if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
 			m_SelectionContext = {};
+
+		if (m_SelectionContext && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && ImGui::IsKeyPressed(ImGuiKey_Delete))
+			RequestDeleteEntity(m_SelectionContext);
 
 		ImGuiPopupFlags flags = ImGuiPopupFlags_NoOpenOverItems | ImGuiPopupFlags_MouseButtonRight;
 
@@ -184,6 +213,31 @@ namespace Kairos
 				strncpy_s(m_EntityRenameBuffer, "Camera", sizeof(m_EntityRenameBuffer) - 1);
 			}
 
+			ImGui::EndPopup();
+		}
+
+		if (m_EntityPendingDeleteConfirmation)
+			ImGui::OpenPopup("Confirm Delete Entity");
+
+		if (ImGui::BeginPopupModal("Confirm Delete Entity", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::TextUnformatted("Delete entity and all children?");
+			ImGui::Separator();
+
+			if (ImGui::Button("Yes", ImVec2(120, 0)))
+			{
+				m_EntityToDestroy = m_EntityPendingDeleteConfirmation;
+				if (m_SelectionContext == m_EntityPendingDeleteConfirmation)
+					m_SelectionContext = {};
+				m_EntityPendingDeleteConfirmation = {};
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0)))
+			{
+				m_EntityPendingDeleteConfirmation = {};
+				ImGui::CloseCurrentPopup();
+			}
 			ImGui::EndPopup();
 		}
 
@@ -281,10 +335,8 @@ namespace Kairos
 		{
 			if (ImGui::MenuItem("Delete Entity"))
 			{
-				if (m_IsRenamingEntity && entity.GetUUID() == m_RenameEntityUUID)
-					m_IsRenamingEntity = false;
-				m_EntityToDestroy = entity;
-				if (m_SelectionContext == entity) m_SelectionContext = {};
+				RequestDeleteEntity(entity);
+				if (!m_EntityPendingDeleteConfirmation && m_SelectionContext == entity) m_SelectionContext = {};
 				if (opened) ImGui::TreePop();
 				ImGui::EndPopup();
 				return;

@@ -10,9 +10,42 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <unordered_set>
 
 namespace Engine
 {
+	enum class ComponentType : uint8_t
+	{
+		Tag = 0,
+		Transform,
+		Mesh,
+		Camera,
+		Light
+	};
+
+	inline const char* ComponentTypeToString(ComponentType type)
+	{
+		switch (type)
+		{
+			case ComponentType::Tag:       return "Tag";
+			case ComponentType::Transform: return "Transform";
+			case ComponentType::Mesh:      return "Mesh";
+			case ComponentType::Camera:    return "Camera";
+			case ComponentType::Light:     return "Light";
+			default:                       return "Unknown";
+		}
+	}
+
+	inline bool ComponentTypeFromString(const std::string& name, ComponentType& outType)
+	{
+		if (name == "Tag")       { outType = ComponentType::Tag;       return true; }
+		if (name == "Transform") { outType = ComponentType::Transform; return true; }
+		if (name == "Mesh")      { outType = ComponentType::Mesh;      return true; }
+		if (name == "Camera")    { outType = ComponentType::Camera;    return true; }
+		if (name == "Light")     { outType = ComponentType::Light;     return true; }
+		return false;
+	}
+
 	struct IDComponent
 	{
 		UUID ID;
@@ -171,5 +204,10 @@ namespace Engine
 
 		PrefabInstanceComponent() = default;
 		PrefabInstanceComponent(AssetHandle handle) : PrefabHandle(handle) {}
+	};
+
+	struct PrefabOverrideComponent
+	{
+		std::unordered_set<ComponentType> OverriddenComponents;
 	};
 }
