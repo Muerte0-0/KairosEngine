@@ -1,12 +1,12 @@
 # Graph Report - D:\Dev\Projects\KairosEngine  (2026-04-30)
 
 ## Corpus Check
-- 189 files · ~130,735 words
+- 195 files · ~133,771 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 898 nodes · 1686 edges · 131 communities detected
-- Extraction: 62% EXTRACTED · 38% INFERRED · 0% AMBIGUOUS · INFERRED: 641 edges (avg confidence: 0.8)
+- 924 nodes · 1737 edges · 133 communities detected
+- Extraction: 62% EXTRACTED · 38% INFERRED · 0% AMBIGUOUS · INFERRED: 660 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -141,116 +141,118 @@
 - [[_COMMUNITY_Community 128|Community 128]]
 - [[_COMMUNITY_Community 129|Community 129]]
 - [[_COMMUNITY_Community 130|Community 130]]
+- [[_COMMUNITY_Community 131|Community 131]]
+- [[_COMMUNITY_Community 132|Community 132]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `End()` - 62 edges
-2. `Get()` - 53 edges
-3. `Begin()` - 39 edges
+1. `End()` - 65 edges
+2. `Get()` - 54 edges
+3. `Begin()` - 42 edges
 4. `GetAPI()` - 29 edges
 5. `Run()` - 26 edges
 6. `Clear()` - 24 edges
-7. `OpenProject()` - 19 edges
+7. `OpenProject()` - 20 edges
 8. `Create()` - 18 edges
 9. `Contains()` - 17 edges
 10. `GetNode()` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `OpenScene()` --calls--> `SetStartupScene()`  [INFERRED]
-  D:\Dev\Projects\KairosEngine\Editor\Source\EditorLayer.cpp → D:\Dev\Projects\KairosEngine\Engine\Source\Engine\Core\LoadingSystem.cpp
 - `DrawComponents()` --calls--> `SetPrimaryCamera()`  [INFERRED]
   D:\Dev\Projects\KairosEngine\Editor\Source\Panels\PropertiesPanel.cpp → D:\Dev\Projects\KairosEngine\Engine\Source\Engine\Scene\Scene.cpp
-- `VulkanImGuiLayer()` --calls--> `GetAPI()`  [INFERRED]
-  Engine\Source\APIs\Vulkan\VulkanImGuiLayer.cpp → Engine\Source\APIs\Vulkan\VulkanMaterial.cpp
+- `DrawSections()` --calls--> `DrawUI()`  [INFERRED]
+  D:\Dev\Projects\KairosEngine\Editor\Source\Windows\SettingsWindow.cpp → D:\Dev\Projects\KairosEngine\Engine\Source\Engine\Settings\RenderSettings.cpp
 - `OnImGuiRender()` --calls--> `Run()`  [INFERRED]
   Engine\Source\APIs\Vulkan\VulkanImGuiLayer.cpp → D:\Dev\Projects\KairosEngine\Engine\Source\Engine\Core\Application.cpp
 - `VulkanCommand()` --calls--> `WaitIdle()`  [INFERRED]
   Engine\Source\APIs\Vulkan\Components\VulkanCommand.cpp → Engine\Source\Engine\Core\Threading\ThreadPool.cpp
+- `Get()` --calls--> `End()`  [INFERRED]
+  Engine\Source\Engine\Assets\AssetRegistry.cpp → Engine\Source\Engine\Renderer\ShadowPass.cpp
 
 ## Communities
 
 ### Community 0 - "Community 0"
 Cohesion: 0.05
-Nodes (64): Application(), EnsureApplicationShadersCompiled(), EnterPlayMode(), GetShaderCompilerBinaryName(), GetTime(), Initialize(), JoinCommand(), OnWindowClosed() (+56 more)
+Nodes (67): Application(), AttachLayersDuringLoading(), EnsureApplicationShadersCompiled(), EnterPlayMode(), GetShaderCompilerBinaryName(), Initialize(), JoinCommand(), OnWindowClosed() (+59 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.06
-Nodes (51): Shutdown(), FlushSlot(), OnBeginFrame(), OnShutdown(), LoadSceneAsync(), Reset(), SceneWorker(), Create() (+43 more)
+Nodes (67): ExitPlayMode(), RequestSceneChange(), GetActiveCamera(), UpdateFromRegistry(), ReimportAsset(), ApplyPrefabInstanceToPrefab(), ApplyPrefabOverrideSnapshot(), BuildLevelEditorLayout() (+59 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.09
-Nodes (48): Contains(), Remove(), DrawDebugWindow(), OnImGuiRender(), SetupOuterDockspace(), Get(), Lerp(), OnLoadingStarted() (+40 more)
+Cohesion: 0.06
+Nodes (38): Contains(), Remove(), LoadPrefab(), GetAsset(), GetAssetType(), IsAssetLoaded(), IsAssetValid(), Clone() (+30 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.07
-Nodes (41): Record(), Shutdown(), GetStages(), Submit(), WaitIdle(), CreateBuffer_Dynamic(), CreateBuffer_Static(), VulkanIndexBuffer() (+33 more)
+Nodes (43): GetTime(), RenderGenericOverlay(), DeduceTypeFromPath(), Record(), Shutdown(), DrawDebugWindow(), OnImGuiRender(), SetupOuterDockspace() (+35 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.11
-Nodes (40): AttachLayersDuringLoading(), ExitPlayMode(), RequestSceneChange(), ReimportAsset(), ApplyPrefabInstanceToPrefab(), ApplyPrefabOverrideSnapshot(), BuildLevelEditorLayout(), CapturePrefabOverrides() (+32 more)
+Cohesion: 0.06
+Nodes (45): FlushSlot(), OnBeginFrame(), OnShutdown(), Flush(), HasStage(), Render(), CreateCommandBuffers(), CreateCommandPool() (+37 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.08
-Nodes (30): Create(), Create(), Create(), EndFrameCapture(), LoadRenderDocAPI(), StartFrameCapture(), TriggerCapture(), Create() (+22 more)
+Cohesion: 0.06
+Nodes (40): Shutdown(), Create(), Create(), Create(), Create(), GetDefault(), GetLayout(), EndFrameCapture() (+32 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.08
-Nodes (32): GetActiveCamera(), OnRender(), GetLayout(), Render(), ResolveMaterialAsset(), GetShaderLibrary(), Execute(), GetShadowMapFramebuffer() (+24 more)
+Cohesion: 0.09
+Nodes (37): Import(), ImportMaterial(), ImportMesh(), ImportPrefab(), ImportTexture(), Add(), Get(), GetHandleForPath() (+29 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.11
-Nodes (31): DeduceTypeFromPath(), Import(), ImportMaterial(), ImportMesh(), ImportPrefab(), ImportTexture(), Add(), Get() (+23 more)
+Cohesion: 0.1
+Nodes (35): GetStages(), CreateBuffer_Dynamic(), CreateBuffer_Static(), VulkanIndexBuffer(), VulkanVertexBuffer(), CreateColorAttachment(), CreateColorSampler(), CreateDepthAttachment() (+27 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.1
-Nodes (33): Update(), AddNodeToCanvas(), DrawAddNodePopup(), DrawNodeCanvas(), DrawParamsSidebar(), DrawToolbar(), GraphNodeWrapper, MakePinStyle() (+25 more)
+Cohesion: 0.11
+Nodes (32): Update(), AddNodeToCanvas(), DrawAddNodePopup(), DrawNodeCanvas(), DrawParamsSidebar(), DrawToolbar(), GraphNodeWrapper, MakePinStyle() (+24 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.1
-Nodes (29): SaveSceneAs(), Load(), Save(), ProjectionCamera(), RecalculateProjection(), SetAspectRatio(), SetFOV(), SetNearFar() (+21 more)
+Cohesion: 0.12
+Nodes (31): Create(), Exists(), Load(), StageToString(), CollectShaderFiles(), CompileEntryPoint(), DiscoverAnnotatedEntryPoints(), FileTimeToUtcString() (+23 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.1
-Nodes (29): ExtractMaterials(), ExtractTexturePath(), Load(), ProcessMesh(), ProcessNode(), Compile(), LoadTextureForNode(), ResolveSourceNode() (+21 more)
+Cohesion: 0.09
+Nodes (24): ContentBrowserPanel(), CreateNewAsset(), DrawEmptySpaceContextMenu(), GetIconForPath(), OnImGuiRender(), RenderFolderTree(), TryLoadIcon(), CreateApplication() (+16 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.16
-Nodes (28): Exists(), CollectShaderFiles(), CompileEntryPoint(), DiscoverAnnotatedEntryPoints(), FileTimeToUtcString(), GetCurrentUtcString(), HashFileContents(), InferStageInfoFromFileName() (+20 more)
+Cohesion: 0.09
+Nodes (26): Init(), OnRender(), FindWorkspaceRoot(), GetExecutablePath(), ResolveWorkspaceRoot(), Render(), ResolveMaterialAsset(), Execute() (+18 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.11
-Nodes (19): ContentBrowserPanel(), TryLoadIcon(), CreateApplication(), Editor, Main(), WinMain(), BuildAll(), LoadTexture() (+11 more)
+Cohesion: 0.12
+Nodes (24): ProjectionCamera(), RecalculateProjection(), SetAspectRatio(), SetFOV(), SetNearFar(), SetOrthographic(), SetPerspective(), OnViewportResize() (+16 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.09
-Nodes (10): DestroyEntity(), OnUpdate(), PropagateTransforms(), SetPrimaryCamera(), Create(), Destroy(), RaiseEvent(), ResolveIconPath() (+2 more)
-
-### Community 14 - "Community 14"
 Cohesion: 0.21
 Nodes (16): FreeFly_Move(), FreeFly_Rotate(), GetForward(), GetRight(), GetUp(), Orbit(), Pan(), RecalculateView() (+8 more)
 
-### Community 15 - "Community 15"
-Cohesion: 0.2
-Nodes (15): HexToImVec4(), LoadFonts(), ResolveFontDirectory(), SetImGuiStyle(), SetTheme_CatppuccinFrappé(), SetTheme_CatppuccinLatte(), SetTheme_CatppuccinMacchiato(), SetTheme_CatppuccinMocha() (+7 more)
-
-### Community 16 - "Community 16"
-Cohesion: 0.16
-Nodes (14): Init(), FindWorkspaceRoot(), GetExecutablePath(), ResolveWorkspaceRoot(), GetExecutableDirectory(), Init(), Shutdown(), Resize() (+6 more)
-
-### Community 17 - "Community 17"
+### Community 14 - "Community 14"
 Cohesion: 0.16
 Nodes (6): ComputeAABB(), GetVertices(), OnImGuiRender(), ComputeCasterBounds(), ComputeDown(), ExtractDirectionalLight()
 
-### Community 18 - "Community 18"
-Cohesion: 0.22
-Nodes (5): SetView(), UpdateFromRegistry(), OnUpdate(), SetViewFromTransform(), SyncFromEntityTransform()
+### Community 15 - "Community 15"
+Cohesion: 0.36
+Nodes (11): HexToImVec4(), LoadFonts(), ResolveFontDirectory(), SetImGuiStyle(), SetTheme_CatppuccinFrappé(), SetTheme_CatppuccinLatte(), SetTheme_CatppuccinMacchiato(), SetTheme_CatppuccinMocha() (+3 more)
 
-### Community 19 - "Community 19"
+### Community 16 - "Community 16"
 Cohesion: 0.22
 Nodes (0): 
 
-### Community 20 - "Community 20"
+### Community 17 - "Community 17"
+Cohesion: 0.39
+Nodes (6): CreateModule(), Engine(), Init(), LoadSpirvFromDisk(), Shutdown(), VulkanShader()
+
+### Community 18 - "Community 18"
 Cohesion: 0.32
 Nodes (4): Shutdown(), Submit(), SubmitAfter(), SubmitBatch()
+
+### Community 19 - "Community 19"
+Cohesion: 0.33
+Nodes (3): SetView(), SetViewFromTransform(), SyncFromEntityTransform()
+
+### Community 20 - "Community 20"
+Cohesion: 0.6
+Nodes (5): ExtractMaterials(), ExtractTexturePath(), Load(), ProcessMesh(), ProcessNode()
 
 ### Community 21 - "Community 21"
 Cohesion: 0.5
@@ -614,7 +616,7 @@ Nodes (0):
 
 ### Community 111 - "Community 111"
 Cohesion: 1.0
-Nodes (2): Open Sans OFL License, KairosEngine README
+Nodes (0): 
 
 ### Community 112 - "Community 112"
 Cohesion: 1.0
@@ -622,7 +624,7 @@ Nodes (0):
 
 ### Community 113 - "Community 113"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): Open Sans OFL License, KairosEngine README
 
 ### Community 114 - "Community 114"
 Cohesion: 1.0
@@ -682,13 +684,21 @@ Nodes (0):
 
 ### Community 128 - "Community 128"
 Cohesion: 1.0
-Nodes (1): Directory Icon
+Nodes (0): 
 
 ### Community 129 - "Community 129"
 Cohesion: 1.0
-Nodes (1): File Icon
+Nodes (0): 
 
 ### Community 130 - "Community 130"
+Cohesion: 1.0
+Nodes (1): Directory Icon
+
+### Community 131 - "Community 131"
+Cohesion: 1.0
+Nodes (1): File Icon
+
+### Community 132 - "Community 132"
 Cohesion: 1.0
 Nodes (1): Kairos Engine Logo
 
@@ -851,69 +861,73 @@ Nodes (1): Kairos Engine Logo
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 106`** (2 nodes): `ParallelSystemExecutor.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 107`** (2 nodes): `PlatformUtils.h`, `Engine()`
+- **Thin community `Community 107`** (2 nodes): `RenderSettings.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 108`** (2 nodes): `PrimitiveMeshFactory.h`, `Engine()`
+- **Thin community `Community 108`** (2 nodes): `SettingsRegistry.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 109`** (2 nodes): `WindowsInput.h`, `Engine()`
+- **Thin community `Community 109`** (2 nodes): `PlatformUtils.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 110`** (2 nodes): `ShaderCompiler()`, `ShaderCompiler.h`
+- **Thin community `Community 110`** (2 nodes): `PrimitiveMeshFactory.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 111`** (2 nodes): `Open Sans OFL License`, `KairosEngine README`
+- **Thin community `Community 111`** (2 nodes): `WindowsInput.h`, `Engine()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 112`** (1 nodes): `KairosEngine-Setup.lua`
+- **Thin community `Community 112`** (2 nodes): `ShaderCompiler()`, `ShaderCompiler.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 113`** (1 nodes): `Build-Editor.lua`
+- **Thin community `Community 113`** (2 nodes): `Open Sans OFL License`, `KairosEngine README`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 114`** (1 nodes): `Build-Engine.lua`
+- **Thin community `Community 114`** (1 nodes): `KairosEngine-Setup.lua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 115`** (1 nodes): `Engine.h`
+- **Thin community `Community 115`** (1 nodes): `Build-Editor.lua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 116`** (1 nodes): `kepch.cpp`
+- **Thin community `Community 116`** (1 nodes): `Build-Engine.lua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 117`** (1 nodes): `kepch.h`
+- **Thin community `Community 117`** (1 nodes): `Engine.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 118`** (1 nodes): `VulkanDispatch.cpp`
+- **Thin community `Community 118`** (1 nodes): `kepch.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 119`** (1 nodes): `AssetManager.cpp`
+- **Thin community `Community 119`** (1 nodes): `kepch.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 120`** (1 nodes): `PlatformDetection.h`
+- **Thin community `Community 120`** (1 nodes): `VulkanDispatch.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 121`** (1 nodes): `Assert.h`
+- **Thin community `Community 121`** (1 nodes): `AssetManager.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 122`** (1 nodes): `SceneCamera.h`
+- **Thin community `Community 122`** (1 nodes): `PlatformDetection.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 123`** (1 nodes): `Buffer.h`
+- **Thin community `Community 123`** (1 nodes): `Assert.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 124`** (1 nodes): `RenderAPI.cpp`
+- **Thin community `Community 124`** (1 nodes): `SceneCamera.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 125`** (1 nodes): `ShadowRenderSystem.h`
+- **Thin community `Community 125`** (1 nodes): `Buffer.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 126`** (1 nodes): `RendererUtils.cpp`
+- **Thin community `Community 126`** (1 nodes): `RenderAPI.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 127`** (1 nodes): `Build-ShaderCompiler.lua`
+- **Thin community `Community 127`** (1 nodes): `ShadowRenderSystem.h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 128`** (1 nodes): `Directory Icon`
+- **Thin community `Community 128`** (1 nodes): `RendererUtils.cpp`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 129`** (1 nodes): `File Icon`
+- **Thin community `Community 129`** (1 nodes): `Build-ShaderCompiler.lua`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 130`** (1 nodes): `Kairos Engine Logo`
+- **Thin community `Community 130`** (1 nodes): `Directory Icon`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 131`** (1 nodes): `File Icon`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 132`** (1 nodes): `Kairos Engine Logo`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `End()` connect `Community 2` to `Community 0`, `Community 1`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 16`, `Community 17`?**
-  _High betweenness centrality (0.152) - this node is a cross-community bridge._
-- **Why does `Get()` connect `Community 10` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`, `Community 15`, `Community 18`?**
+- **Why does `End()` connect `Community 3` to `Community 0`, `Community 1`, `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 14`?**
+  _High betweenness centrality (0.159) - this node is a cross-community bridge._
+- **Why does `Get()` connect `Community 1` to `Community 0`, `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`, `Community 12`, `Community 20`?**
   _High betweenness centrality (0.137) - this node is a cross-community bridge._
-- **Why does `GetAPI()` connect `Community 5` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 6`, `Community 12`, `Community 15`, `Community 16`?**
-  _High betweenness centrality (0.067) - this node is a cross-community bridge._
-- **Are the 61 inferred relationships involving `End()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
-  _`End()` has 61 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 51 inferred relationships involving `Get()` (e.g. with `OnAttach()` and `OnUpdate()`) actually correct?**
-  _`Get()` has 51 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 38 inferred relationships involving `Begin()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
-  _`Begin()` has 38 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `GetAPI()` connect `Community 5` to `Community 3`, `Community 4`, `Community 7`, `Community 9`, `Community 10`, `Community 11`, `Community 17`?**
+  _High betweenness centrality (0.065) - this node is a cross-community bridge._
+- **Are the 64 inferred relationships involving `End()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
+  _`End()` has 64 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 52 inferred relationships involving `Get()` (e.g. with `OnAttach()` and `OnUpdate()`) actually correct?**
+  _`Get()` has 52 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 41 inferred relationships involving `Begin()` (e.g. with `OnImGuiRender()` and `SetupOuterDockspace()`) actually correct?**
+  _`Begin()` has 41 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 26 inferred relationships involving `GetAPI()` (e.g. with `CreateBuffer_Static()` and `CreateBuffer_Dynamic()`) actually correct?**
   _`GetAPI()` has 26 INFERRED edges - model-reasoned connections that need verification._

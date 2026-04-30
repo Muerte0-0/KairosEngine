@@ -30,6 +30,7 @@ namespace Engine
 		Project() = default;
 		
 		static std::filesystem::path GetProjectDirectory() { ASSERT(s_ActiveProject, "No Active Project Found") return s_ActiveProject->m_ProjectDirectory; }
+		static std::filesystem::path GetConfigDirectory() { return GetProjectDirectory() / "Config"; }
 		static std::filesystem::path GetAssetDirectory() { ASSERT(s_ActiveProject, "No Active Project Found") return GetProjectDirectory() / s_ActiveProject->m_Config.AssetDirectory; }
 		
 		// To-Do: Move to Asset Manager

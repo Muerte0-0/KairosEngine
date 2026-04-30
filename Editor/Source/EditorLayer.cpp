@@ -14,6 +14,7 @@
 
 #include "ImGuizmo.h"
 #include "Windows/MaterialEditorWindow.h"
+#include "Windows/SettingsWindow.h"
 #include "Engine/Core/LoadingSystem.h"
 
 constexpr const char* KPROJ_FILTER = "Kairos Project\0*.kproj\0\0";
@@ -133,6 +134,7 @@ namespace Kairos
 	void EditorLayer::OnAttach()
 	{
 		Layer::OnAttach();
+		SettingsRegistry::RegisterDefaultSettings();
 		
 		m_ActiveScene = CreateRef<Scene>();
 		m_SceneRenderer = CreateScope<SceneRenderer>();
@@ -265,6 +267,18 @@ namespace Kairos
 				it = m_OpenWindows.erase(it);
 			else
 				++it;
+		}
+
+		if (m_ProjectSettingsWindow && m_ProjectSettingsWindow->IsOpen())
+		{
+			m_ProjectSettingsWindow->SetOuterDockID(m_OuterDockID);
+			m_ProjectSettingsWindow->OnImGuiRender();
+		}
+
+		if (m_EditorPreferencesWindow && m_EditorPreferencesWindow->IsOpen())
+		{
+			m_EditorPreferencesWindow->SetOuterDockID(m_OuterDockID);
+			m_EditorPreferencesWindow->OnImGuiRender();
 		}
 	}
 
@@ -455,6 +469,28 @@ namespace Kairos
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Edit"))
+			{
+				if (ImGui::MenuItem("Editor Preferences"))
+				{
+					if (!m_EditorPreferencesWindow || !m_EditorPreferencesWindow->IsOpen())
+						m_EditorPreferencesWindow = CreateRef<EditorPreferencesWindow>(Project::GetConfigDirectory());
+				}
+				
+				if (ImGui::MenuItem("Project Settings"))
+				{
+					if (!m_ProjectSettingsWindow || !m_ProjectSettingsWindow->IsOpen())
+						m_ProjectSettingsWindow = CreateRef<ProjectSettingsWindow>(Project::GetConfigDirectory());
+				}
+				
+				if (ImGui::MenuItem("Plugins"))
+				{
+					
+				}
+				
+				ImGui::EndMenu();
+			}
+			
 			if (ImGui::BeginMenu("Tools"))
 			{
 				if (ImGui::MenuItem("New Script"))
@@ -815,6 +851,8 @@ namespace Kairos
 		
 		if (Project::Load(projectPath))
 		{
+			SettingsRegistry::LoadAll(Project::GetConfigDirectory());
+
 			LoadingSystem::SetStatusTextMainThread("Scanning assets...");
 			LoadingSystem::SetStartupProgressMainThread(0.65f);
 			auto am= CreateRef<EditorAssetManager>();
@@ -931,6 +969,8 @@ namespace Kairos
 
 	void EditorLayer::SaveProject()
 	{
+		if (Project::GetActive())
+			SettingsRegistry::SaveAll(Project::GetConfigDirectory());
 	}
 
 	void EditorLayer::OnSceneLoaded(const Ref<Scene>& scene)

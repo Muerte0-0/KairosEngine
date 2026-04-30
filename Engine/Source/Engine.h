@@ -32,6 +32,7 @@
 #include "Engine/Scene/Entity.h"
 
 #include "Engine/Project/Project.h"
+#include "Engine/Settings/SettingsRegistry.h"
 // --------------------------------- //
 
 // ---------- Renderer ----------- //

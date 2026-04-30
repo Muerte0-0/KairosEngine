@@ -8,6 +8,7 @@
 #include "Panels/ViewportPanel.h"
 
 #include "Windows/EditorWindow.h"
+#include "Windows/SettingsWindow.h"
 
 namespace Kairos
 {
@@ -56,6 +57,8 @@ namespace Kairos
 		Scope<ViewportPanel>       m_ViewportPanel;
 
 		std::vector<Ref<EditorWindow>> m_OpenWindows;
+		Ref<ProjectSettingsWindow> m_ProjectSettingsWindow;
+		Ref<EditorPreferencesWindow> m_EditorPreferencesWindow;
 
 		ImGuiID m_OuterDockID             = 0;
 		bool    m_LevelEditorLayoutBuilt  = false;

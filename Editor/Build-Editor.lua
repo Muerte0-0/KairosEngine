@@ -30,6 +30,7 @@ externalincludedirs {
 	"%{IncludeDir.ImNodeFlow}",
 	"%{IncludeDir.GLM}",
 	"%{IncludeDir.EnTT}",
+	"%{IncludeDir.YAML}",
 }
 
 links {
