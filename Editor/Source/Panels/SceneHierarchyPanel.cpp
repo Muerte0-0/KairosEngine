@@ -273,6 +273,14 @@ namespace Kairos
 				strncpy_s(m_EntityRenameBuffer, "Child Entity", sizeof(m_EntityRenameBuffer) - 1);
 			}
 
+			ImGui::Separator();
+
+			if (ImGui::MenuItem("Save As Prefab..."))
+			{
+				if (OnSaveAsPrefab)
+					OnSaveAsPrefab(entity);
+			}
+
 			ImGui::EndPopup();
 		}
 

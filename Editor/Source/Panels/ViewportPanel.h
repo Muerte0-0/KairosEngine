@@ -30,6 +30,7 @@ namespace Kairos
 		// Drag-drop callbacks — set by EditorLayer
 		std::function<void(const std::filesystem::path&)> OnSceneDrop;
 		std::function<void(const std::filesystem::path&)> OnMeshDrop;
+		std::function<void(const std::filesystem::path&)> OnPrefabDrop;
 
 	private:
 		void DrawGizmos();

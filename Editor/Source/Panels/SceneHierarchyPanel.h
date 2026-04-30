@@ -1,6 +1,8 @@
 ﻿#pragma once
 #include "Engine.h"
 #include "Panel.h"
+#include <functional>
+#include <filesystem>
 
 namespace Kairos
 {
@@ -20,6 +22,10 @@ namespace Kairos
 
 		Entity GetSelectedEntity() const { return m_SelectionContext; }
 		void   SetSelectedEntity(Entity entity) { m_SelectionContext = entity; }
+
+		// Called when user picks "Save As Prefab" on an entity.
+		// EditorLayer wires this to open a save dialog + call SavePrefab.
+		std::function<void(Entity)> OnSaveAsPrefab;
 
 	private:
 		void DrawEntityNode(Entity entity);

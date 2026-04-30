@@ -62,7 +62,8 @@ namespace Engine
 	public:
 		PrefabData Data;
 
-		AssetType GetType() const override { return AssetType::Prefab; }
+		static AssetType GetStaticType()        { return AssetType::Prefab; }
+		AssetType        GetType() const override { return AssetType::Prefab; }
 
 		// Instantiate the prefab hierarchy into scene.
 		// Returns the root entity. Generates new UUIDs for all entities.

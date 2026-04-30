@@ -194,6 +194,8 @@ namespace Kairos
 							payloadType = "TEXTURE_ITEM";
 						else if (path.extension() == L".kmat")
 							payloadType = "MATERIAL_ITEM";
+						else if (path.extension() == L".prefab")
+							payloadType = "PREFAB_ITEM";
 
 						ImGui::SetDragDropPayload(payloadType, itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t), ImGuiCond_Once);
 						ImGui::TextUnformatted(filenameString.c_str());
@@ -228,6 +230,18 @@ namespace Kairos
 								if (OnAssetDoubleClicked)
 									OnAssetDoubleClicked(path);
 							}
+
+							// Prefab-specific: instantiate directly into active scene
+							if (path.extension() == ".prefab")
+							{
+								ImGui::Separator();
+								if (ImGui::MenuItem("Instantiate in Scene"))
+								{
+									if (OnPrefabInstantiate)
+										OnPrefabInstantiate(path);
+								}
+							}
+
 							ImGui::Separator();
 							if (ImGui::MenuItem("Reimport"))
 							{

@@ -10,6 +10,7 @@
 #include "Windows/MeshEditorWindow.h"
 
 #include "Engine/Scene/SceneSerializer.h"
+#include "Engine/Scene/Prefab.h"
 
 #include "ImGuizmo.h"
 #include "Windows/MaterialEditorWindow.h"
@@ -70,6 +71,29 @@ namespace Kairos
 			mc.SetMeshAsset(handle, mesh, mesh->GetMaterials());
 			m_SceneHierarchyPanel->SetSelectedEntity(entity);
 			LOG(LogLevel::Info, "Spawned mesh entity '{}' from drag-drop.", name);
+		};
+
+		m_ViewportPanel->OnPrefabDrop = [this](const std::filesystem::path& path)
+		{
+			auto* editorAM = static_cast<EditorAssetManager*>(
+				Project::GetActive()->GetAssetManager().get());
+
+			AssetHandle handle = editorAM->ImportAsset(path);
+			if (static_cast<uint64_t>(handle) == NullAssetHandle)
+			{
+				LOG(LogLevel::Warning, "Prefab drag-drop: import failed for '{}'.", path.string());
+				return;
+			}
+			Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
+			if (!prefab)
+			{
+				LOG(LogLevel::Warning, "Prefab drag-drop: load failed for '{}'.", path.string());
+				return;
+			}
+			Entity root = prefab->Instantiate(m_ActiveScene.get());
+			if (root && m_SceneHierarchyPanel)
+				m_SceneHierarchyPanel->SetSelectedEntity(root);
+			LOG(LogLevel::Info, "Prefab '{}' instantiated via drag-drop.", path.stem().string());
 		};
 	}
 
@@ -514,6 +538,28 @@ namespace Kairos
 			case AssetType::Shader:
 				LOG(LogLevel::Info, "OpenAssetEditor: Shader editor not yet implemented.");
 				break;
+			case AssetType::Prefab:
+			{
+				// Double-click on a .prefab → instantiate directly into active scene
+				auto editorAM = Project::GetActive()->GetEditorAssetManager();
+				AssetHandle handle = editorAM->ImportAsset(path);
+				if (static_cast<uint64_t>(handle) == NullAssetHandle)
+				{
+					LOG(LogLevel::Warning, "OpenAssetEditor: prefab import failed for '{}'.", path.string());
+					break;
+				}
+				Ref<Prefab> prefab = AssetManager::GetAsset<Prefab>(handle);
+				if (!prefab)
+				{
+					LOG(LogLevel::Warning, "OpenAssetEditor: prefab load failed for '{}'.", path.string());
+					break;
+				}
+				Entity root = prefab->Instantiate(m_ActiveScene.get());
+				if (root && m_SceneHierarchyPanel)
+					m_SceneHierarchyPanel->SetSelectedEntity(root);
+				LOG(LogLevel::Info, "Prefab '{}' instantiated.", path.stem().string());
+				break;
+			}
 			default:
 				LOG(LogLevel::Warning, "OpenAssetEditor: unknown type for '{}'.", path.string());
 				break;
@@ -695,6 +741,60 @@ namespace Kairos
 				for (auto& win : m_OpenWindows)
 					if (auto* matWin = dynamic_cast<MaterialEditorWindow*>(win.get()))
 						matWin->SetContentBrowserSelection(path);
+			};
+
+			// ── Prefab: instantiate from content browser ──────────────────────
+			m_ContentBrowserPanel->OnPrefabInstantiate = [this](const std::filesystem::path& path)
+			{
+				auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+				Engine::AssetHandle handle = editorAM->ImportAsset(path);
+				if (static_cast<uint64_t>(handle) == Engine::NullAssetHandle)
+				{
+					LOG(Engine::LogLevel::Warning, "Prefab instantiate: import failed for '{}'.", path.string());
+					return;
+				}
+
+				Engine::Ref<Engine::Prefab> prefab = Engine::AssetManager::GetAsset<Engine::Prefab>(handle);
+				if (!prefab)
+				{
+					LOG(Engine::LogLevel::Warning, "Prefab instantiate: load failed for '{}'.", path.string());
+					return;
+				}
+
+				Engine::Entity root = prefab->Instantiate(m_ActiveScene.get());
+				if (root && m_SceneHierarchyPanel)
+					m_SceneHierarchyPanel->SetSelectedEntity(root);
+
+				LOG(Engine::LogLevel::Info, "Prefab '{}' instantiated.", path.stem().string());
+			};
+
+			// ── Prefab: save entity hierarchy from scene hierarchy panel ──────
+			m_SceneHierarchyPanel->OnSaveAsPrefab = [this](Engine::Entity entity)
+			{
+				// Build a unique filename in the content browser's current directory
+				std::string baseName = entity.GetComponent<Engine::TagComponent>().Tag;
+				std::filesystem::path dir = m_ContentBrowserPanel->GetCurrentDirectory();
+
+				std::filesystem::path candidate = dir / (baseName + ".prefab");
+				int suffix = 0;
+				while (std::filesystem::exists(candidate))
+					candidate = dir / (baseName + std::to_string(++suffix) + ".prefab");
+
+				Engine::PrefabData data = Engine::SerializeEntityHierarchy(entity);
+				if (!Engine::SavePrefab(candidate, data))
+				{
+					LOG(Engine::LogLevel::Error, "Failed to save prefab '{}'.", candidate.string());
+					return;
+				}
+
+				// Register with asset manager so it's tracked
+				auto editorAM = Engine::Project::GetActive()->GetEditorAssetManager();
+				editorAM->ImportAsset(candidate);
+
+				// Trigger inline rename in content browser — same UX as CreateNewAsset
+				m_ContentBrowserPanel->BeginRename(candidate);
+
+				LOG(Engine::LogLevel::Info, "Saved prefab '{}'.", candidate.stem().string());
 			};
 		}
 	}

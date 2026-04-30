@@ -133,6 +133,11 @@ namespace Kairos
 				if (OnMeshDrop)
 					OnMeshDrop(std::filesystem::path(static_cast<const wchar_t*>(p->Data)));
 			}
+			if (const ImGuiPayload* p = ImGui::AcceptDragDropPayload("PREFAB_ITEM"))
+			{
+				if (OnPrefabDrop)
+					OnPrefabDrop(std::filesystem::path(static_cast<const wchar_t*>(p->Data)));
+			}
 			ImGui::EndDragDropTarget();
 		}
 
